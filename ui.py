@@ -423,18 +423,18 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 				f =  self.client.sftp_client.open(path,"a")
 				f.close()
 				id = self._new_resource_id()
-				resource = {
+				new_resource = {
 					"name": os.path.split(path)[-1],
 					"mode": oct(stat.S_IMODE(self.client.sftp_client.lstat(path).st_mode)).replace("0o",""),
 					"is_dir": False,
 					"focus": False,
-					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource)
+					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource),
 					"where": os.path.split(path)[0],
 					"depth": self.focus_resource["depth"] + 1
 				}
-				self.resource_data[id] = resource
+				self.resource_data[id] = new_resource
 				self.update_view_port()
-				sublime.status_message("create %s"%self.path_by_resource(resource))
+				sublime.status_message("create %s"%self.path_by_resource(new_resource))
 			self.window.show_input_panel(
 				"new file:",
 				resource_path+self.client.remote_os_sep,
@@ -450,19 +450,19 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 				path = self.client.remote_expandvars(path)
 				id = self._new_resource_id()
 				self.client.sftp_client.mkdir(path)
-				resource = {
+				new_resource = {
 					"name": os.path.split(path)[-1],
 					"mode": oct(stat.S_IMODE(self.client.sftp_client.lstat(path).st_mode)).replace("0o",""),
 					"is_dir": True,
 					"expand": False,
 					"focus": False,
-					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource)
+					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource),
 					"where": os.path.split(path)[0],
 					"depth": self.focus_resource["depth"] + 1
 				}
-				self.resource_data[id] = resource
+				self.resource_data[id] = new_resource
 				self.update_view_port()
-				sublime.status_message("create %s"%self.path_by_resource(resource))
+				sublime.status_message("create %s"%self.path_by_resource(new_resource))
 			self.window.show_input_panel(
 				"new dir:",
 				resource_path+self.client.remote_os_sep,
