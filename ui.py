@@ -372,9 +372,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 					<p><span class='keyword'>[I] </span>show server infomation<p>
 					<p><span class='keyword'>[R] </span>refresh ans sync file list<p>
 					<p><span class='keyword'>[E] </span>edit settings<p>
-					<p><span class='keyword'>[+] </span>add new main list <span class='warning'>(Under development | Not recommended)</span><p>
 					<p><span class='keyword'>[?] </span>help<p>
 				"""
+				# <p><span class='keyword'>[+] </span>add new main list <span class='warning'>(Under development | Not recommended)</span><p>
 				self.window.run_command(
 					cmd="ssh_panel_output",
 					args={
