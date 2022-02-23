@@ -374,7 +374,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 					<p><span class='keyword'>[E] </span>edit settings<p>
 					<p><span class='keyword'>[?] </span>help<p>
 				"""
-				# <p><span class='keyword'>[+] </span>add new main list <span class='warning'>(Under development | Not recommended)</span><p>
+					# <p><span class='keyword'>[+] </span>add new main list <span class='warning'>(Under development | Not recommended)</span><p>
 				self.window.run_command(
 					cmd="ssh_panel_output",
 					args={
@@ -428,6 +428,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 					"mode": oct(stat.S_IMODE(self.client.sftp_client.lstat(path).st_mode)).replace("0o",""),
 					"is_dir": False,
 					"focus": False,
+					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource)
 					"where": os.path.split(path)[0],
 					"depth": self.focus_resource["depth"] + 1
 				}
@@ -455,6 +456,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 					"is_dir": True,
 					"expand": False,
 					"focus": False,
+					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource)
 					"where": os.path.split(path)[0],
 					"depth": self.focus_resource["depth"] + 1
 				}
