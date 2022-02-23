@@ -621,7 +621,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 				<a href="show:info">[i]</a>
 				<a href="reload:list">[R]</a>
 				<a href="edit_settings:' '">[E]</a>
-				<a href="new_main_resource:' '">[+]</a>
 				<a href="show:help">[?]</a>
 			</p>
 		</p>
@@ -631,6 +630,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 				username=self.user_settings.config["username"],
 				dirtory_tree=self.render_resource_list()
 			)
+				# <a href="new_main_resource:' '">[+]</a>
 		phantom = sublime.Phantom(
 			sublime.Region(0),
 			html_tmp(content=html_ele),
