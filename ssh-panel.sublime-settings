@@ -1,0 +1,46 @@
+{
+	// Special settings can be defined in children of server_list
+	"default_connect_settings":{
+		"remote_path":"$HOME/",
+		// "local_path":"$HOME/SFTP-Local/{auto_generate}",
+		// "local_path":"%userprofile%\\SFTP-Local\\{auto_generate}", # windows
+		"network_timeout": 20,
+		"port":22,
+		"known_hosts_file":"",	// if fill in,will getting houst from known_hosts_file
+	},
+	"server_settings":{
+		// use password and username connect
+		"MyServer0":{
+			"username":"",
+			"hostname":"", // ip or domain name
+			"password":"", // if empty will prompt intput when connect
+			"save_password":false, // (optional) default is true
+			// ...
+		},
+		// use username and [private key] connect
+		// 	if your useing sublime3(python3.3)
+		// 	the private key your use must in PEM format (use [ssh-keygen -m PEM] when generate)
+		// 	or convert private key to PEM format, For example, useing the [puttygen] tool
+		"MyServer1":{
+			"username":"",
+			"hostname":"",
+			"private_key":["RSAKey","~/.ssh/id_rsa"],			// ssh-keygen -t rsa [-m PEM]
+			// "private_key":["DSSKey","~/.ssh/id_dsa"]			// ssh-keygen -t dsa [-m PEM]
+			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
+			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"] // ssh-keygen -t ed25519 [-m PEM]
+			"need_passphrase":false								// (optional) default is false, if is true will prompt intput when connect
+			// ...
+		},
+		// use gssapi connect
+		"MyServer2":{
+			"username":"",
+			"gss_host":"",
+			"gss_auth":true,
+			"gss_kex":true,
+			"gss_deleg_creds":true
+			// ...
+		},
+		// ...
+	},
+	"debug_mode":false
+}

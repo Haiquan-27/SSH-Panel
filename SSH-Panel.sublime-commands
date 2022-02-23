@@ -1,0 +1,14 @@
+[
+	{
+		"caption": "SSH-Panel: Connect Server",
+		"command": "ssh_panel_select_connect" 
+	},
+	{
+		"caption": "SSH-Panel: Edit Settings",
+		"command": "edit_settings",
+		"args":{
+			"base_file": "${packages}/SSH-Panel/ssh-panel.sublime-settings",
+			"default": "{\n\"server_settings\":{\n\t\t\"MyServer\":{\n\t\t\t\"username\":\"\",\n\t\t\t\"remote_path\": \"$HOME\",\n\t\t\t\"local_path\": \"\",\n\t\t\t\"hostname\":\"\",\n\t\t\t\"password\":\"\",\n\t\t\t\"save_password\":true,\n\t\t},\n\t}\n}"
+		}
+	},
+]
