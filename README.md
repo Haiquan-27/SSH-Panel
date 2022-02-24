@@ -7,21 +7,16 @@ Any server that supports openssh (including windows and Linux)
 ![Screenshot](https://)
 # Installation
 
-Using Package Control
-
+## Using Package Control
 Open Package Control: install menu and type "SSH-Panel" to install
 
-or Manual installation
-
+## or Manual installation
 Download this package as ZIP file, extract to "{you packages path}/SSH-Panel"
 
 Finally,restart sublime text
 
 # Check whether the plug-in is imported normally(for sublime text 4 you must to do)
-
-open console panel:
-
-if show error:
+open console panel,if show error:
 ```
 ImportError: DLL load failed while importing _rust
 ```
@@ -33,37 +28,37 @@ you can install from [here](https://) and copy to the installation path for subl
 
 Setup service parameter
 
-open command palette and select "SSH-Panel: Edit Settings"
+open command palette and select *"SSH-Panel: Edit Settings"*
 
 ## parameter description:
 
-root:
-1. "default_connect_settings" All links use default parameter values
-2. "server_settings" Specify preferences for connections
-3. "debug_mode" Debug enable
-path:
-1. "remote_path" The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
-2. "local_path" Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
-connect and authentication:
-1. "network_timeout" The number of timeout seconds used to authenticate and connect to the remote host
-2. "port" SSH service port of remote host
-3. "known_hosts_file" know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
-	"username" user name on remote host
-	"hostname" remote host IP address or domain name
-	if your server uses password authentication,option is:
-		"password" password plaintext
-		"save_password" save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
-	if your server uses private and public key authentication,option is:
-		"private_key" used to set the encryption method and private key path when logged in to the server with the key
-						key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
-						The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
-		!! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
-		"need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
-	if your server uses gssapi authentication,option is:
-		"gss_host" remote host IP address or domain name,if used, the "hostname" option is not used
-		"gss_auth" enable gss authentication ,valus is bool
-		"gss_kex" enable gss kex,valus is bool
-		"gss_deleg_creds" gss deleg creds
+### root:
+> *"default_connect_settings"* All links use default parameter values
+> *"server_settings"* Specify preferences for connections
+> *"debug_mode"* Debug enable
+### path:
+> *"remote_path"* The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
+> *"local_path"* Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
+### connect and authentication:
+> *"network_timeout"* The number of timeout seconds used to authenticate and connect to the remote host
+> *"port"* SSH service port of remote host
+> *"known_hosts_file"* know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
+> *"username"* user name on remote host
+> *"hostname"* remote host IP address or domain name
+#### if your server uses password authentication,option is:
+> *"password"* password plaintext
+> *"save_password"* save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
+#### if your server uses private and public key authentication,option is:
+> *"private_key"* used to set the encryption method and private key path when logged in to the server with the key
+> key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
+> The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
+> !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
+> "need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
+#### if your server uses gssapi authentication,option is:
+> *"gss_host"* remote host IP address or domain name,if used, the *"hostname"* option is not used
+> *"gss_auth"* enable gss authentication ,valus is bool
+> *"gss_kex"* enable gss kex,valus is bool
+> *"gss_deleg_creds"* gss deleg creds
 
 ## Example
 ```json
@@ -101,19 +96,20 @@ connect and authentication:
 ```
 
 # Using
+open command palette and select *"SSH-Panel: Connect Server"*
 
-open command palette and select "SSH-Panel: Connect Server"
 after select you server name to connect
 
 you can edit and view server information on the pop-up directory panel
-quick button:
-	[I] :show server infomation
-	[R] :refresh ans sync file list
-	[E] :edit settings
-	[?] :help
-you can click the [...] button on the right side of the directory or file to view infomation, delete or create a new one
+
+## quick button:
+> *[I]* :show server infomation
+> *[R]* :refresh ans sync file list
+> *[E]* :edit settings
+> *[?]* :help
+you can click the *[...]* button on the right side of the directory or file to view infomation, delete or create a new one
 
 # Feedback
-
 welcome report issues and commit code.
+
 if you like this can give me star :)
