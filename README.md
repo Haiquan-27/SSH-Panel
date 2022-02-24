@@ -33,35 +33,35 @@ open command palette and select *"SSH-Panel: Edit Settings"*
 ## parameter description:
 
 ### root:
-> *"default_connect_settings"* All links use default parameter values
-> *"server_settings"* Specify preferences for connections
-> *"debug_mode"* Debug enable
+* *"default_connect_settings"* All links use default parameter values
+* *"server_settings"* Specify preferences for connections
+* *"debug_mode"* Debug enable
 ### path:
-> *"remote_path"* The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
-> *"local_path"* Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
+* *"remote_path"* The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
+* *"local_path"* Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
 ### connect and authentication:
-> *"network_timeout"* The number of timeout seconds used to authenticate and connect to the remote host
-> *"port"* SSH service port of remote host
-> *"known_hosts_file"* know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
-> *"username"* user name on remote host
-> *"hostname"* remote host IP address or domain name
+* *"network_timeout"* The number of timeout seconds used to authenticate and connect to the remote host
+* *"port"* SSH service port of remote host
+* *"known_hosts_file"* know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
+* *"username"* user name on remote host
+* *"hostname"* remote host IP address or domain name
 #### if your server uses password authentication,option is:
-> *"password"* password plaintext
-> *"save_password"* save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
+* *"password"* password plaintext
+* *"save_password"* save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
 #### if your server uses private and public key authentication,option is:
-> *"private_key"* used to set the encryption method and private key path when logged in to the server with the key
-> key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
-> The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
-> !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
-> "need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
+* *"private_key"* used to set the encryption method and private key path when logged in to the server with the key
+* key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
+* The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
+* !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
+* "need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 #### if your server uses gssapi authentication,option is:
-> *"gss_host"* remote host IP address or domain name,if used, the *"hostname"* option is not used
-> *"gss_auth"* enable gss authentication ,valus is bool
-> *"gss_kex"* enable gss kex,valus is bool
-> *"gss_deleg_creds"* gss deleg creds
+* *"gss_host"* remote host IP address or domain name,if used, the *"hostname"* option is not used
+* *"gss_auth"* enable gss authentication ,valus is bool
+* *"gss_kex"* enable gss kex,valus is bool
+* *"gss_deleg_creds"* gss deleg creds
 
 ## Example
-```json
+```js
 "server_settings":{
 		// use password and username connect
 		"MyServer0":{
@@ -103,10 +103,10 @@ after select you server name to connect
 you can edit and view server information on the pop-up directory panel
 
 ## quick button:
-> *[I]* :show server infomation
-> *[R]* :refresh ans sync file list
-> *[E]* :edit settings
-> *[?]* :help
+* *[I]* :show server infomation
+* *[R]* :refresh ans sync file list
+* *[E]* :edit settings
+* *[?]* :help
 you can click the *[...]* button on the right side of the directory or file to view infomation, delete or create a new one
 
 # Feedback
