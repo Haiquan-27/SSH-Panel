@@ -331,7 +331,7 @@ class ClientObj():
 						on_done,None,None
 					)
 			else:
-				transport_parameter["pkey"] = eval("paramiko.%s"%{pkey_kex}).from_private_key_file(pkey_file)
+				transport_parameter["pkey"] = eval("paramiko.%s"%pkey_kex).from_private_key_file(pkey_file)
 				try_connect()
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
 			transport_parameter = {
