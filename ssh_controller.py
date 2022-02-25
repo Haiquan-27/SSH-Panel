@@ -134,7 +134,7 @@ class UserSettings():
 		# 	error_list.append("local_path")
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
 		if not (isinstance(config["port"],int)):error_list.append("port")
-		if (not os.path.exists(os.path.expandvars(config["known_hosts_file"])) and config["known_hosts_file"] != ""):
+		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
 			error_list.append("known_hosts_file")
 		#  os.path.exists(os.path.expandvars(user_parameter.get("private_key")[1]))
 		if auth_method == AUTH_METHOD_PASSWORD:
@@ -235,8 +235,8 @@ class ClientObj():
 				1
 			)
 		# 转为绝对路径，转换其中的变量
-		user_settings_config["local_path"] = os.path.expandvars(user_settings_config["local_path"])
-		user_settings_config["known_hosts_file"] = os.path.expandvars(user_settings_config["known_hosts_file"])
+		user_settings_config["local_path"] = os.path.expanduser(os.path.expandvars(user_settings_config["local_path"]))
+		user_settings_config["known_hosts_file"] = os.path.expanduser(os.path.expandvars(user_settings_config["known_hosts_file"]))
 		self._user_settings.init_from_parameter(
 			self._user_settings.server_name,
 			user_settings_config
