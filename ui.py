@@ -242,6 +242,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			# self.add_path(client.user_settings_config["remote_path"])
 			self.new_main_resource(path=self.client.user_settings_config["remote_path"],focus=True)
 			self.update_view_port()
+			LOG.D("OS ENV",self.client.env)
 
 	def reload_list(self):
 		self._max_resource_id = -1
