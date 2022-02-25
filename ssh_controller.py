@@ -403,7 +403,7 @@ class ClientObj():
 		def env_replace(match):
 			env_str = match.group()
 			env_name = env_str.replace(env_symbol,"")
-			return remote_env.get(env_name,env_str)
+			return remote_env.get(env_name.upper(),env_str)
 		remote_path = re_rule.sub(env_replace,path)
 		if remote_path[-1] == self.remote_os_sep:
 			remote_path = remote_path[:-1]
