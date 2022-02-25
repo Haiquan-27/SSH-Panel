@@ -52,7 +52,7 @@ class UserSettings():
 			parameter)
 		if ((self.auth_parameter,self.connect_parameter,self.auth_method) == ({},{},None) or
 			UserSettings.check_config_error(self.config,self.auth_method) != []):
-				LOG.E(f"{server_name} settings parameter error, please see ssh-panel.sublime-settings\nerror parameter:",
+				LOG.E("%s settings parameter error, please see ssh-panel.sublime-settings\nerror parameter:"%server_name,
 					UserSettings.check_config_error(self.config,self.auth_method))
 
 	@classmethod
@@ -436,7 +436,7 @@ class ClientObj():
 		return remote_path
 
 	def disconnect(self):
-		LOG.I(f"{self.user_settings.server_name} close")
+		LOG.I(self.user_settings.server_name+" close")
 		self.sftp_client.close()
 
 	def get_dir_list(self,remote_path="."):
