@@ -39,7 +39,7 @@ class UserSettings():
 		self.auth_parameter,self.connect_parameter,self.auth_method = UserSettings.format_parameter(default_parameter,user_parameter)
 		if ((self.auth_parameter,self.connect_parameter,self.auth_method) == ({},{},None) or
 			UserSettings.check_config_error(self.config,self.auth_method) != []):
-				LOG.E(f"{server_name} settings parameter error, please see ssh-panel.sublime-settings\nerror parameter:",
+				LOG.E("%s settings parameter error, please see ssh-panel.sublime-settings\nerror parameter:"%server_name,
 					UserSettings.check_config_error(self.config,self.auth_method))
 		self.server_name = server_name
 
