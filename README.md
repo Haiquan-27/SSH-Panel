@@ -8,12 +8,12 @@ Any server that supports openssh (including windows and Linux)
 ![Screenshot](https://)
 # Installation
 
-1. Check dependent Libraries (**very important**)
-## on Windows you need:
+## 1. Check dependent Libraries (**very important**)
+### on Windows you need:
 * python3.dll
 you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to installation directory of sublime
 
-## on Linux you need:
+### on Linux you need:
 * install **libffi**
 ```bash
 # if Debian / Ubuntu
@@ -22,7 +22,7 @@ apt-get install libffi-dev
 sudo yum install libffi-devel
 ```
 
-## python3.8 dependent libraries following
+### python3.8 dependent libraries following
 > bcrypt
 > cffi
 > cryptography
@@ -30,14 +30,14 @@ sudo yum install libffi-devel
 > six
 you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to Lib\python38 path of sublime
 
-2. Install Plug-in
-## You can using Package Control or Manual installation
+## 2. Install Plug-in
+### You can using Package Control or Manual installation
 Open Package Control: install menu and type "SSH-Panel" to install
 
-## Manual installation
+### Manual installation
 Download this package as ZIP file, extract to "{you packages path}/SSH-Panel"
 
-3. restart sublime text
+## 3. restart sublime text
 
 
 # Settings
