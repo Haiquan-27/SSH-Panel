@@ -1,4 +1,5 @@
-# SSH-Panel
+SSH-Panel
+=========
 
 This Sublime Text plugin let you to browse and edit files on remote servers
 
@@ -7,58 +8,73 @@ Any server that supports openssh (including windows and Linux)
 ![Screenshot](https://)
 # Installation
 
-## Using Package Control
+1. Check dependent Libraries (**very important**)
+## on Windows you need:
+* python3.dll
+you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to installation directory of sublime
+
+## on Linux you need:
+* install **libffi**
+```bash
+# if Debian / Ubuntu
+apt-get install libffi-dev
+# if Fedora / CentOS / RHEL
+sudo yum install libffi-devel
+```
+
+## python3.8 dependent libraries following
+> bcrypt
+> cffi
+> cryptography
+> nacl
+> six
+you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to Lib\python38 path of sublime
+
+2. Install Plug-in
+## You can using Package Control or Manual installation
 Open Package Control: install menu and type "SSH-Panel" to install
 
-## or Manual installation
+## Manual installation
 Download this package as ZIP file, extract to "{you packages path}/SSH-Panel"
 
-Finally,restart sublime text
+3. restart sublime text
 
-# Check whether the plug-in is imported normally(for sublime text 4 you must to do)
-open console panel,if show error:
-```
-ImportError: DLL load failed while importing _rust
-```
-the possible reason is that you missing python3.dll(or python3.so) component
-
-you can install from [here](https://) and copy to the installation path for sublime text
 
 # Settings
 
 Setup service parameter
 
-open command palette and select *"SSH-Panel: Edit Settings"*
+open command palette and select `SSH-Panel: Edit Settings`
 
 ## parameter description:
 
 ### root:
-* *"default_connect_settings"* All links use default parameter values
-* *"server_settings"* Specify preferences for connections
-* *"debug_mode"* Debug enable
+* `default_connect_settings` All links use default parameter values
+* `server_settings` Specify preferences for connections
+* `debug_mode` Debug enable
 ### path:
-* *"remote_path"* The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
-* *"local_path"* Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
+* `remote_path` The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
+* `local_path` Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
 ### connect and authentication:
-* *"network_timeout"* The number of timeout seconds used to authenticate and connect to the remote host
-* *"port"* SSH service port of remote host
-* *"known_hosts_file"* know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
-* *"username"* user name on remote host
-* *"hostname"* remote host IP address or domain name
+* `network_timeout` The number of timeout seconds used to authenticate and connect to the remote host
+* `port` SSH service port of remote host
+* `known_hosts_file` know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
+* `username` user name on remote host
+* `hostname` remote host IP address or domain name
 #### if your server uses password authentication,option is:
-* *"password"* password plaintext
-* *"save_password"* save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
+* `password` password plaintext
+* `save_password` save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
 #### if your server uses private and public key authentication,option is:
-* *"private_key"* used to set the encryption method and private key path when logged in to the server with the key
+* `private_key` used to set the encryption method and private key path when logged in to the server with the key
 * key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
 * The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
 * !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
 * "need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 #### if your server uses gssapi authentication,option is:
-* *"gss_host"* remote host IP address or domain name,if used, the *"hostname"* option is not used
-* *"gss_auth"* enable gss authentication ,valus is bool
-* *"gss_kex"* enable gss kex,valus is bool
-* *"gss_deleg_creds"* gss deleg creds
+* `gss_host` remote host IP address or domain name,if used, the `hostname` option is not used
+* `gss_auth` enable gss authentication ,valus is bool
+* `gss_kex` enable gss kex,valus is bool
+* `gss_deleg_creds` gss deleg creds
 
 ## Example
 ```js
@@ -96,7 +112,7 @@ open command palette and select *"SSH-Panel: Edit Settings"*
 ```
 
 # Using
-open command palette and select *"SSH-Panel: Connect Server"*
+open command palette and select `SSH-Panel: Connect Server`
 
 after select you server name to connect
 
@@ -112,4 +128,4 @@ you can click the *[...]* button on the right side of the directory or file to v
 # Feedback
 welcome report issues and commit code.
 
-if you like this can give me star :)  .
+if you like this can give me star :)
