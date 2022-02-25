@@ -1,17 +1,17 @@
 SSH-Panel
 =========
 
-This Sublime Text plugin let you to browse and edit files on remote servers
+This Sublime Text plugin allow you to browse and edit files on remote servers
 
-Any server that supports openssh (including windows and Linux)
+Windows and Linux servers that support any openssh available
 
-![Screenshot](https://)
+![Screenshot](https://github.com/username/project/branch/...gif)
 # Installation
 
 ## 1. Check dependent Libraries (**very important**)
 ### on Windows you need:
 * python3.dll
-you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to installation directory of sublime
+> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **installation directory** of sublime
 
 ### on Linux you need:
 * install **libffi**
@@ -23,19 +23,20 @@ sudo yum install libffi-devel
 ```
 
 ### python3.8 dependent libraries following
-> bcrypt
-> cffi
-> cryptography
-> nacl
-> six
-you can install from [here](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to Lib\python38 path of sublime
+* bcrypt
+* cffi
+* cryptography
+* nacl
+* six
+> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **Lib\python38** path of sublime
 
 ## 2. Install Plug-in
 ### You can using Package Control or Manual installation
-Open Package Control: install menu and type "SSH-Panel" to install
+* using Package Control
+> Open Package Control: install menu and type **"SSH-Panel"** to install
 
-### Manual installation
-Download this package as ZIP file, extract to "{you packages path}/SSH-Panel"
+* Manual installation
+> Download this package as ZIP file, extract to **"{you packages path}/SSH-Panel"**
 
 ## 3. restart sublime text
 
@@ -44,7 +45,7 @@ Download this package as ZIP file, extract to "{you packages path}/SSH-Panel"
 
 Setup service parameter
 
-open command palette and select `SSH-Panel: Edit Settings`
+open command palette and select `SSH-Panel: Edit Settings` command
 
 ## parameter description:
 
@@ -66,10 +67,12 @@ open command palette and select `SSH-Panel: Edit Settings`
 * `save_password` save password plaintext in settings file,if is false the password will be deleted in the settings after connecting
 #### if your server uses private and public key authentication,option is:
 * `private_key` used to set the encryption method and private key path when logged in to the server with the key
-* key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
-* The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
-* !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
-* "need_passphrase" tells the plug-in whether a passphrase is set when generating a key pair, value is bool
+```
+ key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
+ The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
+ !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
+```
+* `"need_passphrase"` tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 #### if your server uses gssapi authentication,option is:
 * `gss_host` remote host IP address or domain name,if used, the `hostname` option is not used
 * `gss_auth` enable gss authentication ,valus is bool
@@ -112,18 +115,18 @@ open command palette and select `SSH-Panel: Edit Settings`
 ```
 
 # Using
-open command palette and select `SSH-Panel: Connect Server`
+open command palette and select `SSH-Panel: Connect Server` command
 
 after select you server name to connect
 
 you can edit and view server information on the pop-up directory panel
 
 ## quick button:
-* *[I]* :show server infomation
-* *[R]* :refresh ans sync file list
-* *[E]* :edit settings
-* *[?]* :help
-you can click the *[...]* button on the right side of the directory or file to view infomation, delete or create a new one
+* `[I]` :show server infomation
+* `[R]` :refresh ans sync file list
+* `[E]` :edit settings
+* `[?]` :help
+you can click the `[...]` button on the right side of the directory or file to view infomation, delete or create a new one
 
 # Feedback
 welcome report issues and commit code.
