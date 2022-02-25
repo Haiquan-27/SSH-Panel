@@ -59,12 +59,10 @@ class SSHPanelLog():
 		else:
 			console_content = msg_content
 			html_ele += "<p style='padding-left:10px'>%s</p>"%(msg_content)
-		print(html_tmp(content=html_ele))
 		return (console_content,html_tmp(content=html_ele))
 
 	def W(self,msg_title,msg_content=None):
 		msg_tuple = self._msg_format("warning",msg_title,msg_content)
-		print(msg_tuple[0])
 		sublime.active_window().run_command(
 					cmd="ssh_panel_output",
 					args={
@@ -92,7 +90,6 @@ class SSHPanelLog():
 
 	def I(self,msg_title,msg_content=None):
 		msg_tuple = self._msg_format("info",msg_title,msg_content)
-		print(msg_tuple[0])
 		sublime.active_window().run_command(
 					cmd="ssh_panel_output",
 					args={
@@ -107,7 +104,6 @@ class SSHPanelLog():
 	def D(self,msg_title,msg_content=None):
 		if DEBUG:
 			msg_tuple = self._msg_format("debug",msg_title,msg_content)
-			print(msg_tuple[0])
 			sublime.active_window().run_command(
 						cmd="ssh_panel_output",
 						args={

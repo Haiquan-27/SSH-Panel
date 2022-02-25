@@ -82,7 +82,7 @@ class UserSettings():
 			user_parameter.get("private_key")[0] in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"]
 			):
 			private_key = user_parameter.get("private_key")
-			private_key[1] = os.path.expandvars(private_key[1])
+			private_key[1] = os.path.expanduser(os.path.expandvars(private_key[1]))
 			auth_parameter = {
 				"username":user_parameter.get("username"),
 				"hostname":user_parameter.get("hostname"),
@@ -130,7 +130,6 @@ class UserSettings():
 				])
 		if not isinstance(config["remote_path"],str):error_list.append("remote_path")
 		if not isinstance(config["local_path"],str):error_list.append("local_path")
-		# if not (os.path.exists(os.path.expandvars(config["local_path"])) or "{auto_generate}" in config["local_path"]):
 		# 	error_list.append("local_path")
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
 		if not (isinstance(config["port"],int)):error_list.append("port")
@@ -147,7 +146,7 @@ class UserSettings():
 			if not isinstance(config["hostname"],str):error_list.append("hostname")
 			if (not isinstance(config["private_key"],list) or
 					config["private_key"][0] not in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"] or
-					not os.path.exists(os.path.expandvars(config["private_key"][1]))):
+					not os.path.exists(os.path.expanduser(os.path.expandvars(config["private_key"][1])))):
 				error_list.append("private_key")
 			if not isinstance(config["need_passphrase"],bool):error_list.append("need_passphrase")
 		elif auth_method == AUTH_METHOD_GSSAPI:
@@ -313,7 +312,7 @@ class ClientObj():
 		elif user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
 			pkey = None
 			pkey_kex = user_settings_config["private_key"][0]
-			pkey_file = os.path.expandvars(user_settings_config["private_key"][1])
+			pkey_file = os.path.expanduser(os.path.expandvars(user_settings_config["private_key"][1]))
 			# paramiko.[RSAKey/DSSKey/ECDSAKey/Ed25519Key].from_private_key_file()
 			passphrase = user_settings_config["private_key"]
 			hostname = user_settings_config["hostname"]
@@ -454,8 +453,6 @@ class ClientObj():
 		return res
 
 	def file_sync(self,local_path,remote_path,dir,sync_stat=False): # 写入并保持远程文件原始权限
-		# remote_path = ssh_file.remote_path
-		# local_path = ssh_file.local_path
 		try:
 			if dir == "put":
 				with self.sftp_client.open(remote_path,"w") as rf:
@@ -469,7 +466,7 @@ class ClientObj():
 					self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
 				LOG.D("remote:%s sync"%remote_path)
 			elif dir == "get":
-				os.makedirs(os.path.split(local_path)[1],exist_ok=True)
+				os.makedirs(os.path.split(local_path)[0],exist_ok=True)
 				with open(local_path,"wb") as lf:
 					with self.sftp_client.open(remote_path,"rb") as rf:
 						lf.write(rf.read())
@@ -485,7 +482,5 @@ class ClientObj():
 					"local_path":local_path,
 					"remote_path":remote_path
 				})
-
-	# save_host_keys
 
 

@@ -55,20 +55,10 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 		server_config_data_items = list(self.user_config_data.items())
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
 		for server_name,(user_config,auth_method) in server_config_data_items:
-			# show_item_list.append([server_name,user_config["remote_path"]])
-			show_item_list.append([server_name])
+			show_item_list.append([server_name,user_config["remote_path"]])
 
 		def on_highlight(index):
 			html_ele_tmp = "<tt style='padding-left:10px' class='{style}'>{line}</tt><br>"
-			# html_ele_error_tmp = "<p>parameter parse failed please <a href=''>to check settings</a></p>"
-			# html_ele_error_tmp = \
-			# """<p>parameter parse failed please, possible causes following:</p>
-			# 	<ul>
-			# 		<li>your missing requisite parameter</li>
-			# 		<li>incorrect parameter type</li>
-			# 	</ul>
-			# 	<p>please to <a href="edit_settings">check your settings</a><p>
-			# """
 			server_name,(user_config,auth_method) = server_config_data_items[index]
 			html_ele = "<strong>server parameter of <i>%s</i></strong><br>"%server_name
 			error_parameter_list = UserSettings.check_config_error(user_config,auth_method)
@@ -139,7 +129,6 @@ class SshPanelShellInteractiveCommand(sublime_plugin.WindowCommand):
 		self.client.exec_command("/bin/sh")
 		# self.client.exec_command(r"C:\Windows\System32\cmd.exe")
 
-# sublime_plugin.EventListener
 class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 	def __init__(self,window):
 		super().__init__(window)
@@ -207,7 +196,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 		nv.settings().set("gutter",False)
 		nv.settings().set("margin",0)
 		nv.settings().set("line_numbers",False)
-		# self.set_status_bar()
 		src_style = nv.style()
 		new_style_global = {}
 		src_background_color = ""
@@ -233,15 +221,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 
 		self.PhantomSet = sublime.PhantomSet(nv,"navication_view")
 		self.navication_view = nv
-		# (nv_width_dpi,nv_height_dpi) = nv.viewport_extent()
-		# replace_dict = {
-		# 	# "$background":theme_dark_color,
-		# 	"$width_dpi":str(nv_width_dpi)+"dpi",
-		# 	# "$height_dpi":str(nv_height_dpi)+"dpi",
-		# 	}
-		# for k in replace_dict:
-		# 	while(k in css):
-		# 		css = css.replace(k,replace_dict[k])
 		self.update_view_port()
 
 
