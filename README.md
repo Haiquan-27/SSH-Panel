@@ -112,4 +112,4 @@ you can click the *[...]* button on the right side of the directory or file to v
 # Feedback
 welcome report issues and commit code.
 
-if you like this can give me star :)
+if you like this can give me star :)  .
