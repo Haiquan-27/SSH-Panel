@@ -1,9 +1,9 @@
 import sublime
 import sublime_plugin
 import paramiko
-import importlib
-import util
-importlib.reload(util)
+# import importlib
+# import util
+# importlib.reload(util)
 from util import *
 import os
 import stat
@@ -356,7 +356,10 @@ class ClientObj():
 	def exec_command(self,command):
 		chan = self.get_new_channel()
 		chan.exec_command(command)
-		stdin = chan.makefile_stdin("wb", -1)
+		try:
+			stdin = chan.makefile_stdin("wb", -1)
+		except:
+			stdin = None
 		stdout = chan.makefile("r", -1)
 		stderr = chan.makefile_stderr("r", -1)
 		return {

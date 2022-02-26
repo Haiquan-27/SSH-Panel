@@ -48,7 +48,7 @@ class SSHPanelLog():
 			"info":"<p class=info>Info:%s</p>"%msg_title,
 			"debug":"<p class=debug>Debug:%s</p>"%msg_title,
 		}[msg_type]
-		if isinstance(msg_content,dict):
+		if isinstance(msg_content,dict) and int(sublime.version()) >= 4000:
 			for k,v in msg_content.items():
 				console_content += "%s : %s \n"%(k,v)
 				html_ele += "<p style='padding-left:10px' class='keyword'><span>%s:</span>%s</p>"%(k,v)
@@ -145,7 +145,10 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 			output_panel_phantomSet = sublime.PhantomSet(panel_view)
 		if clean:
 			output_panel_phantom_list=[]
-			output_panel_phantomSet.update([])
+			try: # st3 bug
+				output_panel_phantomSet.update([])
+			except:
+				output_panel_phantomSet = sublime.PhantomSet(panel_view)
 			panel_view.erase(edit,sublime.Region(0,panel_view.size()))
 		if new_line:
 			panel_view.insert(edit,panel_view.size(),"\n")
@@ -157,7 +160,10 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 					sublime.LAYOUT_INLINE
 				)
 			)
-			output_panel_phantomSet.update(output_panel_phantom_list)
+			try: # st3 bug
+				output_panel_phantomSet.update(output_panel_phantom_list)
+			except:
+				output_panel_phantomSet = sublime.PhantomSet(panel_view)
 			panel_view.insert(edit,panel_view.size(),"\n")
 		else:
 			panel_view.insert(edit,panel_view.size(),content.rstrip())
