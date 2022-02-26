@@ -5,7 +5,7 @@ This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
-![Screenshot](https://github.com/username/project/branch/...gif)
+![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
 # Installation
 
 ## 1. Check dependent Libraries (**very important**)
@@ -33,7 +33,7 @@ sudo yum install libffi-devel
 ## 2. Install Plug-in
 ### You can using Package Control or Manual installation
 * using Package Control
-> Open Package Control: install menu and type **"SSH-Panel"** to install
+> Open `Package Control: install` menu and type **"SSH-Panel"** to install
 
 * Manual installation
 > Download this package as ZIP file, extract to **"{you packages path}/SSH-Panel"**
@@ -43,23 +43,23 @@ sudo yum install libffi-devel
 
 # Settings
 
-Setup service parameter
+Setup service connect parameter
 
-open command palette and select `SSH-Panel: Edit Settings` command
+open command palette and select `SSH-Panel: Edit Settings` command to edit settings file
 
 ## parameter description:
 
 ### root:
 * `default_connect_settings` All links use default parameter values
 * `server_settings` Specify preferences for connections
-* `debug_mode` Debug enable
+* `debug_mode` Debug enable switch
 ### path:
-* `remote_path` The path on the remote host. You can use the environment variable on the remote host ,like "$HOME" or "%userprofile%"
+* `remote_path` The path on the remote host. You can use the environment variable of the remote host ,like "$HOME" or "%userprofile%"
 * `local_path` Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
 ### connect and authentication:
 * `network_timeout` The number of timeout seconds used to authenticate and connect to the remote host
 * `port` SSH service port of remote host
-* `known_hosts_file` know_hosts file path at local,if filled,it will be used to check the known host fingerprint. If an unknown host is found, a warning will be issued to confirm the host fingerprint
+* `known_hosts_file` know_hosts file path at local,if filled it will be used to check the known host fingerprint and If an unknown host is found, a warning will be issued to confirm the host fingerprint(use sha256)
 * `username` user name on remote host
 * `hostname` remote host IP address or domain name
 #### if your server uses password authentication,option is:
@@ -70,7 +70,7 @@ open command palette and select `SSH-Panel: Edit Settings` command
 ```
  key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
  The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
- !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter
+ !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter or use a tool to convert the existing private key file format
 ```
 * `"need_passphrase"` tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 #### if your server uses gssapi authentication,option is:
@@ -123,10 +123,10 @@ you can edit and view server information on the pop-up directory panel
 
 ## quick button:
 * `[I]` :show server infomation
-* `[R]` :refresh ans sync file list
+* `[R]` :refresh and sync file list
 * `[E]` :edit settings
 * `[?]` :help
-you can click the `[...]` button on the right side of the directory or file to view infomation, delete or create a new one
+you can click the `[...]` button on the right side of the directory or file to view attribute, delete or create a new one
 
 # Feedback
 welcome report issues and commit code.
