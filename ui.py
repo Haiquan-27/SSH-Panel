@@ -2,14 +2,14 @@ import sublime
 import sublime_plugin
 import os
 import json
-import importlib
 import re
 import time
-import ssh_controller
-importlib.reload(ssh_controller)
+# import importlib
+# import ssh_controller
+# importlib.reload(ssh_controller)
 from ssh_controller import *
-import util
-importlib.reload(util)
+# import util
+# importlib.reload(util)
 from util import *
 
 
@@ -64,11 +64,16 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 			error_parameter_list = UserSettings.check_config_error(user_config,auth_method)
 			self.select = (server_name,user_config,error_parameter_list)
 			for p_name,p_value in user_config.items():
-				html_ele += html_ele_tmp.format(
-					style='error' if p_name in error_parameter_list else
-								'keyword' if p_value != default_settings.get(p_name,None) else
-								'info',
-					line = "%s : %s"%(p_name,p_value))
+				if int(sublime.version()) >= 4000:
+					html_ele += html_ele_tmp.format(
+						style='error' if p_name in error_parameter_list else
+									'keyword' if p_value != default_settings.get(p_name,None) else
+									'info',
+						line = "%s : %s"%(p_name,p_value))
+				else:
+					html_ele += html_ele_tmp.format(
+						style='info',
+						line = "%s : %s"%(p_name,p_value))
 			self.window.run_command(
 				cmd="ssh_panel_output",
 				args={
@@ -454,15 +459,16 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			resource_path = self.path_by_resource(resource)
 			resource_stat = self.client.sftp_client.lstat(resource_path)
 			html_ele = """
-					<p><span class='keyword'>path:</span>{path}<p>
-					<p><span class='keyword'>is directory:</span>{is_dir}<p>
-					<p><span class='keyword'>uid:</span>{uid}<p>
-					<p><span class='keyword'>gid:</span>{gid}<p>
-					<p><span class='keyword'>mode:</span>{mode}<p>
-					<p><span class='keyword'>size:</span>{size}<p>
-					<p><span class='keyword'>access time:</span>{atime}<p>
-					<p><span class='keyword'>modify time:</span>{mtime}<p>
+					<p><span class='{style}'>path:</span>{path}<p>
+					<p><span class='{style}'>is directory:</span>{is_dir}<p>
+					<p><span class='{style}'>uid:</span>{uid}<p>
+					<p><span class='{style}'>gid:</span>{gid}<p>
+					<p><span class='{style}'>mode:</span>{mode}<p>
+					<p><span class='{style}'>size:</span>{size}<p>
+					<p><span class='{style}'>access time:</span>{atime}<p>
+					<p><span class='{style}'>modify time:</span>{mtime}<p>
 				""".format(
+					style = "keyword" if int(sublime.version()) >= 4000 else "info",
 					path = resource_path,
 					is_dir = resource["is_dir"],
 					uid = resource_stat.st_uid,
