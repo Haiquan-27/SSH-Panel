@@ -5,6 +5,8 @@ This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
+[此处](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel/main/README-CN.md)中文文档
+
 ![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
 # Installation
 
@@ -50,7 +52,7 @@ open command palette and select `SSH-Panel: Edit Settings` command to edit setti
 ## parameter description:
 
 ### root:
-* `default_connect_settings` All links use default parameter values
+* `default_connect_settings` All connect use default parameter values
 * `server_settings` Specify preferences for connections
 * `debug_mode` Debug enable switch
 ### path:
