@@ -18,7 +18,7 @@
 			// ...
 		},
 		// use username and [private key] connect
-		// 	if your useing sublime3(python3.3)
+		// 	if your useing sublime version < 4000
 		// 	the private key your use must in PEM format (use [ssh-keygen -m PEM] when generate)
 		// 	or convert private key to PEM format, For example, useing the [puttygen] tool
 		"MyServer1":{
