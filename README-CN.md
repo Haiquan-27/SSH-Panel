@@ -12,7 +12,7 @@ SSH-Panel
 * python3.dll
 > 你可以从[这个仓库](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载并复制到sublime text的**安装目录**下
 
-### 在Windows上你需要:
+### 在Linux上你需要:
 * 安装 **libffi**
 ```bash
 # if Debian / Ubuntu
@@ -125,9 +125,10 @@ sudo yum install libffi-devel
 * `[R]` :刷新与同步文件列表
 * `[E]` :编辑设置
 * `[?]` :帮助
+
 你可以点击文件或目录右侧的`[...]`按钮查看其属性或在下方创建新的对象
 
 # Feedback
-欢迎提供建议或提供代码
+欢迎反馈或提供代码
 
 如果你喜欢这个项目可以给我点个star :)
