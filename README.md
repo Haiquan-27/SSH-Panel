@@ -5,7 +5,7 @@ This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
-[此处](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel/main/README-CN.md)中文文档
+[此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
 
 ![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
 
