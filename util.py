@@ -12,7 +12,7 @@ async_Lock = threading.Lock()
 output_panel_phantomSet = None
 output_panel_phantom_list = []
 output_panel_name = "ssh-panel"
-main_css = open(os.path.split(__file__)[0]+os.sep+"style.css","r").read()
+
 def html_tmp(content):
 	return """
 	<html>
@@ -22,7 +22,9 @@ def html_tmp(content):
 		</body>
 	</html>
 	""".format(
-		css = main_css,
+		css = sublime.load_resource(
+				sublime.load_settings("ssh-panel.sublime-settings").get("style_css","Packages/SSH-Panel/style.css")
+			),
 		content = content
 	)
 
@@ -30,6 +32,14 @@ def abstract(algorithm:"加密算法 可用 md5 sha256 sha1 ....",value:bytes):
 	abstract_algorithm_name = algorithm.lower()
 	abstract_algorithm_method = eval("hashlib.%s"%abstract_algorithm_name)
 	return base64.encodebytes(value).decode("utf8").replace("\n","")
+
+def html_str(s):
+	return s.\
+	replace("&","&amp;").\
+	replace("<","&lt;").\
+	replace(">","&gt;").\
+	replace(" ","&nbsp;").\
+	replace("\n","<br>")
 
 class SSHPanelSettingsException(Exception):
 	pass
@@ -48,14 +58,14 @@ class SSHPanelLog():
 			"info":"<p class=info>Info:%s</p>"%msg_title,
 			"debug":"<p class=debug>Debug:%s</p>"%msg_title,
 		}[msg_type]
-		if isinstance(msg_content,dict) and int(sublime.version()) >= 4000:
+		if isinstance(msg_content,dict):
 			for k,v in msg_content.items():
 				console_content += "%s : %s \n"%(k,v)
 				html_ele += "<p style='padding-left:10px' class='keyword'><span>%s:</span>%s</p>"%(k,v)
 		elif isinstance(msg_content,list):
-			for i in msg_content:
-				console_content += "%s\n"%(i)
-				html_ele += "<p style='padding-left:10px'>%s</p>"%(i)
+			for e in msg_content:
+				console_content += "%s\n"%(e)
+				html_ele += "<p style='padding-left:10px'>%s</p>"%(e)
 		else:
 			console_content = msg_content
 			html_ele += "<p style='padding-left:10px'>%s</p>"%(msg_content)
@@ -136,6 +146,8 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 			panel_view.settings().set("gutter",False)
 			panel_view.settings().set("margin",0)
 			panel_view.settings().set("line_numbers",False)
+			if panel_view.settings().get("color_scheme",None):
+				panel_view.settings().set("color_scheme",sublime.load_settings("Preferences.sublime-settings").get("color_scheme"))
 		self.panel_view = panel_view
 		window.run_command("show_panel",args={"panel":"output."+output_panel_name})
 		panel_view.set_read_only(False)
@@ -144,12 +156,10 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 		if not output_panel_phantomSet or output_panel_phantomSet.view != panel_view: # 当phantomSet不存在或phantomSet所在主窗口变化时
 			output_panel_phantomSet = sublime.PhantomSet(panel_view)
 		if clean:
-			output_panel_phantom_list=[]
-			try: # st3 bug
-				output_panel_phantomSet.update([])
-			except:
-				output_panel_phantomSet = sublime.PhantomSet(panel_view)
 			panel_view.erase(edit,sublime.Region(0,panel_view.size()))
+			output_panel_phantom_list = []
+			if int(sublime.version()) >= 4000:
+				output_panel_phantomSet.update(output_panel_phantom_list)
 		if new_line:
 			panel_view.insert(edit,panel_view.size(),"\n")
 		if is_html:

@@ -5,9 +5,10 @@ This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
-[此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
+[此处](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel/main/README-CN.md)中文文档
 
 ![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
+
 # Installation
 
 ## 1. Check dependent Libraries (**very important**)
@@ -55,6 +56,8 @@ open command palette and select `SSH-Panel: Edit Settings` command to edit setti
 * `default_connect_settings` All connect use default parameter values
 * `server_settings` Specify preferences for connections
 * `debug_mode` Debug enable switch
+* `style_css` Custom CSS Style,value is sublime resource,default is *Packages/SSH-Panel/style.css* [see details](#UI#nbsp%20coustom)
+* `new_window` open new window when connect
 ### path:
 * `remote_path` The path on the remote host. You can use the environment variable of the remote host ,like "$HOME" or "%userprofile%"
 * `local_path` Local directory for synchronization,if empty will automatically generated in the user's home directory.can use the local environment variable
@@ -129,6 +132,30 @@ you can edit and view server information on the pop-up directory panel
 * `[E]` :edit settings
 * `[?]` :help
 you can click the `[...]` button on the right side of the directory or file to view attribute, delete or create a new one
+
+# UI coustom
+
+you can set *style_css* option to control display in HTML style of output_panel and navigation_view
+
+Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and set *"style_css":"Packages\User\SSH-Panel\style.css"*
+
+## css class
+```css
+<!-- the following class will be load -->
+<!-- The available syntax rules follow https://www.sublimetext.com/docs/minihtml.html -->
+.keyword{}
+.keyword_error{}
+.symbol{}
+.title_bar{}
+.res_dir{}
+.res{}
+.res_focus{}
+.operation_menu{}
+.warning{}
+.error{}
+.info{}
+.debug{}
+```
 
 # Feedback
 welcome report issues and commit code.
