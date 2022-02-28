@@ -5,6 +5,7 @@ SSH-Panel
 支持可使用openssh的Windows、Linux服务器
 
 ![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
+
 # Install
 
 ## 1. 检查依赖库 (**非常重要**)
@@ -12,7 +13,7 @@ SSH-Panel
 * python3.dll
 > 你可以从[这个仓库](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载并复制到sublime text的**安装目录**下
 
-### 在Linux上你需要:
+### 在Windows上你需要:
 * 安装 **libffi**
 ```bash
 # if Debian / Ubuntu
@@ -52,6 +53,8 @@ sudo yum install libffi-devel
 * `default_connect_settings` 所有连接使用的默认参数
 * `server_settings` 配置连接的首选项
 * `debug_mode` 是否启用Debug模式
+* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#UI%20coustom)
+* `new_window` 当连接时打开一个新的窗口
 ### 路径:
 * `remote_path` 远程主机上的路径，你可以使用远程主机上的环境变量，例如"$HOME"、"%userprofile%"
 * `local_path` 用于同步的本地目录路径，如果为空将会在当前用户家目录下自动生成，可以使用本地环境变量
@@ -125,10 +128,33 @@ sudo yum install libffi-devel
 * `[R]` :刷新与同步文件列表
 * `[E]` :编辑设置
 * `[?]` :帮助
-
 你可以点击文件或目录右侧的`[...]`按钮查看其属性或在下方创建新的对象
 
+# UI coustom
+
+你可以通过自定义*style_css*项控制显示在output_panel和navication_view中的html样式
+
+在sublime package路径下创建文件*"Packages\User\SSH-Panel\style.css"*，并设置*"style_css":"Packages\User\SSH-Panel\style.css"*
+
+## css 类
+```css
+<!-- the following class will be load -->
+<!-- The available syntax rules follow https://www.sublimetext.com/docs/minihtml.html -->
+.keyword{}
+.keyword_error{}
+.symbol{}
+.title_bar{}
+.res_dir{}
+.res{}
+.res_focus{}
+.operation_menu{}
+.warning{}
+.error{}
+.info{}
+.debug{}
+```
+
 # Feedback
-欢迎反馈或提供代码
+欢迎提供建议或提供代码
 
 如果你喜欢这个项目可以给我点个star :)

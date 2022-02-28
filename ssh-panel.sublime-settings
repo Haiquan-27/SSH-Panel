@@ -18,9 +18,7 @@
 			// ...
 		},
 		// use username and [private key] connect
-		// 	if your useing sublime version < 4000
-		// 	the private key your use must in PEM format (use [ssh-keygen -m PEM] when generate)
-		// 	or convert private key to PEM format, For example, useing the [puttygen] tool
+		// 	if your useing sublime version < 4000 must in PEM format (use [ssh-keygen -m PEM] when generate)
 		"MyServer1":{
 			"username":"",
 			"hostname":"",
@@ -42,5 +40,7 @@
 		},
 		// ...
 	},
+	"style_css":"Packages/SSH-Panel/style.css",
+	"new_window":true, // open new window when connect
 	"debug_mode":false
 }

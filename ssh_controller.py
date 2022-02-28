@@ -1,9 +1,9 @@
 import sublime
 import sublime_plugin
 import paramiko
-# import importlib
-# import util
-# importlib.reload(util)
+# import importlib # debug
+# import util # debug
+# importlib.reload(util) # debug
 from util import *
 import os
 import stat
@@ -330,7 +330,10 @@ class ClientObj():
 						on_done,None,None
 					)
 			else:
-				transport_parameter["pkey"] = eval("paramiko.%s"%pkey_kex).from_private_key_file(pkey_file)
+				try:
+					transport_parameter["pkey"] = eval("paramiko.%s"%pkey_kex).from_private_key_file(pkey_file)
+				except Exception as e:
+					LOG.E("Unavailable Key",e.args)
 				try_connect()
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
 			transport_parameter = {
@@ -350,7 +353,8 @@ class ClientObj():
 
 	def get_new_channel(self):
 		chan = self.transport.open_session(timeout=self.user_settings_config["network_timeout"]) # 设置打开session的timeout
-		chan.settimeout = self.user_settings_config["network_timeout"] # 交互timeout
+		# chan.settimeout(self.user_settings_config["network_timeout"]) # 交互timeout
+		chan.settimeout(0.5) # 交互timeout
 		return chan
 
 	def exec_command(self,command):
@@ -362,17 +366,13 @@ class ClientObj():
 			stdin = None
 		stdout = chan.makefile("r", -1)
 		stderr = chan.makefile_stderr("r", -1)
-		return {
-			"stdin" :stdin,
-			"stdout":stdout,
-			"stderr":stderr
-		}
+		return (stdin,stdout,stderr)
 
 	def get_env(self):
 		cmd = "env"
 		if self.remote_platform == "windows":
 			cmd = "set"
-		cmd_res = self.exec_command(cmd).get("stdout").read().decode("utf8")
+		cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
 		cmd_res = cmd_res.replace("\r\n","\n")
 		env = {}
 		for l in cmd_res.split("\n"):
@@ -384,7 +384,7 @@ class ClientObj():
 
 	def get_platform(self):
 		test_cmd = "echo ~"
-		cmd_res = self.exec_command(test_cmd).get("stdout").read().decode("utf8")
+		cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
 		if cmd_res[0] == "/":
 			remote_platform = "like-linux"
 		elif cmd_res[0] == "~":
@@ -417,7 +417,7 @@ class ClientObj():
 		local_path_base = self.user_settings_config["local_path"]
 		if local_path_base[-1] == os.sep:
 			local_path_base[-1] = local_path_base[:-1]
-		if remote_path.find(remote_path_base) == 0:
+		if remote_path.startswith(remote_path_base):
 			remote_path = remote_path.replace(remote_path_base,"")
 		else:
 			return
@@ -430,7 +430,7 @@ class ClientObj():
 		local_path_base = self.user_settings_config["local_path"]
 		if remote_path_base[-1] == self.remote_os_sep:
 			remote_path_base = remote_path_base[:-1]
-		if local_path.find(local_path_base) == 0:
+		if local_path.startswith(local_path_base):
 			local_path = local_path.replace(local_path_base,"")
 		else:
 			return

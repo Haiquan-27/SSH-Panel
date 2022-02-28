@@ -4,12 +4,13 @@ import os
 import json
 import re
 import time
-# import importlib
-# import ssh_controller
-# importlib.reload(ssh_controller)
+
+# import importlib # debug
+# import ssh_controller # debug
+# importlib.reload(ssh_controller) # debug
 from ssh_controller import *
-# import util
-# importlib.reload(util)
+# import util # debug
+# importlib.reload(util) # debug
 from util import *
 
 
@@ -64,16 +65,11 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 			error_parameter_list = UserSettings.check_config_error(user_config,auth_method)
 			self.select = (server_name,user_config,error_parameter_list)
 			for p_name,p_value in user_config.items():
-				if int(sublime.version()) >= 4000:
-					html_ele += html_ele_tmp.format(
-						style='error' if p_name in error_parameter_list else
-									'keyword' if p_value != default_settings.get(p_name,None) else
-									'info',
-						line = "%s : %s"%(p_name,p_value))
-				else:
-					html_ele += html_ele_tmp.format(
-						style='info',
-						line = "%s : %s"%(p_name,p_value))
+				html_ele += html_ele_tmp.format(
+					style='error' if p_name in error_parameter_list else
+								'keyword' if p_value != default_settings.get(p_name,None) else
+								'info',
+					line = "%s : %s"%(p_name,p_value))
 			self.window.run_command(
 				cmd="ssh_panel_output",
 				args={
@@ -123,17 +119,6 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 				on_highlight = on_highlight,)
 
 
-class SshPanelShellInteractiveCommand(sublime_plugin.WindowCommand):
-	def __init__(self,window):
-		super().__init__(window)
-		self.client = None
-		self.history = ""
-
-	def run(self,client_id):
-		self.client = client_mapping.get(client_id)
-		self.client.exec_command("/bin/sh")
-		# self.client.exec_command(r"C:\Windows\System32\cmd.exe")
-
 class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 	def __init__(self,window):
 		super().__init__(window)
@@ -158,10 +143,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 		self.resource_data = {}
 		self._max_resource_id = -1
 		self.focus_resource = None
-		sublime.active_window().run_command("new_window")
-		new_window = sublime.windows()[-1]
-		new_window.set_sidebar_visible(False)
-		self.window = new_window
+		if sublime.load_settings("ssh-panel.sublime-settings").get("new_window",True):
+			sublime.active_window().run_command("new_window")
+			window = sublime.windows()[-1]
+			window.set_sidebar_visible(False)
+			self.window = window
 		split_layout = {
 			'cells': [
 					[0, 0, 1, 1],
@@ -170,10 +156,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			'cols': [0.0, 0.2, 1.0],
 			'rows': [0.0, 1.0]
 		}
-		new_window.set_layout(split_layout)
-		navication_view = new_window.new_file()
-		new_window.set_view_index(navication_view,0,0)
-		new_window.focus_group(1)
+		window.set_layout(split_layout)
+		navication_view = window.new_file()
+		window.set_view_index(navication_view,0,0)
+		window.focus_group(1)
 		user_settings = UserSettings()
 		if from_settings:
 			user_settings.init_from_settings_file(server_name)
@@ -201,28 +187,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 		nv.settings().set("gutter",False)
 		nv.settings().set("margin",0)
 		nv.settings().set("line_numbers",False)
-		src_style = nv.style()
-		new_style_global = {}
-		src_background_color = ""
-		theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-		theme_dark_color -= 0x101010
-		theme_dark_color &= 0xffffff
-		theme_dark_color = hex(theme_dark_color).replace("0x","#")
-		new_style_global["background"] = theme_dark_color
-		new_style_global["foreground"] = src_style["foreground"]
-		# new_style_global["green"] = "#bae67e"
-		# new_style_global["greenish"] = "#bae67e"
-
-		theme_resource = self.save_theme({
-			"globals":new_style_global,
-			"variables":{
-			},
-			"name":"SSH-Panel"
-			})
-
-		nv.settings().set("color_scheme",theme_resource)
-		nv.set_name(self.user_settings.server_name+" (disconnect)")
-
 
 		self.PhantomSet = sublime.PhantomSet(nv,"navication_view")
 		self.navication_view = nv
@@ -248,6 +212,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			self.new_main_resource(path=self.client.user_settings_config["remote_path"],focus=True)
 			self.update_view_port()
 			LOG.D("OS ENV",self.client.env)
+			if self.client.get_platform() == "windows":
+				self.interattach = self.client.exec_command(r"C:\Windows\System32\cmd.exe")
+				LOG.D("Shell","cmd.exe")
+			else:
+				self.interattach = self.client.exec_command("/bin/sh")
+				LOG.D("Shell","bash")
 
 	def reload_list(self):
 		self._max_resource_id = -1
@@ -289,21 +259,17 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 		return str(self._max_resource_id)
 
 	def save_theme(self,data_dict):
-		theme_path_dir = os.path.join(
+		theme_path = os.path.join(
 				sublime.packages_path(),
 				"User",
-				"SSH-Panel"
-			)
-		theme_path = os.path.join(
-				theme_path_dir,
+				"SSH-Panel",
 				"SSH-Panel.hidden-color-scheme"
 			)
-		if not os.path.exists(theme_path_dir):
-			os.mkdir(theme_path_dir)
+		os.makedirs(os.path.split(theme_path)[0],exist_ok=True)
 		with open(theme_path,"w") as f:
 			f.write(
 				json.dumps(data_dict,indent=5,ensure_ascii=False)
-				)
+			)
 		return sublime.find_resources("SSH-Panel.hidden-color-scheme")[0]
 
 	@async_run
@@ -376,6 +342,31 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 					self.update_view_port()
 			self.window.show_input_panel(
 				"add path:",
+				"",
+				on_done,
+				None,
+				None)
+		def run_command(_):
+			@async_run
+			def on_done(cmd):
+				try:
+					res = self.client.exec_command(cmd)
+					html_ele = "<p><span class='symbol'>$</span>%s</p>"%html_str(cmd)+\
+								"<p>%s</p>"%html_str(res[1].read().decode("utf8"))+\
+								"<p class='error'>%s</p>"%html_str(res[2].read().decode("utf8"))
+					self.window.run_command(
+						cmd="ssh_panel_output",
+						args={
+								"content": html_tmp(content=html_ele),
+								"is_html": True,
+								"new_line": True,
+								"clean": False
+							}
+						)
+				except Exception as e:
+					LOG.E("interattach failed",e.args)
+			self.window.show_input_panel(
+				"cmd:",
 				"",
 				on_done,
 				None,
@@ -459,16 +450,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			resource_path = self.path_by_resource(resource)
 			resource_stat = self.client.sftp_client.lstat(resource_path)
 			html_ele = """
-					<p><span class='{style}'>path:</span>{path}<p>
-					<p><span class='{style}'>is directory:</span>{is_dir}<p>
-					<p><span class='{style}'>uid:</span>{uid}<p>
-					<p><span class='{style}'>gid:</span>{gid}<p>
-					<p><span class='{style}'>mode:</span>{mode}<p>
-					<p><span class='{style}'>size:</span>{size}<p>
-					<p><span class='{style}'>access time:</span>{atime}<p>
-					<p><span class='{style}'>modify time:</span>{mtime}<p>
+					<p><span class='keyword'>path:</span>{path}<p>
+					<p><span class='keyword'>is directory:</span>{is_dir}<p>
+					<p><span class='keyword'>uid:</span>{uid}<p>
+					<p><span class='keyword'>gid:</span>{gid}<p>
+					<p><span class='keyword'>mode:</span>{mode}<p>
+					<p><span class='keyword'>size:</span>{size}<p>
+					<p><span class='keyword'>access time:</span>{atime}<p>
+					<p><span class='keyword'>modify time:</span>{mtime}<p>
 				""".format(
-					style = "keyword" if int(sublime.version()) >= 4000 else "info",
 					path = resource_path,
 					is_dir = resource["is_dir"],
 					uid = resource_stat.st_uid,
@@ -524,9 +514,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 						else:
 							self.add_path(resource_path,root_path=self.path_by_resource(resource))
 					else: # 删除非展开目录下的资源
-						l = len(resource_path)
 						for id,path_where in [(id,self.resource_data[id]["where"]) for id in self.resource_data.keys()]:
-							if path_where[:l+1] == resource_path:
+							if path_where.startswith(resource_path):
 								del self.resource_data[id]
 			else:
 				self.open_resource_file(resource)
@@ -607,6 +596,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 				<a href="show:info">[i]</a>
 				<a href="reload:list">[R]</a>
 				<a href="edit_settings:' '">[E]</a>
+				<a href="run_command:' '">[T]</a>
 				<a href="show:help">[?]</a>
 			</p>
 		</p>
@@ -622,10 +612,27 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			html_tmp(content=html_ele),
 			sublime.LAYOUT_INLINE,
 			on_navigate=self.navcation_href_click)
-		# self.phantom_items.append(phantom)
-		self.navication_view.set_name("%s|%s"%(
+		nv = self.navication_view
+		nv.set_name("%s|%s"%(
 			self.user_settings.server_name,
 			self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"]))
+		if nv.settings().get("color_scheme").find("SSH-Panel.hidden-color-scheme") == -1:
+			src_style = nv.style()
+			new_style_global = {}
+			src_background_color = ""
+			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
+			theme_dark_color -= 0x101010
+			theme_dark_color &= 0xffffff
+			theme_dark_color = hex(theme_dark_color).replace("0x","#")
+			new_style_global["background"] = theme_dark_color
+			new_style_global["foreground"] = src_style["foreground"]
+			theme_resource = self.save_theme({
+				"globals":new_style_global,
+				"variables":{
+				},
+				"name":"SSH-Panel"
+				})
+			nv.settings().set("color_scheme",theme_resource)
 		self.phantom_items = [phantom]
 		self.update_phantom()
 
@@ -681,7 +688,7 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 	def on_post_save_async(self):
 		file_name = self.view.file_name()
 		for client_id,client in client_mapping.items():
-			if file_name.find(client.user_settings_config["local_path"]) == 0:
+			if file_name.startswith(client.user_settings_config["local_path"]):
 				client.file_sync(
 					file_name,
 					client.remote_path_mapping(file_name),
