@@ -6,8 +6,12 @@ import hashlib
 import base64
 
 DEBUG = None
-
+settings_name = "ssh-panel.sublime-settings"
 async_Lock = threading.Lock()
+
+def plugin_loaded():
+	global DEBUG
+	DEBUG = sublime.load_settings(settings_name).get("debug_mode")
 
 output_panel_phantomSet = None
 output_panel_phantom_list = []
@@ -23,7 +27,7 @@ def html_tmp(content):
 	</html>
 	""".format(
 		css = sublime.load_resource(
-				sublime.load_settings("ssh-panel.sublime-settings").get("style_css","Packages/SSH-Panel/style.css")
+				sublime.load_settings(settings_name).get("style_css","Packages/SSH-Panel/style.css")
 			),
 		content = content
 	)
@@ -82,6 +86,7 @@ class SSHPanelLog():
 						"clean": False
 					}
 				)
+		print(msg_tuple[0])
 		sublime.status_message(msg_title)
 
 	def E(self,msg_title,msg_content=None):
@@ -95,6 +100,7 @@ class SSHPanelLog():
 						"clean": True
 					}
 				)
+		print(msg_tuple[0])
 		sublime.status_message(msg_title)
 		raise SSHPanelSettingsException("%s\n%s"%(msg_title,msg_tuple[0]))
 
@@ -109,9 +115,11 @@ class SSHPanelLog():
 						"clean": False
 					}
 				)
+		print(msg_tuple[0])
 		sublime.status_message(msg_title)
 
 	def D(self,msg_title,msg_content=None):
+		global DEBUG
 		if DEBUG:
 			msg_tuple = self._msg_format("debug",msg_title,msg_content)
 			sublime.active_window().run_command(
@@ -123,7 +131,8 @@ class SSHPanelLog():
 							"clean": False
 						}
 					)
-		sublime.status_message(msg_title)
+			print(msg_tuple[0])
+			sublime.status_message(msg_title)
 
 class SshPanelOutputCommand(sublime_plugin.TextCommand):
 	def __init__(self,view):

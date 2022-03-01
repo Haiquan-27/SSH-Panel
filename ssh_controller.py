@@ -1,9 +1,9 @@
 import sublime
 import sublime_plugin
 import paramiko
-# import importlib # debug
-# import util # debug
-# importlib.reload(util) # debug
+import importlib # debug
+import util # debug
+importlib.reload(util) # debug
 from util import *
 import os
 import stat
@@ -12,16 +12,9 @@ import re
 import sys
 
 
-settings_name = "ssh-panel.sublime-settings"
-
 AUTH_METHOD_PASSWORD = 0	# 0: username and password	
 AUTH_METHOD_PRIVATEKEY = 1	# 1: username and private_key	
 AUTH_METHOD_GSSAPI = 2		# 2: username and gssapi	
-
-def plugin_loaded():
-	st_settings = sublime.load_settings(settings_name)
-	global DEBUG
-	DEBUG = st_settings.get("debug_mode")
 
 LOG = SSHPanelLog()
 
