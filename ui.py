@@ -5,12 +5,12 @@ import json
 import re
 import time
 
-# import importlib # debug
-# import ssh_controller # debug
-# importlib.reload(ssh_controller) # debug
+import importlib # debug
+import ssh_controller # debug
+importlib.reload(ssh_controller) # debug
 from ssh_controller import *
-# import util # debug
-# importlib.reload(util) # debug
+import util # debug
+importlib.reload(util) # debug
 from util import *
 
 
@@ -143,7 +143,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 		self.resource_data = {}
 		self._max_resource_id = -1
 		self.focus_resource = None
-		if sublime.load_settings("ssh-panel.sublime-settings").get("new_window",True):
+		if sublime.load_settings(settings_name).get("new_window",True):
 			sublime.active_window().run_command("new_window")
 			window = sublime.windows()[-1]
 			window.set_sidebar_visible(False)
@@ -635,6 +635,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.WindowCommand):
 			nv.settings().set("color_scheme",theme_resource)
 		self.phantom_items = [phantom]
 		self.update_phantom()
+		LOG.D("resource_data",self.resource_data)
 
 	def update_phantom(self):
 		self.PhantomSet.update(self.phantom_items)
