@@ -30,7 +30,7 @@ sudo yum install libffi-devel
 * six
 > 你可以从[这个仓库](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载并复制到sublime text 的**Lib\python38**路径下
 
-## 2. 安装插件
+## 2. 安装此包
 ### 你可以使用*Package Control*安装或*手动安装*
 * 使用 Package Control
 > 打开 `Package Control: install` 菜单并键入 **"SSH-Panel"** 即可安装
@@ -53,33 +53,43 @@ sudo yum install libffi-devel
 * `default_connect_settings` 所有连接使用的默认参数
 * `server_settings` 配置连接的首选项
 * `debug_mode` 是否启用Debug模式
-* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#UI%20coustom)
+* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#style-coustom)
 * `new_window` 当连接时打开一个新的窗口
+* `quiet_log` 当有消息时不会立即弹出消息面板
+* `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
+* `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff) 字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色
+> 如果想使用原视图的背景色则可设置为 "0"
 ### 路径:
-* `remote_path` 远程主机上的路径，你可以使用远程主机上的环境变量，例如"$HOME"、"%userprofile%"
+* `remote_path` 远程主机上的路径，你可以使用远程主机上的环境变量，例如"$HOME"、"%userprofile%"，值是一个路径或路径列表
+> 每个远程根路径将会被分别映射到`local_path`的子目录下，子目录名称是由路径名生成的摘要字符串
 * `local_path` 用于同步的本地目录路径，如果为空将会在当前用户家目录下自动生成，可以使用本地环境变量
+> "{auto_generate}"会被替换为由配置与时间戳生成的uuid字符串,用于生成唯一的uuid路径
+> 在第一次连接后此路径将会写入到用户配置中，用于下次连接使用
 ### 连接和认证:
 * `network_timeout` 用于认证和连接到远程主机的超时秒数
-* `port` 服务器上的SSH服务端口
-* `known_hosts_file` 本地know_hosts文件路径，如果填写将会使用其检查已知主机且如果连接了未知主机将会发出警告要求确认主机指纹(使用sha256)
+* `port` 服务器上的SSH服务端口，默认22
+* `known_hosts_file` 本地know_hosts文件路径，如果设置此项则
+> 连接时使用known_hosts_file中记录的主机密钥算法
+> 如主机未在know_hosts_file中记录，则会提示是否添加主机公钥
+> 当在连接成功后得到的主机公钥与known_host_file中记录的公钥不匹配时将会警告并强制关闭当前连接
 * `username` 远程主机上的用户名
 * `hostname` 远程主机IP或域名
+* `always_fingerprint_confirm` 每次连接要求确认主机指纹，如果设置了`known_hosts_file`则直接通过known_hosts_file验证主机指纹
 #### 如果服务器使用账户密码进行认证，应使用如下选项:
 * `password` 密码明文
 * `save_password` 是否在配置文件中保存密码明文，如果设为false密码将在连接操作后被删除，值为bool
 #### 如果服务器使用公私密钥对进行认证，应使用如下选项:
 * `private_key` 用于设置加密算法和私钥文件路径，此项只在服务器要求使用公私密钥对进行认证时有效
-```
- 密钥算法支持"RSAKey"、"DSSKey"、"ECDSAKey"、"Ed25519Key"
- 此项的值是一个2元素的列表，格式为[{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
- !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
-```
+> 密钥算法支持"RSAKey"、"DSSKey"、"ECDSAKey"、"Ed25519Key"
+> 此项的值是一个2元素的列表，格式为[{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
+> !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
 * `"need_passphrase"` 告知插件此密钥生成时是否使用了passphrase，值为bool
 #### 如果服务器使用GSSAPI进行认证，应使用如下选项:
 * `gss_host` 远程主机IP或域名，如果使用此项`hostname`将不被使用
 * `gss_auth` 启用gss认证，值为bool
 * `gss_kex` 使用gss kex，值为bool
 * `gss_deleg_creds` gss deleg creds
+* `gss_trust_dns` gss trust dns
 
 ## 例子
 ```js
@@ -90,6 +100,11 @@ sudo yum install libffi-devel
 			"hostname":"", // ip或域名
 			"password":"", // 如果为空将会在连接时提示输入
 			"save_password":false, // (可选) 默认为true
+			// 路径
+			"remote_path":"/", // 指定绝对路径
+			// "remote_path":"%HOME/", // 带变量的路径
+			// "remote_path":["/var","/etc"], // 使用列表
+			"local_path":"~/SFTP-Local/{auto_generate}" // 自动生成
 			// ...
 		},
 		// 使用用户名和私钥进行连接
@@ -109,7 +124,8 @@ sudo yum install libffi-devel
 			"gss_host":"",
 			"gss_auth":true,
 			"gss_kex":true,
-			"gss_deleg_creds":true
+			"gss_deleg_creds":true,
+			"gss_trust_dns":true
 			// ...
 		},
 		// ...
@@ -124,13 +140,16 @@ sudo yum install libffi-devel
 你可以在弹出的目录面板上查看和编辑服务器信息
 
 ## 快速命令按钮:
+* `[?]` :帮助
 * `[I]` :显示服务器信息
 * `[R]` :刷新与同步文件列表
 * `[E]` :编辑设置
-* `[?]` :帮助
+* `[T]` :伪终端
+* `[+]` :添加路径
+* `[-]` :从目录视图中删除路径
 你可以点击文件或目录右侧的`[...]`按钮查看其属性或在下方创建新的对象
 
-# UI coustom
+# Style coustom
 
 你可以通过自定义*style_css*项控制显示在output_panel和navication_view中的html样式
 
@@ -152,6 +171,7 @@ sudo yum install libffi-devel
 .error{}
 .info{}
 .debug{}
+.no_accessible{}
 ```
 
 # Feedback
