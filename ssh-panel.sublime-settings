@@ -1,12 +1,12 @@
 {
 	// Special settings can be defined in children of server_list
 	"default_connect_settings":{
-		"remote_path":"$HOME/",
-		// "local_path":"$HOME/SFTP-Local/{auto_generate}",
-		// "local_path":"%userprofile%\\SFTP-Local\\{auto_generate}", # windows
+		"remote_path":["$HOME/"],
+		"local_path":"~/SFTP-Local/{auto_generate}",
 		"network_timeout": 20,
 		"port":22,
 		"known_hosts_file":"",	// if fill in,will getting houst from known_hosts_file
+		"always_fingerprint_confirm": false
 	},
 	"server_settings":{
 		// use password and username connect
@@ -35,12 +35,16 @@
 			"gss_host":"",
 			"gss_auth":true,
 			"gss_kex":true,
-			"gss_deleg_creds":true
+			"gss_deleg_creds":true,
+			"gss_trust_dns":true,
 			// ...
 		},
 		// ...
 	},
 	"style_css":"Packages/SSH-Panel/style.css",
 	"new_window":true, // open new window when connect
+	"reconnect_on_start":true,
+	"nav_bar_color_change": "-0x101010",
+	"quiet_log":false,
 	"debug_mode":false
 }

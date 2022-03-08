@@ -1,9 +1,9 @@
 import sublime
 import sublime_plugin
 import paramiko
-import importlib # debug
-import util # debug
-importlib.reload(util) # debug
+# import importlib # debug
+# import util # debug
+# importlib.reload(util) # debug
 from util import *
 import os
 import stat
@@ -50,13 +50,10 @@ class UserSettings():
 
 	@classmethod
 	def format_parameter(cls,default_parameter,user_parameter):
-		default_parameter["remote_path"] = default_parameter.get("remote_path","$HOME/")
-		default_parameter["local_path"] = default_parameter.get("local_path",os.sep.join([os.path.expanduser('~'),"SFTP-Local","{auto_generate}"]))
-		default_parameter["network_timeout"] = default_parameter.get("network_timeout",20)
-		default_parameter["port"] = default_parameter.get("port",22)
-		default_parameter["known_hosts_file"] = default_parameter.get("known_hosts_file","")
 		auth_parameter = {}
 		connect_parameter = {}
+		if isinstance(user_parameter["remote_path"],str):
+			user_parameter["remote_path"] = [user_parameter["remote_path"]]
 		if (user_parameter.get("username",None) and
 			user_parameter.get("password",None) and
 			user_parameter.get("hostname",None)
@@ -121,9 +118,9 @@ class UserSettings():
 					"incorrect parameter type",
 					"please to edit_settings check your settings</a>",
 				])
-		if not isinstance(config["remote_path"],str):error_list.append("remote_path")
+		if not isinstance(config["remote_path"],list) or isinstance(config["remote_path"],str):error_list.append("remote_path")
 		if not isinstance(config["local_path"],str):error_list.append("local_path")
-		# 	error_list.append("local_path")
+		if not isinstance(config["always_fingerprint_confirm"],bool):error_list.append("always_fingerprint_confirm")
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
 		if not (isinstance(config["port"],int)):error_list.append("port")
 		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
@@ -165,7 +162,6 @@ class UserSettings():
 					"connect_parameter": self.connect_parameter,
 					"auth_method": self.auth_method
 				})
-
 	@property
 	def config(self):
 		return UserSettings.to_config(self.auth_parameter,self.connect_parameter)
@@ -194,15 +190,16 @@ class UserSettings():
 
 class ClientObj():
 	def __init__(
-				self,
-				user_settings, # UserSettings
-				):
+		self,
+		user_settings, # UserSettings
+		):
 		self._user_settings = user_settings
 		self.user_settings_config = user_settings.config
 		self.user_settings = self._user_settings
 		self.transport = None
 		self.sftp_client = None
 		self.remote_platform = "unknown"
+		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
 	@property
 	def user_settings(self):
@@ -237,108 +234,191 @@ class ClientObj():
 	def connect(self):
 		user_settings = self.user_settings
 		user_settings_config = user_settings.config
-		transport_parameter = {}
-		hostname,port = (None,user_settings_config["port"])
-		def try_connect():
-			start_time = time.time()
-			try:
-				transport = paramiko.Transport(sock=(hostname,port))
-			except paramiko.ssh_exception.SSHException as e:
-				LOG.E("Connect failed",{
-					"Error":e.args,
-					"timeuse":time.time() -  start_time
+		port = user_settings_config["port"]
+		# self.transport
+		# self.sftp_client
+		# self.remote_platform
+		# self.env
+		# self.user_settings_config
+		# self.user_settings.save_config()
+		hostname = None
+		if user_settings.auth_method == AUTH_METHOD_GSSAPI:
+			hostname = user_settings_config["gss_host"]
+			self.transport.set_gss_host(
+					gss_host =  user_settings_config["gss_host"],
+					trust_dns = user_settings_config["gss_trust_dns"],
+					gssapi_requested = user_settings_config["gss_auth"] or user_settings_config["gss_kex"]
+				)
+		else:
+			hostname = user_settings_config["hostname"]
+		try:
+			self.transport = paramiko.Transport(sock=(hostname,port))
+		except Exception as e:
+			LOG.E("Connect Failed",str(e.args))
+		hostkeys = paramiko.HostKeys()
+		need_fingerprint_confirm = user_settings_config.get("always_fingerprint_confirm",False)
+		known_hosts_file = user_settings_config["known_hosts_file"]
+		if known_hosts_file != "": # 如果设置known_hosts_file使用其中的认证加密方式
+			hostkeys.load(known_hosts_file)
+			trust_kexs = hostkeys.lookup(hostname)
+			if trust_kexs:
+				kexs_tuple = tuple(trust_kexs.keys())
+				LOG.D("set trust_kex from known_hosts_file:",str(kexs_tuple))
+				self.transport.get_security_options().key_types = kexs_tuple
+			else:
+				need_fingerprint_confirm = True # 当完成连接并获取到指纹后需要对指纹进行确认
+		event = threading.Event() # 监听协商结束
+		self.transport.start_client(event=event,timeout=user_settings_config["network_timeout"])
+
+		start_time = time.time()
+		while True: # 等待start_client返回
+			event.wait(0.1)
+			if event.is_set():
+				if not self.transport.is_active(): # 协商失败
+					time_use = time.time() - start_time
+					LOG.E("Negotiation Failed",{
+						"error": self.transport.get_exception().args,
+						"timeout": time_use > user_settings_config["network_timeout"]
 					})
+				else: # 协商成功
+					LOG.I("Negotiation Successful")
+				break
 
-			known_hosts_file = user_settings_config["known_hosts_file"]
-			try:
-				transport.connect(**transport_parameter)
-			except paramiko.ssh_exception.AuthenticationException as e:
-				LOG.E("Authentication failed.:%s"%(e.args),self.user_settings_config)
-			server_key = transport.get_remote_server_key()
+		server_pkey = self.transport.get_remote_server_key() # 服务器公钥
+		server_fingerprint = "%s:%s"%pkey_fingerprint(server_pkey)   # 服务器公钥指纹
 
-			kh_kex = None # 远程主机公钥加密算法
-			kh_key = None # 远程主机公钥
-			if known_hosts_file != "": # 使用known_hosts中的认证方式和远程主机公钥
-				try :
-					kh_data = paramiko.HostKeys(known_hosts_file).lookup(hostname)
-				except IOError:
-					LOG.E("%s file open error or not exists, please to check"%known_hosts_file)
-				if kh_data:
-					kh_kex = kh_data.keys()[0]
-					kh_key = kh_data[kh_kex]
-					transport_parameter["hostkey"] = kh_key
+		if need_fingerprint_confirm: # 确认添加服务器公钥指纹
+			LOG.W("host no such in known_hosts,please confirm whether you trust this host",
+					{
+						"hostname":hostname,
+						"key_name":server_pkey.get_name(),
+						"fingerprint":server_fingerprint
+					}
+				)
+			if sublime.yes_no_cancel_dialog(
+			"Are you sure you want to continue connecting (yes/no)?",
+			"yes",
+			"no") == sublime.DIALOG_YES:
+				hostkeys.add(hostname,server_pkey.get_name(),server_pkey)
+				if known_hosts_file != "" and sublime.yes_no_cancel_dialog(
+				"save host public key to %s ?"%known_hosts_file) == sublime.DIALOG_YES:
+					hostkeys.save(known_hosts_file)
+					LOG.I("save %s to %s"%(hostname,known_hosts_file))
+			else:
+				LOG.I("user clean")
+				self.transport.close()
+				return
+
+		def auth_done():
+			LOG.I("Client loaded over",{
+				"time use": time.time() - start_time,
+				"remote OS": self.remote_platform,
+				"user": user_settings_config["username"],
+				"fingerprint": server_fingerprint
+			})
+			LOG.D("OS ENV",self.env)
+			if self.get_platform() == "windows":
+				# self.interattach = self.client.exec_command(r"C:\Windows\System32\cmd.exe")
+				LOG.D("Shell","cmd.exe")
+			else:
+				# self.interattach = self.client.exec_command("/bin/sh")
+				LOG.D("Shell","bash")
+			# 检查hostkey
+			if need_fingerprint_confirm:
+				hostkey = hostkeys.lookup(hostname)[server_pkey.get_name()]
+				if hostkey.asbytes() == server_pkey.asbytes():
+					LOG.D("HostKey check OK")
 				else:
-					LOG.W("host no such in known_hosts,please confirm whether you trust this host",
-							{
-								"hostname":hostname,
-								"key_name":server_key.get_name(),
-								"fingerprint": abstract("sha256",server_key.asbytes()) + " (%s,%s)"%("sha256","base64")
-								# ssh-keyscan -t [kh_kex] [host_name] | awk '{print $3}' |base64 -d|openssl [abstract_algorithm_name] -binary |base64
-							}
-						)
-					if sublime.yes_no_cancel_dialog(
-						"Are you sure you want to continue connecting (yes/no)?"
-						,"yes","no"):
-						pass
-					else:
-						LOG.I("user clean")
-						return
-			LOG.I("Authentication Successful")
-			self.transport = transport
-			channel = self.get_new_channel()
-			channel.invoke_subsystem('sftp')
-			self.sftp_client =  paramiko.SFTPClient(sock=channel)
-			test_platform = self.get_platform()
-			self.remote_platform = test_platform if test_platform else "unknown"
-			self.env = self.get_env()
-			self.user_settings_config["remote_path"] = self.remote_expandvars(self.user_settings_config["remote_path"])
-			LOG.I("Connect Successful","time use:%s"%(time.time() - start_time))
-			self.user_settings.save_config()
-			LOG.D("Configure has saved",self.user_settings_config)
+					LOG.E("REMOTE HOST IDENTIFICATION HAS CHANGED!",{
+						"host fingerprint": server_fingerprint,
+					})
+					self.transport.close()
+					return
+
+		# 身份认证
 		if user_settings.auth_method == AUTH_METHOD_PASSWORD:
-			transport_parameter = {
-				"username": user_settings_config["username"],
-				"password": user_settings_config["password"]
-			}
-			hostname = user_settings_config["hostname"]
-			try_connect()
-		elif user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
-			pkey = None
-			pkey_kex = user_settings_config["private_key"][0]
-			pkey_file = os.path.expanduser(os.path.expandvars(user_settings_config["private_key"][1]))
-			# paramiko.[RSAKey/DSSKey/ECDSAKey/Ed25519Key].from_private_key_file()
-			passphrase = user_settings_config["private_key"]
-			hostname = user_settings_config["hostname"]
-			transport_parameter = {
-				"username": user_settings_config["username"],
-				"pkey": pkey
-			}
-			if user_settings_config["need_passphrase"]:
-				def on_done(input):
-					transport_parameter["pkey"] = eval("paramiko.%s"%pkey_kex).from_private_key_file(pkey_file,password=input)
-					try_connect()
+			def auth_password(password):
+				try:
+					self.transport.auth_password(
+						username = user_settings_config["username"],
+						password = password
+					)
+					LOG.I("Password Authentication Successful")
+				except Exception as e:
+					LOG.E("Password Authentication Failed",str(e.args))
+				self.load_client(auth_done)
+			if not user_settings_config["save_password"]:
 				sublime.active_window().show_input_panel(
-						"passshrase:",
+						"password:",
 						"",
-						on_done,None,None
+						auth_password,
+						None,
+						lambda: LOG.I("Connect Clean")
 					)
 			else:
+				auth_password(user_settings_config["password"])
+
+		elif user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
+			pkey_kex = user_settings_config["private_key"][0]
+			pkey_file = user_settings_config["private_key"][1]
+			def auth_private_key(pkey):
 				try:
-					transport_parameter["pkey"] = eval("paramiko.%s"%pkey_kex).from_private_key_file(pkey_file)
+					self.transport.auth_publickey(
+						username = user_settings_config["username"],
+						key = pkey
+					)
+					LOG.I("Key Authentication Successful")
 				except Exception as e:
-					LOG.E("Unavailable Key",e.args)
-				try_connect()
+					LOG.E("Key Authentication Failed",str(e.args))
+			try:
+				pkey = eval("paramiko.%s"%pkey_kex)
+			except Exception as e:
+				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
+			if user_settings_config["need_passphrase"]:
+				sublime.active_window().show_input_panel(
+						"passphrase:",
+						"",
+						lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)),
+						None,
+						lambda: LOG.I("Connect Clean")
+					)
+			else:
+				auth_private_key(pkey.from_private_key_file(pkey_file))
+			self.load_client(auth_done)
+
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
-			transport_parameter = {
-				"username":user_settings_config["username"],
-				"gss_host":user_settings_config["gss_host"],
-				"gss_auth":user_settings_config["gss_auth"],
-				"gss_kex":user_settings_config["gss_kex"],
-				"gss_deleg_creds":user_settings_config["gss_deleg_creds"],
-				"gss_trust_dns":user_settings_config["gss_trust_dns"]
-			}
-			hostname = user_settings_config["gss_host"] # 不确定
-			try_connect()
+			try:
+				if user_settings_config["gss_auth"]:
+					self.transport.auth_gssapi_with_mic(
+							username = user_settings_config["username"],
+							gss_host = user_settings_config["gss_host"],
+							gss_deleg_creds = user_settings_config["gss_deleg_creds"]
+						)
+					LOG.I("GSS Authentication Successful (gssapi-with-mic)")
+				elif user_settings_config["gss_kex"]:
+					self.transport.auth_gssapi_keyex(username=user_settings_config["username"])
+					LOG.I("GSS Authentication Successful (gssapi-with-mic)")
+				else:
+					LOG.E("GSS options error")
+			except Exception as e:
+				LOG.E("GSS Authentication Failed",str(e.args))
+			self.load_client(auth_done)
+
+	def load_client(self,callback=None):
+		channel = self.get_new_channel()
+		channel.invoke_subsystem('sftp')
+		self.sftp_client =  paramiko.SFTPClient(sock=channel)
+		test_platform = self.get_platform()
+		self.remote_platform = test_platform if test_platform else "unknown"
+		self.env = self.get_env()
+		self.user_settings.save_config()
+		self.user_settings_config["remote_path"] = [self.remote_expandvars(rp) for rp in self.user_settings_config["remote_path"]]
+		try:
+			self.userid = self.get_userid()
+		except:
+			self.userid = (0,(0))
+		if callback:
+			callback()
 
 	@property
 	def remote_os_sep(self):
@@ -361,6 +441,21 @@ class ClientObj():
 		stderr = chan.makefile_stderr("r", -1)
 		return (stdin,stdout,stderr)
 
+	def get_userid(self):
+		cmd = "id -u && id -G"
+		cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+		cmd_res = cmd_res.replace("\r\n","\n")
+		uid,gids,_ = cmd_res.split("\n")
+		gids = (gids.split(" "))
+		uid = int(uid)
+		gids = tuple(int(i) for i in gids)
+		LOG.D("userid",{
+			"uid": uid,
+			"gids":gids
+		})
+		return (uid,gids)
+
+
 	def get_env(self):
 		cmd = "env"
 		if self.remote_platform == "windows":
@@ -378,8 +473,9 @@ class ClientObj():
 	def get_platform(self):
 		test_cmd = "echo ~"
 		cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
+		remote_platform = None
 		if cmd_res[0] == "/":
-			remote_platform = "like-linux"
+			remote_platform = "*nix"
 		elif cmd_res[0] == "~":
 			remote_platform = "windows"
 		return remote_platform
@@ -405,34 +501,10 @@ class ClientObj():
 			remote_path = remote_path[:-1]
 		return remote_path
 
-	def local_path_mapping(self,remote_path): # 远程路径转为本地路径
-		remote_path_base = self.user_settings_config["remote_path"]
-		local_path_base = self.user_settings_config["local_path"]
-		if local_path_base[-1] == os.sep:
-			local_path_base[-1] = local_path_base[:-1]
-		if remote_path.startswith(remote_path_base):
-			remote_path = remote_path.replace(remote_path_base,"")
-		else:
-			return
-		local_path = local_path_base + os.sep.join(remote_path.split(self.remote_os_sep))
-		return local_path
-
-	def remote_path_mapping(self,local_path): # 本地路径转为远程路径
-		# 转化路径格式
-		remote_path_base = self.user_settings_config["remote_path"]
-		local_path_base = self.user_settings_config["local_path"]
-		if remote_path_base[-1] == self.remote_os_sep:
-			remote_path_base = remote_path_base[:-1]
-		if local_path.startswith(local_path_base):
-			local_path = local_path.replace(local_path_base,"")
-		else:
-			return
-		remote_path = remote_path_base + self.remote_os_sep.join(local_path.split(os.sep))
-		return remote_path
-
 	def disconnect(self):
 		LOG.I(self.user_settings.server_name+" close")
 		self.sftp_client.close()
+		self.transport.close()
 
 	def get_dir_list(self,remote_path="."):
 		res = []
@@ -449,34 +521,35 @@ class ClientObj():
 		return res
 
 	def file_sync(self,local_path,remote_path,dir,sync_stat=False): # 写入并保持远程文件原始权限
-		try:
-			if dir == "put":
-				with self.sftp_client.open(remote_path,"w") as rf:
-					with open(local_path,"rb") as lf:
-						rf.write(lf.read())
-				if sync_stat:
-					local_stat = os.stat(local_path)
-					local_atime = local_stat.st_atime
-					local_mtime = local_stat.st_mtime
-					self.sftp_client.utime(remote_path,(local_atime,local_mtime))
-					self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
-				LOG.D("remote:%s sync"%remote_path)
-			elif dir == "get":
-				os.makedirs(os.path.split(local_path)[0],exist_ok=True)
-				with open(local_path,"wb") as lf:
-					with self.sftp_client.open(remote_path,"rb") as rf:
-						lf.write(rf.read())
-				if sync_stat:
-					remote_stat = self.sftp_client.stat(remote_path)
-					remote_atime = remote_stat.st_atime
-					remote_mtime = remote_stat.st_mtime
-					os.utime(local_path,(remote_atime,remote_mtime))
-					os.chmod(local_path,stat.S_IMODE(remote_stat.st_mode))
-				LOG.D("local:%s sync"%local_path)
-		except PermissionError as e:
-			LOG.E("file %s writing Failed:%s"%(remote_path,e),{
-					"local_path":local_path,
-					"remote_path":remote_path
-				})
+		# try:
+		if dir == "put":
+			with self.sftp_client.open(remote_path,"w") as rf:
+				with open(local_path,"rb") as lf:
+					rf.write(lf.read())
+			if sync_stat:
+				local_stat = os.stat(local_path)
+				local_atime = local_stat.st_atime
+				local_mtime = local_stat.st_mtime
+				self.sftp_client.utime(remote_path,(local_atime,local_mtime))
+				self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
+			LOG.D("remote:%s sync"%remote_path)
+		elif dir == "get":
+			os.makedirs(os.path.split(local_path)[0],exist_ok=True)
+			with open(local_path,"wb") as lf:
+				with self.sftp_client.open(remote_path,"rb") as rf:
+					lf.write(rf.read())
+			if sync_stat:
+				remote_stat = self.sftp_client.stat(remote_path)
+				remote_atime = remote_stat.st_atime
+				remote_mtime = remote_stat.st_mtime
+				os.utime(local_path,(remote_atime,remote_mtime))
+				os.chmod(local_path,stat.S_IMODE(remote_stat.st_mode))
+			LOG.D("local:%s sync"%local_path)
+		# except Exception as e:
+		# 	LOG.E("file async Failed:",{
+		# 			"local_path":local_path,
+		# 			"remote_path":remote_path,
+		# 			"error": str(e.args)
+		# 		})
 
 

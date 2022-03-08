@@ -34,7 +34,6 @@ a{
 	padding-bottom: 10px;
 }
 
-
 .res_dir{
 	color: var(--foreground);
 	font-weight: bold;
@@ -50,6 +49,10 @@ a{
 	border: 1px solid var(--bluish);
 	color: var(--foreground);
 	border-radius: 2px;
+}
+
+.no_accessible{
+	color: color(var(--foreground) alpha(0.5));
 }
 
 .operation_menu a{
