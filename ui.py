@@ -195,7 +195,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			window = sublime.windows()[-1]
 			window.set_sidebar_visible(False)
 			self.window = window
-		window = self.window
+		window = self.window = self.view.window()
 		user_settings = UserSettings()
 		if reload_from_view:
 			navication_view = self.view
