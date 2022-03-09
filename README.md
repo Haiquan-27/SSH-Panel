@@ -7,7 +7,7 @@ Windows and Linux servers that support any openssh available
 
 [此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
 
-![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/recording-v1.2.1.gif)
 
 # Installation
 

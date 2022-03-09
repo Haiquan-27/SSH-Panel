@@ -4,7 +4,7 @@ SSH-Panel
 
 支持可使用openssh的Windows、Linux服务器
 
-![Screenshot](https://github.com/Haiquan-27/SSH-Panel-doc-annex/blob/main/recording.gif?raw=true)
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/recording-v1.2.1.gif)
 
 # Install
 
