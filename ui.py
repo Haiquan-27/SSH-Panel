@@ -341,13 +341,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
     @async_run
     def navigation_href_click(self, href):
         # available_operation = [
-        # 	"show",
-        # 	"resource_click",
-        # 	"reload",
-        # 	"resource_create_file",
-        # 	"resource_create_dir",
-        # 	"resource_info",
-        # 	"resource_delete",
+        #     "show",
+        #     "resource_click",
+        #     "reload",
+        #     "resource_create_file",
+        #     "resource_create_dir",
+        #     "resource_info",
+        #     "resource_delete",
         # ]
         operation, args = href.split(":")
 
@@ -367,11 +367,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                 elif self.client.user_settings.auth_method == AUTH_METHOD_GSSAPI:
                     auth_method = "GSSAPI"
                 html_ele = """
-					<p><span class='keyword'>hostname:</span>{hostname}<p>
-					<p><span class='keyword'>auth method:</span>{auth_method}<p>
-					<p><span class='keyword'>username:</span>{username}<p>
-					<p><span class='keyword'>remote platform:</span>{platform}<p>
-				""".format(
+                    <p><span class='keyword'>hostname:</span>{hostname}<p>
+                    <p><span class='keyword'>auth method:</span>{auth_method}<p>
+                    <p><span class='keyword'>username:</span>{username}<p>
+                    <p><span class='keyword'>remote platform:</span>{platform}<p>
+                """.format(
                     hostname=self.client.user_settings_config["hostname"],
                     auth_method=auth_method,
                     username=self.client.user_settings_config["username"],
@@ -388,15 +388,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                 )
             if what == "help":
                 html_ele = """
-					<p><span class='keyword'>[?] </span>help<p>
-					<p><span class='keyword'>[I] </span>show server infomation<p>
-					<p><span class='keyword'>[R] </span>refresh ans sync file list<p>
-					<p><span class='keyword'>[E] </span>edit settings<p>
-					<p><span class='keyword'>[T] </span>pseudo terminal<p>
-					<p><span class='keyword'>[+] </span>add new root path<p>
-					<p><span class='keyword'>[-] </span>remove root path from view<p>
-					<p><span class='keyword'>[...] </span>object menu<p>
-				"""
+                    <p><span class='keyword'>[?] </span>help<p>
+                    <p><span class='keyword'>[I] </span>show server infomation<p>
+                    <p><span class='keyword'>[R] </span>refresh ans sync file list<p>
+                    <p><span class='keyword'>[E] </span>edit settings<p>
+                    <p><span class='keyword'>[T] </span>pseudo terminal<p>
+                    <p><span class='keyword'>[+] </span>add new root path<p>
+                    <p><span class='keyword'>[-] </span>remove root path from view<p>
+                    <p><span class='keyword'>[...] </span>object menu<p>
+                """
                 self.window.run_command(
                     cmd="ssh_panel_output",
                     args={
@@ -535,15 +535,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
             resource_path = self.path_by_resource(resource)
             resource_stat = self.client.sftp_client.lstat(resource_path)
             html_ele = """
-					<p><span class='keyword'>path:</span>{path}<p>
-					<p><span class='keyword'>is directory:</span>{is_dir}<p>
-					<p><span class='keyword'>uid:</span>{uid}<p>
-					<p><span class='keyword'>gid:</span>{gid}<p>
-					<p><span class='keyword'>mode:</span>{mode}<p>
-					<p><span class='keyword'>size:</span>{size}<p>
-					<p><span class='keyword'>access time:</span>{atime}<p>
-					<p><span class='keyword'>modify time:</span>{mtime}<p>
-				""".format(
+                    <p><span class='keyword'>path:</span>{path}<p>
+                    <p><span class='keyword'>is directory:</span>{is_dir}<p>
+                    <p><span class='keyword'>uid:</span>{uid}<p>
+                    <p><span class='keyword'>gid:</span>{gid}<p>
+                    <p><span class='keyword'>mode:</span>{mode}<p>
+                    <p><span class='keyword'>size:</span>{size}<p>
+                    <p><span class='keyword'>access time:</span>{atime}<p>
+                    <p><span class='keyword'>modify time:</span>{mtime}<p>
+                """.format(
                 path=resource_path,
                 is_dir=resource["is_dir"],
                 uid=resource_stat.st_uid,
@@ -707,19 +707,19 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
     def update_view_port(self):
         html_ele = '''
-		<p class="title_bar">
-			{hostname}<span class='symbol'>@{username}</span>
-			<p>
-				<a href="show:info">[i]</a>
-				<a href="reload:list">[R]</a>
-				<a href="edit_settings:' '">[E]</a>
-				<a href="run_command:' '">[T]</a>
-				<a href="add_root_path:' '">[+]</a>
-				<a href="show:help">[?]</a>
-			</p>
-		</p>
-		{dirtory_tree}
-		'''.format(
+        <p class="title_bar">
+            {hostname}<span class='symbol'>@{username}</span>
+            <p>
+                <a href="show:info">[i]</a>
+                <a href="reload:list">[R]</a>
+                <a href="edit_settings:' '">[E]</a>
+                <a href="run_command:' '">[T]</a>
+                <a href="add_root_path:' '">[+]</a>
+                <a href="show:help">[?]</a>
+            </p>
+        </p>
+        {dirtory_tree}
+        '''.format(
             hostname=self.client.user_settings_config["hostname"] if self.client else self.user_settings.config[
                 "hostname"],
             username=self.user_settings.config["username"],
@@ -800,7 +800,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
             )
             ele_list.append(ele)
         # for id in ignore_id_list:
-        # 	del self.resource_data[id]
+        #     del self.resource_data[id]
         id_re_rule = re.compile(r"(?<=resource_click:)\d+")
 
         def get_resource_path(ele):
