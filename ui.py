@@ -344,6 +344,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
         #     "show",
         #     "resource_click",
         #     "reload",
+        #     "resource_copy_path",
         #     "resource_create_file",
         #     "resource_create_dir",
         #     "resource_info",
@@ -531,6 +532,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                 None,
                 None)
 
+        def resource_copy_path(id):
+            resource = self.resource_data[id]
+            resource_path = self.path_by_resource(resource)
+            sublime.set_clipboard(resource_path)
+
         def resource_info(id):
             resource = self.resource_data[id]
             resource_path = self.path_by_resource(resource)
@@ -646,6 +652,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
         def resource_menu(id):
             operation_menu = [
+                ("copy path", resource_copy_path),
                 ("show info", resource_info),
                 ("delete", resource_delete)
             ]
