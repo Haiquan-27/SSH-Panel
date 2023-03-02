@@ -1,6 +1,8 @@
 SSH-Panel
 =========
 
+## Forked from [SSH-Panel](https://github.com/Haiquan-27/SSH-Panel)
+
 This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available

@@ -4,7 +4,7 @@ import paramiko
 # import importlib # debug
 # import util # debug
 # importlib.reload(util) # debug
-from util import *
+from .util import *
 import os
 import stat
 import time

@@ -8,10 +8,10 @@ import time
 # import importlib # debug
 # import ssh_controller # debug
 # importlib.reload(ssh_controller) # debug
-from ssh_controller import *
+from .ssh_controller import *
 # import util # debug
 # importlib.reload(util) # debug
-from util import *
+from .util import *
 
 client_map = {}  # client_id -> client
 _max_client_id = -1
