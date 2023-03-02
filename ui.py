@@ -348,6 +348,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
         #     "resource_create_dir",
         #     "resource_info",
         #     "resource_delete",
+        #     "resource_folder_reload",
         # ]
         operation, args = href.split(":")
 
@@ -585,6 +586,29 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                 sublime.KEEP_OPEN_ON_FOCUS_LOST | sublime.MONOSPACE_FONT
             )
 
+        def resource_folder_reload(id):
+            resource_data = self.resource_data
+            resource = resource_data[id]
+            resource_path = self.path_by_resource(resource)
+            """remove current items"""
+            dl = []
+            for id in resource_data.keys():
+                r = resource_data[id]
+                path_where = r["where"]
+                root_path = r["root_path"]
+                if path_where.startswith(resource_path) and root_path == resource["root_path"]:
+                    dl.append(id)
+                if root_path == resource_path:  # 当在root_path下
+                    dl.append(id)
+            for id in dl:
+                del resource_data[id]
+            """add items"""
+            if resource["root_path"] != "":  # 始终继承父级的root_path
+                self.add_path(resource_path, root_path=resource["root_path"])
+            else:
+                self.add_path(resource_path, root_path=self.path_by_resource(resource))
+            self.update_view_port()
+
         def resource_click(id):
             resource_data = self.resource_data
             resource = resource_data[id]
@@ -627,6 +651,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
             ]
             if self.resource_data[id]["is_dir"]:
                 operation_menu.extend([
+                    ("refresh", resource_folder_reload),
                     ("add file", resource_create_file),
                     ("add directory", resource_create_dir)
                 ])
