@@ -60,9 +60,9 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 				self.user_config_data[server_name] = (None,None)
 			else:
 				self.user_config_data[server_name] = (UserSettings.to_config(*user_parameter),user_parameter[2])
-		self.show_penel()
+		self.show_panel()
 
-	def show_penel(self,start_index=0):
+	def show_panel(self,start_index=0):
 		show_item_list = []
 		server_config_data_items = list(self.user_config_data.items())
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
@@ -101,7 +101,7 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 			if index == -1: return
 			if error_parameter_list != []: return
 			self.window.run_command(
-				cmd = "ssh_panel_create_connect",
+				cmd="ssh_panel_create_connect",
 				args={
 					"server_name":server_name,
 					"connect_now":True,
@@ -126,7 +126,7 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 				sublime.KEEP_OPEN_ON_FOCUS_LOST,
 				start_index,
 				on_highlight = on_highlight,
-				placeholder = "choice you server")
+				placeholder = "select a server")
 		else:
 			self.window.show_quick_panel(
 				show_item_list,
@@ -180,7 +180,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self._user_settings = None
 		self.focus_resource = None
 		self._focus_tip = ""
-		self.navication_view = None
+		self.navigation_view = None
 
 	def run(self,edit,
 		server_name: str,
@@ -195,11 +195,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			window = sublime.windows()[-1]
 			window.set_sidebar_visible(False)
 			self.window = window
-		window = self.window = self.view.window()
+		else:
+			window = self.view.window()
 		user_settings = UserSettings()
 		if reload_from_view:
-			navication_view = self.view
-			user_settings.init_from_settings_file(navication_view.settings().get("ssh_panel_serverName"))
+			navigation_view = self.view
+			user_settings.init_from_settings_file(navigation_view.settings().get("ssh_panel_serverName"))
 		else:
 			window.set_layout({
 				'cells': [
@@ -209,13 +210,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				'cols': [0.0, 0.2, 1.0],
 				'rows': [0.0, 1.0]
 			})
-			navication_view = window.new_file()
-			window.set_view_index(navication_view,0,0)
+			navigation_view = window.new_file()
+			window.set_view_index(navigation_view,0,0)
 			window.focus_group(1)
 			user_settings.init_from_settings_file(server_name)
 		self.user_settings = user_settings
-		self.init_navcation_view(navication_view)
-		self.navication_view = navication_view
+		self.init_navigation_view(navigation_view)
+		self.navigation_view = navigation_view
 
 		if connect_now:
 			self.connect_post(user_settings)
@@ -240,15 +241,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			self.client.user_settings = value
 		self._user_settings = value
 
-	def init_navcation_view(self,nv):
+	def init_navigation_view(self,nv):
 		nv.set_read_only(True)
 		nv.settings().set("word_wrap",False)
 		nv.settings().set("gutter",False)
 		nv.settings().set("margin",0)
 		nv.settings().set("line_numbers",False)
 		nv.settings().set("scroll_past_end",False)
-		self.PhantomSet = sublime.PhantomSet(nv,"navication_view")
-		self.navication_view = nv
+		self.PhantomSet = sublime.PhantomSet(nv,"navigation_view")
+		self.navigation_view = nv
 		self.update_view_port()
 
 
@@ -266,8 +267,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			client.connect()
 			self.window.status_message("connect over")
 			self.client = client
-			self.navication_view.settings().set("ssh_panel_clientID",self.client_id)
-			self.navication_view.settings().set("ssh_panel_serverName",client.user_settings.server_name)
+			self.navigation_view.settings().set("ssh_panel_clientID",self.client_id)
+			self.navigation_view.settings().set("ssh_panel_serverName",client.user_settings.server_name)
 			for remote_path in self.client.user_settings_config["remote_path"]:
 				self.add_root_path(path=remote_path,focus=True)
 			self.update_view_port()
@@ -276,7 +277,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 	def reload_list(self):
 		self._max_resource_id = -1
 		self.resource_data = {}
-		self.navication_view.settings().erase("color_scheme")
+		self.navigation_view.settings().erase("color_scheme")
 		if self.client:
 			for remote_path in self.client.user_settings_config["remote_path"]:
 				self.add_root_path(path=remote_path,focus=True)
@@ -334,7 +335,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		return sublime.find_resources("SSH-Panel.hidden-color-scheme")[0]
 
 	@async_run
-	def navcation_href_click(self,href):
+	def navigation_href_click(self,href):
 		# available_operation = [
 		# 	"show",
 		# 	"resource_click",
@@ -670,7 +671,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		if focus:
 			resource["focus"] = not resource["focus"]
 			self.focus_resource = resource
-			self.navcation_href_click("resource_click:%s"%id)
+			self.navigation_href_click("resource_click:%s"%id)
 		path_hash_map[path] = (
 				abstract_hex("md5",path.encode("utf8")),
 				self.client.user_settings_config["local_path"],
@@ -700,8 +701,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			sublime.Region(0),
 			html_tmp(content=html_ele),
 			sublime.LAYOUT_INLINE,
-			on_navigate=self.navcation_href_click)
-		nv = self.navication_view
+			on_navigate=self.navigation_href_click)
+		nv = self.navigation_view
 		nv.set_name("%s|%s"%(
 				self.user_settings.server_name,
 				self.path_by_resource(self.focus_resource) if self.focus_resource else self.user_settings.server_name if self.client else "connect lost"
@@ -710,11 +711,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			src_style = nv.style()
 			new_style_global = {}
 			src_background_color = ""
-			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-			theme_dark_color += eval(sublime.load_settings(settings_name).get("nav_bar_color_change"))
-			theme_dark_color &= 0xffffff
-			theme_dark_color = hex(theme_dark_color).replace("0x","#")
-			new_style_global["background"] = theme_dark_color
+			# theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
+			# theme_dark_color += eval(sublime.load_settings(settings_name).get("nav_bar_color_change"))
+			# theme_dark_color &= 0xffffff
+			# theme_dark_color = hex(theme_dark_color).replace("0x","#")
+			# new_style_global["background"] = theme_dark_color
+			new_style_global["background"] = "#333333"
 			new_style_global["foreground"] = src_style["foreground"]
 			theme_resource = self.save_theme({
 				"globals":new_style_global,
@@ -789,7 +791,7 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 		global client_map
 		local_file = self.view.file_name()
 		for remote_root,(remote_path_hash,local_root,client_id) in path_hash_map.items():
-			local_hash_root = os.path.sep.join([local_root,remote_path_hash])
+			local_hash_root = os.path.sep.join([local_root,remote_path_hash]).replace('/','\\')
 			if local_file.startswith(local_hash_root):
 				client = client_map[client_id]
 				remote_file = remote_root + client.remote_os_sep.join(local_file.replace(local_hash_root,"",1).split(os.path.sep))

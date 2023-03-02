@@ -185,7 +185,7 @@ class UserSettings():
 		server_settings = st_settings.get("server_settings")
 		del server_settings[server_name]
 		st_settings.set("server_settings",server_settings)
-		subilme.save_settings(settings_name)
+		sublime.save_settings(settings_name)
 
 
 class ClientObj():
