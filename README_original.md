@@ -1,18 +1,47 @@
-[SSH-Panel](https://github.com/ta946/SSH-Panel) (Windows)
+SSH-Panel
 =========
-
-## Forked from [SSH-Panel](https://github.com/Haiquan-27/SSH-Panel) ([original README](README_original.md))
 
 This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
-![Screenshot](recording-v1.2.1.gif)
+[此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
+
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/recording-v1.2.1.gif)
 
 # Installation
 
+## 1. Check dependent Libraries (**very important**)
+### on Windows you need:
+* python3.dll
+> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **installation directory** of sublime
+
+### on Linux you need:
+* install **libffi**
+```bash
+# if Debian / Ubuntu
+apt-get install libffi-dev
+# if Fedora / CentOS / RHEL
+sudo yum install libffi-devel
+```
+
+### python3.8 dependent libraries following
+* bcrypt
+* cffi
+* cryptography
+* nacl
+* six
+> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **Lib\python38** path of sublime
+
+## 2. Install Package
+### You can using Package Control or Manual installation
+* using Package Control
+> Open `Package Control: install` menu and type **"SSH-Panel"** to install
+
 * Manual installation
 > Download this package as ZIP file and extract to **"{you packages path}/SSH-Panel"**
+
+## 3. restart sublime text
 
 
 # Settings
@@ -151,3 +180,8 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 .debug{}
 .no_accessible{}
 ```
+
+# Feedback
+welcome report issues and commit code.
+
+if you like this can give me star :)

@@ -9,7 +9,7 @@
 		"args": {"settings_file":"settings"}
 	},
 	{
-		"caption": "SSH-Panel: Style Coustom",
+		"caption": "SSH-Panel: Style Custom",
 		"command": "ssh_panel_edit_settings",
 		"args": {"settings_file":"style"}
 	},
