@@ -92,9 +92,8 @@ class DSSKey(PKey):
     def __str__(self):
         return self.asbytes()
 
-    @property
-    def _fields(self):
-        return (self.get_name(), self.p, self.q, self.g, self.y)
+    def __hash__(self):
+        return hash((self.get_name(), self.p, self.q, self.g, self.y))
 
     def get_name(self):
         return "ssh-dss"
@@ -105,7 +104,7 @@ class DSSKey(PKey):
     def can_sign(self):
         return self.x is not None
 
-    def sign_ssh_data(self, data, algorithm=None):
+    def sign_ssh_data(self, data):
         key = dsa.DSAPrivateNumbers(
             x=self.x,
             public_numbers=dsa.DSAPublicNumbers(

@@ -140,14 +140,7 @@ class PKey(object):
         return cmp(self.asbytes(), other.asbytes())  # noqa
 
     def __eq__(self, other):
-        return self._fields == other._fields
-
-    def __hash__(self):
-        return hash(self._fields)
-
-    @property
-    def _fields(self):
-        raise NotImplementedError
+        return hash(self) == hash(other)
 
     def get_name(self):
         """
@@ -196,20 +189,13 @@ class PKey(object):
         """
         return u(encodebytes(self.asbytes())).replace("\n", "")
 
-    def sign_ssh_data(self, data, algorithm=None):
+    def sign_ssh_data(self, data):
         """
         Sign a blob of data with this private key, and return a `.Message`
         representing an SSH signature message.
 
-        :param str data:
-            the data to sign.
-        :param str algorithm:
-            the signature algorithm to use, if different from the key's
-            internal name. Default: ``None``.
+        :param str data: the data to sign.
         :return: an SSH signature `message <.Message>`.
-
-        .. versionchanged:: 2.9
-            Added the ``algorithm`` kwarg.
         """
         return bytes()
 

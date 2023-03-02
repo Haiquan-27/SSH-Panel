@@ -29,8 +29,7 @@ from paramiko.py3compat import byte_chr, PY2, long, b
     MSG_DEBUG,
     MSG_SERVICE_REQUEST,
     MSG_SERVICE_ACCEPT,
-    MSG_EXT_INFO,
-) = range(1, 8)
+) = range(1, 7)
 (MSG_KEXINIT, MSG_NEWKEYS) = range(20, 22)
 (
     MSG_USERAUTH_REQUEST,
@@ -69,7 +68,6 @@ cMSG_UNIMPLEMENTED = byte_chr(MSG_UNIMPLEMENTED)
 cMSG_DEBUG = byte_chr(MSG_DEBUG)
 cMSG_SERVICE_REQUEST = byte_chr(MSG_SERVICE_REQUEST)
 cMSG_SERVICE_ACCEPT = byte_chr(MSG_SERVICE_ACCEPT)
-cMSG_EXT_INFO = byte_chr(MSG_EXT_INFO)
 cMSG_KEXINIT = byte_chr(MSG_KEXINIT)
 cMSG_NEWKEYS = byte_chr(MSG_NEWKEYS)
 cMSG_USERAUTH_REQUEST = byte_chr(MSG_USERAUTH_REQUEST)
@@ -111,7 +109,6 @@ MSG_NAMES = {
     MSG_SERVICE_REQUEST: "service-request",
     MSG_SERVICE_ACCEPT: "service-accept",
     MSG_KEXINIT: "kexinit",
-    MSG_EXT_INFO: "ext-info",
     MSG_NEWKEYS: "newkeys",
     30: "kex30",
     31: "kex31",

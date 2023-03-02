@@ -90,9 +90,7 @@ class KexNistp256:
         hm.add_mpint(long(K))
         H = self.hash_algo(hm.asbytes()).digest()
         self.transport._set_K_H(K, H)
-        sig = self.transport.get_server_key().sign_ssh_data(
-            H, self.transport.host_key_type
-        )
+        sig = self.transport.get_server_key().sign_ssh_data(H)
         # construct reply
         m = Message()
         m.add_byte(c_MSG_KEXECDH_REPLY)

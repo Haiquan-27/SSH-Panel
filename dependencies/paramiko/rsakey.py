@@ -20,7 +20,7 @@
 RSA keys.
 """
 
-from cryptography.exceptions import InvalidSignature, UnsupportedAlgorithm
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -36,15 +36,6 @@ class RSAKey(PKey):
     Representation of an RSA key which can be used to sign and verify SSH2
     data.
     """
-
-    HASHES = {
-        "ssh-rsa": hashes.SHA1,
-        "ssh-rsa-cert-v01@openssh.com": hashes.SHA1,
-        "rsa-sha2-256": hashes.SHA256,
-        "rsa-sha2-256-cert-v01@openssh.com": hashes.SHA256,
-        "rsa-sha2-512": hashes.SHA512,
-        "rsa-sha2-512-cert-v01@openssh.com": hashes.SHA512,
-    }
 
     def __init__(
         self,
@@ -70,8 +61,6 @@ class RSAKey(PKey):
         else:
             self._check_type_and_load_cert(
                 msg=msg,
-                # NOTE: this does NOT change when using rsa2 signatures; it's
-                # purely about key loading, not exchange or verification
                 key_type="ssh-rsa",
                 cert_type="ssh-rsa-cert-v01@openssh.com",
             )
@@ -109,9 +98,10 @@ class RSAKey(PKey):
         else:
             return self.asbytes().decode("utf8", errors="ignore")
 
-    @property
-    def _fields(self):
-        return (self.get_name(), self.public_numbers.e, self.public_numbers.n)
+    def __hash__(self):
+        return hash(
+            (self.get_name(), self.public_numbers.e, self.public_numbers.n)
+        )
 
     def get_name(self):
         return "ssh-rsa"
@@ -122,20 +112,18 @@ class RSAKey(PKey):
     def can_sign(self):
         return isinstance(self.key, rsa.RSAPrivateKey)
 
-    def sign_ssh_data(self, data, algorithm="ssh-rsa"):
+    def sign_ssh_data(self, data):
         sig = self.key.sign(
-            data,
-            padding=padding.PKCS1v15(),
-            algorithm=self.HASHES[algorithm](),
+            data, padding=padding.PKCS1v15(), algorithm=hashes.SHA1()
         )
+
         m = Message()
-        m.add_string(algorithm)
+        m.add_string("ssh-rsa")
         m.add_string(sig)
         return m
 
     def verify_ssh_sig(self, data, msg):
-        sig_algorithm = msg.get_text()
-        if sig_algorithm not in self.HASHES:
+        if msg.get_text() != "ssh-rsa":
             return False
         key = self.key
         if isinstance(key, rsa.RSAPrivateKey):
@@ -143,10 +131,7 @@ class RSAKey(PKey):
 
         try:
             key.verify(
-                msg.get_binary(),
-                data,
-                padding.PKCS1v15(),
-                self.HASHES[sig_algorithm](),
+                msg.get_binary(), data, padding.PKCS1v15(), hashes.SHA1()
             )
         except InvalidSignature:
             return False
@@ -201,7 +186,7 @@ class RSAKey(PKey):
                 key = serialization.load_der_private_key(
                     data, password=None, backend=default_backend()
                 )
-            except (ValueError, TypeError, UnsupportedAlgorithm) as e:
+            except ValueError as e:
                 raise SSHException(str(e))
         elif pkformat == self._PRIVATE_KEY_FORMAT_OPENSSH:
             n, e, d, iqmp, p, q = self._uint32_cstruct_unpack(data, "iiiiii")

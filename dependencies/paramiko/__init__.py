@@ -42,7 +42,6 @@ from paramiko.ssh_exception import (
     ChannelException,
     ConfigParseError,
     CouldNotCanonicalize,
-    IncompatiblePeer,
     PasswordRequiredException,
     ProxyCommandFailure,
     SSHException,

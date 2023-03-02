@@ -240,9 +240,7 @@ class KexGex(object):
         H = self.hash_algo(hm.asbytes()).digest()
         self.transport._set_K_H(K, H)
         # sign it
-        sig = self.transport.get_server_key().sign_ssh_data(
-            H, self.transport.host_key_type
-        )
+        sig = self.transport.get_server_key().sign_ssh_data(H)
         # send reply
         m = Message()
         m.add_byte(c_MSG_KEXDH_GEX_REPLY)
