@@ -151,3 +151,156 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 .debug{}
 .no_accessible{}
 ```
+
+<br />
+<br />
+<hr/>
+<br />
+<br />
+
+# For the best sublime ssh setup
+* install [SublimeRepl-ssh](https://github.com/ta946/SublimeREPL-ssh)
+* add the following file into {you packages path}:
+<details><summary>ssh_run.py</summary>
+```
+import sublime
+import sublime_plugin
+
+
+USER = '' # ENTER THE DEFAULT USER NAME
+KEY = '' # ENTER THE PATH TO YOUR DEFAULT SSH KEY .pem File
+SSHPANEL_OUTPUT_PANEL_NAME = "ssh-panel"
+SSHPANEL_SETTING_FILE_NAME = 'ssh-panel.sublime-settings'
+
+
+
+class ssh_runCommand(sublime_plugin.WindowCommand):
+    def run(self, ip, user=None, key=None):
+        if user is None: user = USER
+        if key is None: key = KEY
+        cmd = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
+        sublime.active_window().run_command("repl_open", {
+            "cmd": {"windows": cmd},
+            "type": "ssh",
+            "cmd_postfix": "\n",
+            "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
+            "env": {},
+            "external_id": "shell",
+            "suppress_echo": True,
+            "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage"
+        })
+
+
+class SshPanelSettings:
+    def __init__(self, setting_file_name=SSHPANEL_SETTING_FILE_NAME):
+        self._setting_file_name = setting_file_name
+        self.settings = None
+
+    def get_settings(self):
+        self.settings = sublime.load_settings(self._setting_file_name)
+        return self.settings
+
+    def save_settings(self, settings):
+        sublime.save_settings(self._setting_file_name)
+
+    def check_server_in_settings(self, name, settings=None):
+        if settings is None:
+            settings = self.settings or self.get_settings()
+        server_settings = settings['server_settings']
+        if name in server_settings:
+            return True, settings
+        return False, settings
+
+    def ensure_server_in_settings(self, ip, name, user, key):
+        ret, settings = self.check_server_in_settings(name)
+        if ret:
+            return
+        settings['server_settings'][name] = {
+            "hostname": ip,
+            "username": user,
+            "private_key": key,
+            "remote_path": ["."],
+            "local_path": "~/SFTP-Local/{auto_generate}",
+            "need_passphrase": False,
+        }
+        self.save_settings(settings)
+
+    def update_server_ip(self, name, ip, settings=None):
+        if settings is None:
+            settings = self.settings or self.get_settings()
+        settings['server_settings'][name]['hostname'] = ip
+        self.save_settings(settings)
+        return settings
+
+
+class ssh_sftp_runCommand(sublime_plugin.WindowCommand):
+    def run(self, name=None, repl_only=False):
+        self.name = name
+        self.repl_only = bool(repl_only)
+        self.settings_handler = SshPanelSettings()
+        self.settings = self.settings_handler.get_settings()
+
+        server_names = list(self.settings['server_settings'])
+
+        if name is not None and name in self.settings['server_settings']:
+            return self.on_done(name)
+
+        self.window.show_quick_panel(server_names, lambda idx: self.on_select(idx))
+
+    def on_change(self, *args, **kwargs):
+        pass
+
+    def on_cancel(self, *args, **kwargs):
+        print('no server selected')
+
+    def on_select(self, idx):
+        if idx == -1: return self.on_cancel()
+        # elif _id == len(self.items)-1:
+        #     self.window.show_input_panel('_id', '', self.on_done, self.on_change, self.on_cancel)
+        else:
+            name = list(self.settings['server_settings'])[idx]
+            self.on_done(name)
+
+    def on_done(self, name):
+        server_dict = self.settings['server_settings'][name]
+        ip = server_dict['hostname']
+        user = server_dict['username']
+        key = server_dict['private_key']
+        self._run(ip, name, user, key)
+
+    def _run_ssh_panel(self, name):
+        self.window.run_command(
+            cmd="ssh_panel_create_connect",
+            args={
+                "server_name": name,
+                "connect_now": True,
+                "reload_from_view": False
+            }
+        )
+        self.window.run_command(
+            cmd="ssh_panel_output",
+            args={
+                "content": "",
+                "is_html": False,
+                "new_line": False,
+                "clean": True
+            }
+        )
+        self.window.destroy_output_panel(SSHPANEL_OUTPUT_PANEL_NAME)
+
+    def _run(self, ip, name, user, key):
+        self.settings_handler.ensure_server_in_settings(ip, name, user, key)
+
+        if not self.repl_only:
+            self._run_ssh_panel(name)
+
+        ssh_runCommand(self).run(ip, user, key[1])
+```
+</details>
+* add the following key command:
+```
+{ "keys": ["<user defined keys>"], "command": "ssh_sftp_run", "args": {"name": null} },
+{ "keys": ["shift+ctrl+c"], "command": "subprocess_repl_send_signal", "args": {"signal": "SIGTERM"},  // sigterm 15 sigint 2
+    "context": [{ "key": "setting.repl", "operator": "equal", "operand": true }]
+}
+```
