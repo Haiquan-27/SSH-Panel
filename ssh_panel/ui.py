@@ -4,6 +4,7 @@ import os
 import json
 import re
 import time
+import shutil
 
 # import importlib # debug
 # import ssh_controller # debug
@@ -848,6 +849,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
         return "".join(ele_list)
 
 
+class SshPanelSaveCommand(sublime_plugin.WindowCommand):
+    def run(self):
+        view = sublime.active_window().active_view()
+        return SshPanelEventCommand(view).on_post_save_async()
+
+
 class SshPanelEventCommand(sublime_plugin.ViewEventListener):
     @classmethod
     def is_applicable(self, settings):
@@ -856,7 +863,14 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
     def on_post_save_async(self):
         global path_hash_map
         global client_map
-        local_file = self.view.file_name()
+        if self.view is None:
+            window = sublime.active_window()
+            local_file = window.extract_variables().get('file')
+            is_binary = True
+        else:
+            window = self.view.window()
+            local_file = self.view.file_name()
+            is_binary = self.view.settings().get('syntax') == 'Packages/Binary/Binary.sublime-syntax'
         for remote_root, (remote_path_hash, local_root, client_id) in path_hash_map.items():
             local_hash_root = os.path.sep.join([local_root, remote_path_hash]).replace('/', '\\')
             if local_file.startswith(local_hash_root):
@@ -867,9 +881,9 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
                 def upload(remote_file):
                     try:
                         try:
-                            client.file_sync(local_file, remote_file, "put", sync_stat=True)
+                            client.file_sync(local_file, remote_file, "put", sync_stat=True, is_binary=is_binary)
                         except:
-                            client.file_sync(local_file, remote_file, "put")
+                            client.file_sync(local_file, remote_file, "put", is_binary=is_binary)
                             LOG.W("file upload success,but stat is not sync")
                         sublime.status_message("file upload: " + remote_file)
                         LOG.D("save remote", {
@@ -883,7 +897,7 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
                             "error": str(e.args)
                         })
 
-                self.view.window().show_input_panel(
+                window.show_input_panel(
                     "save to remote:",
                     remote_file,
                     upload, None, None
@@ -899,3 +913,5 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
             for remote_path in client.user_settings_config["remote_path"]:
                 del path_hash_map[remote_path]
             del client_map[client_id]
+            local_path = client.user_settings_config["local_path"]
+            shutil.rmtree(local_path)

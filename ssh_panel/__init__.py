@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-from .ui import SshPanelSelectConnectCommand, SshPanelEditSettingsCommand, SshPanelCreateConnectCommand
+from .ui import SshPanelSelectConnectCommand, SshPanelEditSettingsCommand, SshPanelCreateConnectCommand, SshPanelEventCommand, SshPanelSaveCommand
 from .util import SshPanelOutputCommand
 
 __all__ = [
     'SshPanelSelectConnectCommand',
     'SshPanelEditSettingsCommand',
-    'SshPanelOutputCommand',
     'SshPanelCreateConnectCommand',
+    'SshPanelEventCommand',
+    'SshPanelSaveCommand',
+    'SshPanelOutputCommand',
 ]

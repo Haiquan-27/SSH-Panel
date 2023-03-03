@@ -105,7 +105,7 @@ class UserSettings():
 		return (
 				auth_parameter,
 				connect_parameter,
-				auth_method
+				auth_method,
 				)
 
 	@classmethod
@@ -520,12 +520,15 @@ class ClientObj():
 			res.append(fs_item)
 		return res
 
-	def file_sync(self,local_path,remote_path,dir,sync_stat=False): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,dir,sync_stat=False,is_binary=False): # 写入并保持远程文件原始权限
 		# try:
 		if dir == "put":
-			with self.sftp_client.open(remote_path,"w") as rf:
+			with self.sftp_client.open(remote_path,"wb") as rf:
 				with open(local_path,"rb") as lf:
-					rf.write(lf.read())
+					data = lf.read()
+					if not is_binary:
+						data = data.replace(b'\r\n',b'\n')
+					rf.write(data)
 			if sync_stat:
 				local_stat = os.stat(local_path)
 				local_atime = local_stat.st_atime
