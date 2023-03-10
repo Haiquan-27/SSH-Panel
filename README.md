@@ -222,14 +222,16 @@ class SshPanelSettings:
             "remote_path": ["."],
             "local_path": "~/SFTP-Local/{auto_generate}",
             "need_passphrase": False,
+            "aws_id": None
         }
         self.save_settings(settings)
 
     def update_server_ip(self, name, ip, settings=None):
         if settings is None:
             settings = self.settings or self.get_settings()
-        settings['server_settings'][name]['hostname'] = ip
-        self.save_settings(settings)
+        server_settings = settings['server_settings']
+        server_settings[name]['hostname'] = ip
+        settings['server_settings'] = server_settings
         return settings
 
 
@@ -262,7 +264,10 @@ class ssh_sftp_runCommand(sublime_plugin.WindowCommand):
             self.on_done(name)
 
     def on_done(self, name):
+        print('ssh sftp', name)
         server_dict = self.settings['server_settings'][name]
+        print('server_dict')
+        print(server_dict)
         ip = server_dict['hostname']
         user = server_dict['username']
         key = server_dict['private_key']
@@ -277,16 +282,6 @@ class ssh_sftp_runCommand(sublime_plugin.WindowCommand):
                 "reload_from_view": False
             }
         )
-        self.window.run_command(
-            cmd="ssh_panel_output",
-            args={
-                "content": "",
-                "is_html": False,
-                "new_line": False,
-                "clean": True
-            }
-        )
-        self.window.destroy_output_panel(SSHPANEL_OUTPUT_PANEL_NAME)
 
     def _run(self, ip, name, user, key):
         self.settings_handler.ensure_server_in_settings(ip, name, user, key)
