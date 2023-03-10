@@ -118,7 +118,7 @@ class SSHPanelLog():
 			html_ele += "<p style='padding-left:10px'>%s</p>"%str(msg_content)
 		return (console_content,html_tmp(content=html_ele))
 
-	def _log(self,msg_tuple):
+	def _log(self,msg_tuple,display=None):
 		sublime.active_window().run_command(
 					cmd="ssh_panel_output",
 					args={
@@ -126,7 +126,7 @@ class SSHPanelLog():
 						"is_html": int(sublime.version()) >= 4000,
 						"new_line": False,
 						"clean": False,
-						"display": not sublime.load_settings(settings_name).get("quiet_log")
+						"display": not sublime.load_settings(settings_name).get("quiet_log") and display is not False
 					}
 				)
 		print(msg_tuple[0])
@@ -141,8 +141,9 @@ class SSHPanelLog():
 		raise SSHPanelException("%s\n%s"%(msg_title,msg_tuple[0]))
 
 	def I(self,msg_title,msg_content=""):
+		log_level_info = sublime.load_settings(settings_name).get("log_level_info")
 		msg_tuple = self._msg_format("info",msg_title,msg_content)
-		self._log(msg_tuple)
+		self._log(msg_tuple, display=log_level_info)
 
 	def D(self,msg_title,msg_content=""):
 		# global DEBUG

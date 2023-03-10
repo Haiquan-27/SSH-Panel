@@ -363,23 +363,26 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
         def show(what):
             if what == "info":
-                if self.client.user_settings.auth_method == AUTH_METHOD_PASSWORD:
-                    auth_method = "PASSWORD"
-                elif self.client.user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
-                    auth_method = "PRIVATEKEY"
-                elif self.client.user_settings.auth_method == AUTH_METHOD_GSSAPI:
-                    auth_method = "GSSAPI"
-                html_ele = """
-                    <p><span class='keyword'>hostname:</span>{hostname}<p>
-                    <p><span class='keyword'>auth method:</span>{auth_method}<p>
-                    <p><span class='keyword'>username:</span>{username}<p>
-                    <p><span class='keyword'>remote platform:</span>{platform}<p>
-                """.format(
-                    hostname=self.client.user_settings_config["hostname"],
-                    auth_method=auth_method,
-                    username=self.client.user_settings_config["username"],
-                    platform=self.client.remote_platform
-                )
+                if self.client is None:
+                    html_ele = """<p class="error">failed to connect to server!<p>"""
+                else:
+                    if self.client.user_settings.auth_method == AUTH_METHOD_PASSWORD:
+                        auth_method = "PASSWORD"
+                    elif self.client.user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
+                        auth_method = "PRIVATEKEY"
+                    elif self.client.user_settings.auth_method == AUTH_METHOD_GSSAPI:
+                        auth_method = "GSSAPI"
+                    html_ele = """
+                        <p><span class='keyword'>hostname:</span>{hostname}<p>
+                        <p><span class='keyword'>auth method:</span>{auth_method}<p>
+                        <p><span class='keyword'>username:</span>{username}<p>
+                        <p><span class='keyword'>remote platform:</span>{platform}<p>
+                    """.format(
+                        hostname=self.client.user_settings_config["hostname"],
+                        auth_method=auth_method,
+                        username=self.client.user_settings_config["username"],
+                        platform=self.client.remote_platform
+                    )
                 self.window.run_command(
                     cmd="ssh_panel_output",
                     args={
@@ -914,4 +917,5 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
                 del path_hash_map[remote_path]
             del client_map[client_id]
             local_path = client.user_settings_config["local_path"]
-            shutil.rmtree(local_path)
+            if os.path.exists:
+                shutil.rmtree(local_path)

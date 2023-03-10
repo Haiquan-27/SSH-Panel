@@ -47,5 +47,6 @@
 	"reconnect_on_start":true,
 	"nav_bar_color_change": "-0x101010",
 	"quiet_log":false,
+	"log_level_info":true,
 	"debug_mode":false
 }
