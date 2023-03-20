@@ -7,12 +7,23 @@ This Sublime Text plugin allow you to browse and edit files on remote servers
 
 Windows and Linux servers that support any openssh available
 
+This fork does the following:
+
+* Adds a folder menu item to refresh the open folder instead of having to close and open again
+* Adds a menu item to copy the relative file path
+* cleans temp folder containing all downloaded files after closing the connection
+* fixes bugs
+
+
 ![Screenshot](recording-v1.2.1.gif)
 
 # Installation
 
-* Manual installation
-> Download this package as ZIP file and extract to **"{you packages path}/SSH-Panel"**
+Manual installation
+
+* Download this package as ZIP file and extract to **"{your packages path}/SSH-Panel"**
+* copy the file `SSH-Panel\dependencies\python3.dll` into your sublime text install directory
+  eg: `C:\Program Files\Sublime Text\`
 
 
 # Settings
@@ -160,7 +171,7 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 
 # For the best sublime ssh setup
 * install [SublimeRepl-ssh](https://github.com/ta946/SublimeREPL-ssh)
-* add the following file into {you packages path}:
+* add the following file into {your packages path}:
 <details><summary>ssh_run.py</summary>
 ```
 import sublime
