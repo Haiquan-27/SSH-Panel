@@ -191,7 +191,7 @@ class ssh_runCommand(sublime_plugin.WindowCommand):
         if key is None: key = KEY
         cmd = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
         sublime.active_window().run_command("repl_open", {
-            "cmd": {"windows": cmd},
+            "cmd": cmd,
             "type": "ssh",
             "cmd_postfix": "\n",
             "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
