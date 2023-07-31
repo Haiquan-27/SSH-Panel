@@ -3,27 +3,42 @@
 
 ## Forked from [SSH-Panel](https://github.com/Haiquan-27/SSH-Panel) ([original README](README_original.md))
 
-This Sublime Text plugin allow you to browse and edit files on remote servers
+This Sublime Text plugin allow you to browse and edit files on remote servers that have openssh support
 
-Windows and Linux servers that support any openssh available
+### This fork uses paramiko who's dependancies need to be built
+
+* The package only includes the binaries for windows.
+* Non windows users will have to follow the instructions under *Manual installation* which has not been tested and is not guaranteed to work
+
 
 This fork does the following:
 
 * Adds a folder menu item to refresh the open folder instead of having to close and open again
 * Adds a menu item to copy the relative file path
 * cleans temp folder containing all downloaded files after closing the connection
-* fixes bugs
+* updated paramiko to v3.2.0 (and its dependancies) and uses sublime's python 3.8. no python3.dll required
+* bug fixes
+
+
 
 
 ![Screenshot](recording-v1.2.1.gif)
 
 # Installation
 
-Manual installation
-
 * Download this package as ZIP file and extract to **"{your packages path}/SSH-Panel"**
-* copy the file `SSH-Panel\dependencies\python3.dll` into your sublime text install directory
-  eg: `C:\Program Files\Sublime Text\`
+
+## Manual installation
+
+* under the folder `dependancies` you will find `requirements.txt`
+* you can either:
+    * go to [pypi](https://pypi.org/) to download each module with the correct version, `cp38` and os & cpu architecture
+    * or using a temporary virtual environment with python `3.8.8`, run `pip install -r requirements.txt`
+* then extract the downloaded modules or move them from the temp environment's `site-packages` into sublime's `Lib/python38` folder
+    * to find sublime's folder, open sublime's console `Menu > View > Show Console` then run the following command:
+    ```
+    import os,sublime; os.path.abspath(os.path.join(sublime.packages_path(),'..','Lib','python38'))
+    ```
 
 
 # Settings

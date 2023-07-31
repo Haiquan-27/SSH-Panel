@@ -148,23 +148,23 @@ class UserSettings():
 			if not isinstance(config["gss_trust_dns"],bool):error_list.append("gss_trust_dns")
 		return error_list
 
-	@classmethod
-	def to_config(cls,auth_parameter,connect_parameter,auth_method=None):
+	@staticmethod
+	def to_config(auth_parameter,connect_parameter,server_name=None,auth_method=None):
 		try:
 			all_config = dict(auth_parameter,**connect_parameter)
-			if all_config.get("save_password") == False:
+			if all_config.get("save_password") is False:
 				all_config["password"] = ""
 			return all_config
 		except TypeError:
 			LOG.E("UserSettings has not init",{
-					"server_name": self.server_name,
-					"auth_parameter": self.auth_parameter,
-					"connect_parameter": self.connect_parameter,
-					"auth_method": self.auth_method
+					"server_name": server_name,
+					"auth_parameter": auth_parameter,
+					"connect_parameter": connect_parameter,
+					"auth_method": auth_method
 				})
 	@property
 	def config(self):
-		return UserSettings.to_config(self.auth_parameter,self.connect_parameter)
+		return UserSettings.to_config(self.auth_parameter,self.connect_parameter,server_name=self.server_name,auth_method=self.auth_method)
 
 	def save_config(self):
 		server_name = self.server_name
@@ -253,11 +253,58 @@ class ClientObj():
 			hostname = user_settings_config["hostname"]
 		try:
 			self.transport = paramiko.Transport(sock=(hostname,port))
+			# self.transport = paramiko.Transport(sock=(hostname,port), disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
 		except Exception as e:
 			LOG.E("Connect Failed",str(e.args))
 		hostkeys = paramiko.HostKeys()
 		need_fingerprint_confirm = user_settings_config.get("always_fingerprint_confirm",False)
 		known_hosts_file = user_settings_config["known_hosts_file"]
+
+		def auth_done():
+			LOG.I("Client loaded over",{
+				"time use": time.time() - start_time,
+				"remote OS": self.remote_platform,
+				"user": user_settings_config["username"],
+				"fingerprint": server_fingerprint
+			})
+			LOG.D("OS ENV",self.env)
+			if self.get_platform() == "windows":
+				# self.interattach = self.client.exec_command(r"C:\Windows\System32\cmd.exe")
+				LOG.D("Shell","cmd.exe")
+			else:
+				# self.interattach = self.client.exec_command("/bin/sh")
+				LOG.D("Shell","bash")
+			# 检查hostkey
+			if need_fingerprint_confirm:
+				hostkey = hostkeys.lookup(hostname)[server_pkey.get_name()]
+				if hostkey.asbytes() == server_pkey.asbytes():
+					LOG.D("HostKey check OK")
+				else:
+					LOG.E("REMOTE HOST IDENTIFICATION HAS CHANGED!",{
+						"host fingerprint": server_fingerprint,
+					})
+					self.transport.close()
+					return
+
+		username = user_settings_config["username"]
+		pkey_kex = user_settings_config["private_key"][0]
+		pkey_file = user_settings_config["private_key"][1]
+		try:
+			pkey = eval("paramiko.%s"%pkey_kex)
+		except Exception as e:
+			LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
+		pkey = pkey.from_private_key_file(pkey_file)
+
+		start_time = time.time()
+		self.transport.connect(username=username, pkey=pkey)
+		server_pkey = self.transport.get_remote_server_key() # 服务器公钥
+		server_fingerprint = "%s:%s"%pkey_fingerprint(server_pkey)   # 服务器公钥指纹
+		self.load_client(auth_done)
+		return
+
+
+
+
 		if known_hosts_file != "": # 如果设置known_hosts_file使用其中的认证加密方式
 			hostkeys.load(known_hosts_file)
 			trust_kexs = hostkeys.lookup(hostname)
@@ -309,32 +356,6 @@ class ClientObj():
 				self.transport.close()
 				return
 
-		def auth_done():
-			LOG.I("Client loaded over",{
-				"time use": time.time() - start_time,
-				"remote OS": self.remote_platform,
-				"user": user_settings_config["username"],
-				"fingerprint": server_fingerprint
-			})
-			LOG.D("OS ENV",self.env)
-			if self.get_platform() == "windows":
-				# self.interattach = self.client.exec_command(r"C:\Windows\System32\cmd.exe")
-				LOG.D("Shell","cmd.exe")
-			else:
-				# self.interattach = self.client.exec_command("/bin/sh")
-				LOG.D("Shell","bash")
-			# 检查hostkey
-			if need_fingerprint_confirm:
-				hostkey = hostkeys.lookup(hostname)[server_pkey.get_name()]
-				if hostkey.asbytes() == server_pkey.asbytes():
-					LOG.D("HostKey check OK")
-				else:
-					LOG.E("REMOTE HOST IDENTIFICATION HAS CHANGED!",{
-						"host fingerprint": server_fingerprint,
-					})
-					self.transport.close()
-					return
-
 		# 身份认证
 		if user_settings.auth_method == AUTH_METHOD_PASSWORD:
 			def auth_password(password):
@@ -369,6 +390,7 @@ class ClientObj():
 					)
 					LOG.I("Key Authentication Successful")
 				except Exception as e:
+					print(e)
 					LOG.E("Key Authentication Failed",str(e.args))
 			try:
 				pkey = eval("paramiko.%s"%pkey_kex)

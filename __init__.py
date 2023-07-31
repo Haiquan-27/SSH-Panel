@@ -1,31 +1,27 @@
-import os
-import sys
-import logging
-import sublime
-
-# add dependencies on package initialization
-sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
-
-
 try:
-    import bcrypt,cffi,cryptography,nacl,six
+    import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
 except ModuleNotFoundError as e:
-    sublime.error_message("ssh-panel: missing dependencies:\n"+str(e.args))
-except ImportError:
-    if sublime.platform() == "windows":
-        sublime_install_folder = os.dirname(sys.executable)
-        target_python3_dll_path = os.path.join(sublime_install_folder,'python3.dll')
-        if not os.path.exists(target_python3_dll_path):
-            import shutil
-            source_python3_dll_path = os.path.join(os.path.dirname(__file__), 'dependencies', 'python3.dll')
-            shutil.copy(source_python3_dll_path, target_python3_dll_path)
-        try:
-            import bcrypt,cffi,cryptography,nacl,six
-        except ImportError:
-            sublime.error_message("ssh-panel: dependancy incompatability!\n")
+    import os
+    import sublime
+    import shutil
+    def copytree(src, dst, symlinks=False, ignore=None):
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            if os.path.isdir(s):
+                shutil.copytree(s, d, symlinks, ignore)
+            else:
+                shutil.copy2(s, d)
+    sublime_lib_p38 = os.path.join(sublime.packages_path(),'..','Lib','python38')
+    copytree(os.path.join(os.path.dirname(__file__),'dependancies'), sublime_lib_p38)
+    try:
+        import bcrypt,cffi,cryptography,nacl,six
+    except (ModuleNotFoundError,ImportError):
+        sublime.error_message(f"ssh-panel: dependancy incompatability!\n{e}")
 
 try:
     from .ssh_panel import *
 except ImportError:
+    import logging
     logging.exception("Error during importing .ssh_panel package")
     raise
