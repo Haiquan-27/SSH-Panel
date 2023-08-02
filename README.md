@@ -201,20 +201,26 @@ SSHPANEL_SETTING_FILE_NAME = 'ssh-panel.sublime-settings'
 
 
 class ssh_runCommand(sublime_plugin.WindowCommand):
-    def run(self, ip, user=None, key=None):
+    def run(self, ip, user=None, key=None, name=None):
         if user is None: user = USER
         if key is None: key = KEY
-        cmd = ["ssh", "-tt", "-i", key, f"{user}@{ip}"]
-        sublime.active_window().run_command("repl_open", {
-            "cmd": cmd,
-            "type": "ssh",
+        title = f"{ip}"
+        if name is not None:
+            title = f"{name} {title}"
+        args = {
             "cmd_postfix": "\n",
             "encoding": {"linux": "utf-8", "osx": "utf-8", "windows": "$win_cmd_encoding"},
             "env": {},
             "external_id": "shell",
             "suppress_echo": True,
-            "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage"
-        })
+            "syntax": "Packages/SublimeREPL-ssh/config/Io/Io.tmLanguage",
+            "title": title
+        }
+        args['type'] = 'ssh_paramiko'
+        args['user'] = user
+        args['ip'] = ip
+        args['key'] = key
+        sublime.active_window().run_command("repl_open", args)
 
 
 class SshPanelSettings:
