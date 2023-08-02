@@ -1,6 +1,7 @@
 try:
     import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
-except ModuleNotFoundError as e:
+except (ImportError,ModuleNotFoundError) as e:
+    import sys
     import os
     import sublime
     import shutil
@@ -14,8 +15,10 @@ except ModuleNotFoundError as e:
                 shutil.copy2(s, d)
     sublime_lib_p38 = os.path.join(sublime.packages_path(),'..','Lib','python38')
     copytree(os.path.join(os.path.dirname(__file__),'dependancies'), sublime_lib_p38)
+    sublime_install_path = os.path.join(os.path.dirname(sys.executable),'python3.dll')
+    shutil.copy2(os.path.join(os.path.dirname(__file__),'python3.dll'), sublime_install_path)
     try:
-        import bcrypt,cffi,cryptography,nacl,six
+        import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
     except (ModuleNotFoundError,ImportError):
         sublime.error_message(f"ssh-panel: dependancy incompatability!\n{e}")
 

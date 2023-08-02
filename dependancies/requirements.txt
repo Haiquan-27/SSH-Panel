@@ -1,7 +1,7 @@
 six==1.16.0
 cffi==1.15.1
-bcrypt==3.2.0
-cryptography==41.0.2
+bcrypt==4.0.1
+cryptography==41.0.3
 pycparser==2.21
 pynacl==1.5.0
-paramiko==3.2.0
+paramiko==3.3.1
