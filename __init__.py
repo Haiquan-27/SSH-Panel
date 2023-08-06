@@ -10,8 +10,12 @@ except (ImportError,ModuleNotFoundError) as e:
             s = os.path.join(src, item)
             d = os.path.join(dst, item)
             if os.path.isdir(s):
+                if os.path.exists(d):
+                    shutil.rmtree(d)
                 shutil.copytree(s, d, symlinks, ignore)
             else:
+                if os.path.exists(d):
+                    os.remove(d)
                 shutil.copy2(s, d)
     sublime_lib_p38 = os.path.join(sublime.packages_path(),'..','Lib','python38')
     copytree(os.path.join(os.path.dirname(__file__),'dependancies'), sublime_lib_p38)
