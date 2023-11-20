@@ -1,0 +1,32 @@
+[
+    {
+        "caption": "Preferences",
+        "mnemonic": "n",
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "mnemonic": "P",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "SSH-Panel",
+                        "children":
+                        [
+                            {
+                                "command": "edit_settings", "args":
+                                {
+                                    "base_file": "${packages}/SSH-Panel/ssh-panel.sublime-settings",
+                                    "user_file": "${packages}/User/ssh-panel.sublime-settings"
+                                },
+                                "caption": "Settings"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
