@@ -60,9 +60,9 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 				self.user_config_data[server_name] = (None,None)
 			else:
 				self.user_config_data[server_name] = (UserSettings.to_config(*user_parameter),user_parameter[2])
-		self.show_penel()
+		self.show_panel()
 
-	def show_penel(self,start_index=0):
+	def show_panel(self,start_index=0):
 		show_item_list = []
 		server_config_data_items = list(self.user_config_data.items())
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
@@ -381,14 +381,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				)
 			if what == "help":
 				html_ele = """
-					<p><span class='keyword'>[?] </span>help<p>
-					<p><span class='keyword'>[I] </span>show server infomation<p>
-					<p><span class='keyword'>[R] </span>refresh ans sync file list<p>
-					<p><span class='keyword'>[E] </span>edit settings<p>
-					<p><span class='keyword'>[T] </span>pseudo terminal<p>
-					<p><span class='keyword'>[+] </span>add new root path<p>
-					<p><span class='keyword'>[-] </span>remove root path from view<p>
-					<p><span class='keyword'>[...] </span>object menu<p>
+					<p><span class='keyword'>[?] </span>Help<p>
+					<p><span class='keyword'>[i] </span>Show server infomation<p>
+					<p><span class='keyword'>[R] </span>Refresh ans sync file list<p>
+					<p><span class='keyword'>[E] </span>Edit settings<p>
+					<p><span class='keyword'>[T] </span>Simple terminal<p>
+					<p><span class='keyword'>[P] </span>Show panel<p>
+					<p><span class='keyword'>[+] </span>Add new root path<p>
+					<p><span class='keyword'>[-] </span>Remove root path from view<p>
+					<p><span class='keyword'>[...] </span>Object menu<p>
 				"""
 				self.window.run_command(
 					cmd="ssh_panel_output",
@@ -451,8 +452,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			self.window.run_command("ssh_panel_edit_settings",args={
 				"settings_file": "settings"
 			})
-
-
+		def show_panel(_):
+			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
 		def resource_create_file(id):
 			resource = self.resource_data[id]
 			resource_path = self.path_by_resource(resource)
@@ -686,6 +687,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				<a href="reload:list">[R]</a>
 				<a href="edit_settings:' '">[E]</a>
 				<a href="run_command:' '">[T]</a>
+				<a href="show_panel:' '">[P]</a>
 				<a href="add_root_path:' '">[+]</a>
 				<a href="show:help">[?]</a>
 			</p>
@@ -711,11 +713,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			new_style_global = {}
 			src_background_color = ""
 			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-			theme_dark_color += eval(sublime.load_settings(settings_name).get("nav_bar_color_change"))
+			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_change"),16)
 			theme_dark_color &= 0xffffff
-			theme_dark_color = hex(theme_dark_color).replace("0x","#")
+			theme_dark_color = "#{:06x}".format(theme_dark_color)
 			new_style_global["background"] = theme_dark_color
 			new_style_global["foreground"] = src_style["foreground"]
+			new_style_global["line_highlight"] = theme_dark_color
 			theme_resource = self.save_theme({
 				"globals":new_style_global,
 				"variables":{
