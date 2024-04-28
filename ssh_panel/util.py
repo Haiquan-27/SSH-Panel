@@ -124,7 +124,7 @@ class SSHPanelLog():
 					args={
 						"content": msg_tuple[1] if int(sublime.version()) >= 4000 else msg_tuple[0],
 						"is_html": int(sublime.version()) >= 4000,
-						"new_line": False,
+						"new_line": True,
 						"clean": False,
 						"display": not sublime.load_settings(settings_name).get("quiet_log") and display is not False
 					}
@@ -176,7 +176,8 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 			panel_view.settings().set("line_numbers",False)
 			panel_view.settings().set("scroll_past_end",False)
 			if panel_view.settings().get("color_scheme",None):
-				panel_view.settings().set("color_scheme",sublime.load_settings("Preferences.sublime-settings").get("color_scheme"))
+				# panel_view.settings().set("color_scheme",sublime.load_settings("Preferences.sublime-settings").get("color_scheme"))
+				panel_view.settings().set("color_scheme",sublime.find_resources("SSH-Panel.hidden-color-scheme")[0])
 		self.panel_view = panel_view
 		if display:
 			window.run_command("show_panel",args={"panel":"output."+output_panel_name})
@@ -186,12 +187,15 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 		if not output_panel_phantomSet or output_panel_phantomSet.view != panel_view: # 当phantomSet不存在或phantomSet所在主窗口变化时
 			output_panel_phantomSet = sublime.PhantomSet(panel_view)
 		if clean:
-			panel_view.erase(edit,sublime.Region(0,panel_view.size()))
+			# panel_view.erase(edit,sublime.Region(0,panel_view.size()))
+			panel_view.run_command("select_all")
+			panel_view.run_command("left_delete")
 			output_panel_phantom_list = []
 			if int(sublime.version()) >= 4000:
 				output_panel_phantomSet.update(output_panel_phantom_list)
 		if new_line:
-			panel_view.insert(edit,panel_view.size(),"\n")
+			# panel_view.insert(edit,panel_view.size(),"\n")
+			panel_view.run_command("insert",args={"characters": "\n"})
 		if is_html:
 			output_panel_phantom_list.append(
 				sublime.Phantom(
@@ -201,7 +205,9 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 				)
 			)
 			output_panel_phantomSet.update(output_panel_phantom_list)
-			panel_view.insert(edit,panel_view.size(),"\n")
+			# panel_view.insert(edit,panel_view.size(),"\n")
+			panel_view.run_command("insert",args={"characters": "\n"})
 		else:
-			panel_view.insert(edit,panel_view.size(),content.rstrip())
+			# panel_view.insert(edit,panel_view.size(),content.rstrip())
+			panel_view.run_command("insert",args={"characters": content.rstrip()})
 		panel_view.set_read_only(True)

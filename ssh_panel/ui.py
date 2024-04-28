@@ -399,6 +399,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                     <p><span class='keyword'>[R] </span>refresh ans sync file list<p>
                     <p><span class='keyword'>[E] </span>edit settings<p>
                     <p><span class='keyword'>[T] </span>pseudo terminal<p>
+                    <p><span class='keyword'>[P] </span>Show panel<p>
                     <p><span class='keyword'>[+] </span>add new root path<p>
                     <p><span class='keyword'>[-] </span>remove root path from view<p>
                     <p><span class='keyword'>[...] </span>object menu<p>
@@ -468,7 +469,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
             self.window.run_command("ssh_panel_edit_settings", args={
                 "settings_file": "settings"
             })
-
+        def show_panel(_):
+            self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
         def resource_create_file(id):
             resource = self.resource_data[id]
             resource_path = self.path_by_resource(resource)
@@ -750,6 +752,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
                 <a href="reload:list">[R]</a>
                 <a href="edit_settings:' '">[E]</a>
                 <a href="run_command:' '">[T]</a>
+                <a href="show_panel:' '">[P]</a>
                 <a href="add_root_path:' '">[+]</a>
                 <a href="show:help">[?]</a>
             </p>
@@ -776,12 +779,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
             src_style = nv.style()
             new_style_global = {}
             src_background_color = ""
-            # theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-            # theme_dark_color += eval(sublime.load_settings(settings_name).get("nav_bar_color_change"))
-            # theme_dark_color &= 0xffffff
-            # theme_dark_color = hex(theme_dark_color).replace("0x","#")
-            # new_style_global["background"] = theme_dark_color
-            new_style_global["background"] = "#333333"
+            theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
+            theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_change"),16)
+            theme_dark_color &= 0xffffff
+            theme_dark_color = "#{:06x}".format(theme_dark_color)
+            new_style_global["background"] = theme_dark_color
+            new_style_global["line_highlight"] = theme_dark_color
+            # new_style_global["background"] = "#333333"
             new_style_global["foreground"] = src_style["foreground"]
             theme_resource = self.save_theme({
                 "globals": new_style_global,
