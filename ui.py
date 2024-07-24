@@ -287,7 +287,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		res = []
 		try:
 		# 使用self.client.get_dir_list会执行两次循环
-			for fs in self.client.sftp_client.listdir_iter(remote_path):
+			for fs in list(self.client.sftp_client.listdir_iter(remote_path)):
 				resource_item = {}
 				resource_item["name"] = fs.filename
 				resource_item["mode"] = oct(stat.S_IMODE(fs.st_mode)).replace("0o","")
@@ -319,6 +319,22 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self._max_resource_id += 1
 		return str(self._max_resource_id)
 
+	def clean_resource(self,resource):
+		# 删除目录资源下的所有资源
+		resource_data = self.resource_data
+		resource_path = self.path_by_resource(resource)
+		dl = []
+		for id in resource_data.keys():
+			r = resource_data[id]
+			path_where = r["where"]
+			root_path = r["root_path"]
+			if path_where.startswith(resource_path) and root_path == resource["root_path"]:
+				dl.append(id)
+			if root_path == resource_path: # 当在root_path下
+				dl.append(id)
+		for id in dl:
+			del resource_data[id]
+
 	def save_theme(self,data_dict):
 		theme_path = os.path.join(
 				sublime.packages_path(),
@@ -343,6 +359,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		# 	"resource_create_dir",
 		# 	"resource_info",
 		# 	"resource_delete",
+		#	"resource_clone_dir"
 		# ]
 		operation,args = href.split(":")
 		def reload(what):
@@ -454,27 +471,34 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			})
 		def show_panel(_):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
+		def _resource_create_file(path,fs,parent_resource):
+			path = self.client.remote_expandvars(path)
+			f =  self.client.sftp_client.open(path,"a")
+			f.close()
+			id = self._new_resource_id()
+			# fs = self.client.sftp_client.lstat(path)
+			new_resource = {
+				"name": os.path.split(path)[-1],
+				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
+				"access": accessable(fs,*(self.client.userid)),
+				"is_dir": False,
+				"focus": False,
+				"root_path": parent_resource["root_path"] if parent_resource["root_path"] != "" else self.path_by_resource(parent_resource),
+				"where": os.path.split(path)[0],
+				"depth": parent_resource["depth"] + 1
+			}
+			self.resource_data[id] = new_resource
+			return new_resource
 		def resource_create_file(id):
 			resource = self.resource_data[id]
 			resource_path = self.path_by_resource(resource)
 			def on_done(path):
 				if path[-1] == self.client.remote_os_sep: return
-				path = self.client.remote_expandvars(path)
-				f =  self.client.sftp_client.open(path,"a")
-				f.close()
-				id = self._new_resource_id()
-				fs = self.client.sftp_client.lstat(path)
-				new_resource = {
-					"name": os.path.split(path)[-1],
-					"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
-					"access": accessable(fs,*(self.client.userid)),
-					"is_dir": False,
-					"focus": False,
-					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource),
-					"where": os.path.split(path)[0],
-					"depth": self.focus_resource["depth"] + 1
-				}
-				self.resource_data[id] = new_resource
+				new = _resource_create_file(
+					path,
+					self.client.sftp_client.lstat(path),
+					resource
+				)
 				self.update_view_port()
 				sublime.status_message("create %s"%self.path_by_resource(new_resource))
 			self.window.show_input_panel(
@@ -483,36 +507,101 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				on_done,
 				None,
 				None)
+		def _resource_create_dir(path,fs,parent_resource):
+			path = self.client.remote_expandvars(path)
+			id = self._new_resource_id()
+			# fs = self.client.sftp_client.lstat(path)
+			new_resource = {
+				"name": os.path.split(path)[-1],
+				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
+				"access": accessable(fs,*(self.client.userid)),
+				"is_dir": True,
+				"expand": False,
+				"focus": False,
+				"root_path": parent_resource["root_path"] if parent_resource["root_path"] != "" else self.path_by_resource(parent_resource),
+				"where": os.path.split(path)[0],
+				"depth": parent_resource["depth"] + 1
+			}
+			self.resource_data[id] = new_resource
+			return new_resource
 		def resource_create_dir(id):
 			resource = self.resource_data[id]
 			resource_path = self.path_by_resource(resource)
 			def on_done(path):
 				if path[-1] == self.client.remote_os_sep:
 					path = path[:-1]
-				path = self.client.remote_expandvars(path)
-				id = self._new_resource_id()
 				self.client.sftp_client.mkdir(path)
-				fs = self.client.sftp_client.lstat(path)
-				new_resource = {
-					"name": os.path.split(path)[-1],
-					"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
-					"access": accessable(fs,*(self.client.userid)),
-					"is_dir": True,
-					"expand": False,
-					"focus": False,
-					"root_path": resource["root_path"] if resource["root_path"] != "" else self.path_by_resource(resource),
-					"where": os.path.split(path)[0],
-					"depth": self.focus_resource["depth"] + 1
-				}
-				self.resource_data[id] = new_resource
+				new = _resource_create_dir(
+					path,
+					self.client.sftp_client.lstat(path),
+					resource
+				)
 				self.update_view_port()
-				sublime.status_message("create %s"%self.path_by_resource(new_resource))
+				sublime.status_message("create %s"%self.path_by_resource(new))
 			self.window.show_input_panel(
 				"new dir:",
 				resource_path+self.client.remote_os_sep,
 				on_done,
 				None,
 				None)
+		def resource_clone_dir(id):
+			select_resource = self.resource_data[id]
+			path_hash,local_path_root,_ = path_hash_map.get(select_resource["root_path"])
+			save_hash_root = os.path.sep.join([local_path_root,path_hash]) # local_path_root/path_hash
+			remote_path = self.path_by_resource(select_resource)
+
+			@async_run
+			def on_done(i):
+				self.clean_resource(select_resource)
+				current_resource = select_resource
+				def make_in_local(_remote_path):
+					nonlocal current_resource
+					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)): # 必须要转列表否则单个生成式遍历对象会超时
+						r_path = _remote_path + self.client.remote_os_sep + fs.filename
+						l_path = save_hash_root + os.path.sep.join(r_path.split(self.client.remote_os_sep))
+						if(stat.S_ISDIR(fs.st_mode)): # 目录
+							new = _resource_create_dir(
+								r_path,
+								fs,
+								current_resource
+							) # 创建目录资源
+							new["expand"] = True
+							parent_bak = current_resource.copy()
+							current_resource = new
+							# 创建空目录，递归进入创建空目录
+							os.makedirs(l_path, exist_ok=True)
+							os.chmod(l_path,stat.S_IMODE(fs.st_mode))
+							print(r_path,"**")
+							make_in_local(r_path) # 递归
+							current_resource = parent_bak
+						else: # 文件
+							_resource_create_file(
+								r_path,
+								fs,
+								current_resource
+							) # 创建文件资源
+							# 直接get到本地
+							os.makedirs(os.path.split(l_path)[0], exist_ok=True)
+							self.client.file_sync(l_path,r_path,dir="get",sync_stat=True)
+							print(r_path)
+							pass
+						sublime.status_message("get [%s] to [%s]"%(r_path,l_path))
+						self.update_view_port()
+				make_in_local(remote_path)
+			if int(sublime.version()) >= 4081:
+				self.window.show_quick_panel(
+					["yes","no"],
+					on_done,
+					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT,
+					placeholder = " clone remote[%s] to local"%remote_path
+				)
+			else:
+				self.window.show_quick_panel(
+					["clone [%s] to local"%get_path,"clean"],
+					on_done,
+					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT
+				)
+
 		def resource_info(id):
 			resource = self.resource_data[id]
 			resource_path = self.path_by_resource(resource)
@@ -582,18 +671,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 							self.add_path(resource_path,root_path=resource["root_path"])
 						else:
 							self.add_path(resource_path,root_path=self.path_by_resource(resource))
-					else: # 删除非展开目录下的资源
-						dl = []
-						for id in resource_data.keys():
-							r = resource_data[id]
-							path_where = r["where"]
-							root_path = r["root_path"]
-							if path_where.startswith(resource_path) and root_path == resource["root_path"]:
-								dl.append(id)
-							if root_path == resource_path: # 当在root_path下
-								dl.append(id)
-						for id in dl:
-							del resource_data[id]
+					else:
+						self.clean_resource(resource)
 			else:
 				self.open_resource_file(resource)
 			self.update_view_port()
@@ -605,14 +684,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			if self.resource_data[id]["is_dir"]:
 				operation_menu.extend([
 					("add file",resource_create_file),
-					("add directory",resource_create_dir)
+					("add directory",resource_create_dir),
+					("clone directory",resource_clone_dir)
 				])
 			if int(sublime.version()) >= 4081:
 				self.window.show_quick_panel(
 					[d[0] for d in operation_menu],
 					lambda i: operation_menu[i][1](id) if i!=-1 else None,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT,
-					placeholder = "you can"
+					placeholder = " you can"
 				)
 			else:
 				self.window.show_quick_panel(
