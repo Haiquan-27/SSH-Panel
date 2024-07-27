@@ -1,16 +1,15 @@
 import sublime
 import sublime_plugin
-import paramiko
-# import importlib # debug
-# import util # debug
-# importlib.reload(util) # debug
-from util import *
+from .util import *
 import os
 import stat
 import time
 import re
 import sys
-
+dependencies_path = os.path.join(os.path.dirname(__file__), 'dependencies')
+sys.path.append(dependencies_path)
+import paramiko
+sys.path.remove(dependencies_path)
 
 AUTH_METHOD_PASSWORD = 0	# 0: username and password	
 AUTH_METHOD_PRIVATEKEY = 1	# 1: username and private_key	
