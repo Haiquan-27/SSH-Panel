@@ -45,6 +45,7 @@
 	"new_window":true, // open new window when connect
 	"reconnect_on_start":true,
 	"nav_bar_color_change": "-0x101010",
+	"icon_style":"image", // emjio | none | image
 	"quiet_log":false,
 	"debug_mode":false
 }

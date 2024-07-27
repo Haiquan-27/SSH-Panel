@@ -17,6 +17,45 @@ from util import *
 client_map = {} # client_id -> client
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
+icon_style = None
+icon_style_data = {
+	"emjio": { # utf-8 code
+		"folder":b'\xf0\x9f\x93\x81'.decode("utf-8"),
+		"folder_open":b'\xf0\x9f\x93\x82'.decode("utf-8"),
+		"file":b'\xf0\x9f\x93\x84'.decode("utf-8"),
+		"menu":b'\xe2\x98\xb0'.decode("utf-8"),
+		"drop":b'\xe2\x9c\x96\xef\xb8\x8f'.decode("utf-8"),
+		"error":b'\xe2\x9d\x8c'.decode("utf-8"),
+		"ok":b'\xe2\x9c\x94\xef\xb8\x8f'.decode("utf-8"),
+		"bus":b'\xe2\x8f\xb3'.decode("utf-8"),
+		"warning":b'\xe2\x9a\xa0\xef\xb8\x8f'.decode("utf-8"),
+		"denied":b'\xf0\x9f\x9a\xab'.decode("utf-8")
+	},
+	"none":{
+		"folder":"",
+		"folder_open":"",
+		"file":"",
+		"menu":"[...]",
+		"drop":"[-]",
+		"error":"<span class='error'>error</span>",
+		"ok":"<span class='keyword'> OK</span>",
+		"bus":"<span class='warning'>[###  ]</span>",
+		"warning":"<span class='warning'> !</span>",
+		"denied":"<span class='error'>denied</span>"
+	},
+	"image":{
+		"folder":"<img src='res://Packages/Theme - Spacegray/assets/folder-closed.png'>",
+		"folder_open":"<img src='res://Packages/Theme - Spacegray/assets/folder-open.png'>",
+		"file":"<img src='res://Packages/Theme - Default/common/icon_context.png'>",
+		"menu":"[...]",
+		"drop":"[-]",
+		"error":"<span class='error'>error</span>",
+		"ok":"<span class='keyword'> OK</span>",
+		"bus":"<span class='warning'>[###  ]</span>",
+		"warning":"<span class='warning'> !</span>",
+		"denied":"<span class='error'>denied</span>"
+	}
+}
 
 def register_client(client):
 	global client_map
@@ -190,11 +229,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.resource_data = {}
 		self._max_resource_id = -1
 		self.focus_resource = None
-		if sublime.load_settings(settings_name).get("new_window",True):
+		settings = sublime.load_settings(settings_name)
+		if settings.get("new_window",True):
 			sublime.active_window().run_command("new_window")
 			window = sublime.windows()[-1]
 			window.set_sidebar_visible(False)
 			self.window = window
+		global icon_style
+		icon_style = icon_style_data.get(settings.get("icon_style"),"none")
 		window = self.window = self.view.window()
 		user_settings = UserSettings()
 		if reload_from_view:
@@ -311,7 +353,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				resource_data[id] = resource_item
 			return res
 		except Exception as e:
-			self.focus_tip = "<span class='error'>!?</span>"
+			self.focus_tip = icon_style["denied"]
 			self.update_view_port()
 			LOG.E("'%s' is not accessible"%remote_path,str(e.args))
 
@@ -473,8 +515,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
 		def _resource_create_file(path,fs,parent_resource):
 			path = self.client.remote_expandvars(path)
-			f =  self.client.sftp_client.open(path,"a")
-			f.close()
+			# f =  self.client.sftp_client.open(path,"a")
+			# f.close()
 			id = self._new_resource_id()
 			# fs = self.client.sftp_client.lstat(path)
 			new_resource = {
@@ -556,6 +598,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				current_resource = select_resource
 				def make_in_local(_remote_path):
 					nonlocal current_resource
+					self.focus_tip = icon_style["bus"]
 					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)): # 必须要转列表否则单个生成式遍历对象会超时
 						r_path = _remote_path + self.client.remote_os_sep + fs.filename
 						l_path = save_hash_root + os.path.sep.join(r_path.split(self.client.remote_os_sep))
@@ -566,6 +609,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 								current_resource
 							) # 创建目录资源
 							new["expand"] = True
+							new["focus"] = True
 							parent_bak = current_resource.copy()
 							current_resource = new
 							# 创建空目录，递归进入创建空目录
@@ -575,11 +619,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 							make_in_local(r_path) # 递归
 							current_resource = parent_bak
 						else: # 文件
-							_resource_create_file(
+							new = _resource_create_file(
 								r_path,
 								fs,
 								current_resource
 							) # 创建文件资源
+							new["focus"] = True
 							# 直接get到本地
 							os.makedirs(os.path.split(l_path)[0], exist_ok=True)
 							self.client.file_sync(l_path,r_path,dir="get",sync_stat=True)
@@ -588,6 +633,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						sublime.status_message("get [%s] to [%s]"%(r_path,l_path))
 						self.update_view_port()
 				make_in_local(remote_path)
+				self.focus_tip = icon_style["ok"]
+				self.update_view_port()
 			if int(sublime.version()) >= 4081:
 				self.window.show_quick_panel(
 					["yes","no"],
@@ -641,6 +688,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					try:
 						self.client.sftp_client.rmdir(resource_path)
 					except Exception as e:
+						self.focus_tip = icon_style["denied"]
 						LOG.E("rmdir %s Falied,please check permission and the directory empty,see [info]"%resource_path)
 				else:
 					self.client.sftp_client.remove(resource_path)
@@ -724,7 +772,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			try:
 				fn()
 			except Exception as e:
-				self.focus_tip = "<span class='error'>!?</span>"
+				self.focus_tip = icon_style["error"]
 				self.update_view_port()
 				LOG.E("file sync failed",{
 					"remote_path":remote_path,
@@ -833,7 +881,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep
 		for resource_id,resource in self.resource_data.items():
 			resource_path = self.path_by_resource(resource)
-			ele = "<p style='padding-left:{depth}px'><a class='{style_class}' href='resource_click:{resource_id}'>{text}</a>{symbol}{focus_tip}<span class='operation_menu'>{operation_menu}</span></p>".format(
+			ele = "<p style='padding-left:{depth}px'>{file_icon}<a class='{style_class}' href='resource_click:{resource_id}'>{text}</a>{symbol}{focus_tip}<span class='operation_menu'>{operation_menu}</span></p>".format(
+					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_style["file"],
 					style_class = ("res_focus" if resource["focus"] else "res") + " " + ("no_accessible" if not resource["access"] else ""),
 					resource_id = resource_id,
 					depth = resource["depth"] * 30,
@@ -843,8 +892,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 								replace(">","&gt;").
 								replace(" ","&nbsp;"),
 					symbol = os_sep_symbol if resource["is_dir"] else "",
-					operation_menu = ("<a href='resource_menu:%s'>[...]</a>"%resource_id if resource["focus"] else "") +
-									 ("<a href='del_root_path:%s'>[-]</a>"%resource_id if resource["root_path"] == "" else ""),
+					operation_menu = ("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else "" +
+									 ("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "",
 					focus_tip = self.focus_tip if resource["focus"] else ""
 				)
 			ele_list.append(ele)
