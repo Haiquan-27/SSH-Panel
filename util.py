@@ -9,11 +9,6 @@ import stat
 # DEBUG = None
 settings_name = "ssh-panel.sublime-settings"
 async_Lock = threading.Lock()
-
-# def plugin_loaded():
-# 	global DEBUG
-# 	DEBUG = sublime.load_settings(settings_name).get("debug_mode")
-
 output_panel_phantomSet = None
 output_panel_phantom_list = []
 output_panel_name = "ssh-panel"
