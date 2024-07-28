@@ -57,6 +57,7 @@ sudo yum install libffi-devel
 * `new_window` 当连接时打开一个新的窗口
 * `quiet_log` 当有消息时不会立即弹出消息面板
 * `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
+* `icon_style` 显示在文件或目录前的图标样式，值为`emjio` | `none` | `image`之一
 * `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff) 字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色
 > 如果想使用原视图的背景色则可设置为 "0"
 ### 路径:
@@ -144,6 +145,7 @@ sudo yum install libffi-devel
 * `[I]` :显示服务器信息
 * `[R]` :刷新与同步文件列表
 * `[E]` :编辑设置
+* `[P]` :调出状态面板
 * `[T]` :伪终端
 * `[+]` :添加路径
 * `[-]` :从目录视图中删除路径
