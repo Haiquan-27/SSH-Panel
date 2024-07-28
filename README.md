@@ -60,6 +60,7 @@ open command palette and select `SSH-Panel: Edit Settings` command to edit setti
 * `new_window` open new window when connect
 * `quiet_log` the pop-up message panel is not displayed immediately when a message is obtained
 * `reconnect_on_start` whether to automatically open the last closed connection when starting sublime text
+* `icon_style` Icon style displayed in front of a directory or file,value is choice in `emjio` | `none` | `image`
 * `nav_bar_color_change` change color of the directory panel,value range is -16777215~+16777215(-0xffffff~+0xffffff) type is string,this value will be added with the RGB color of the current view background to get a new RGB color
 > if you not want to change the background color value can be set to "0"
 ### path:
@@ -151,6 +152,7 @@ you can edit and view server information on the pop-up directory panel
 * `[I]` :show server infomation
 * `[R]` :refresh and sync file list
 * `[E]` :edit settings
+* `[P]` :show status panel
 * `[T]` :pseudo terminal
 * `[+]` :add new root path
 * `[-]` :remove root path from view
