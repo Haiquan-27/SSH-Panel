@@ -1,7 +1,7 @@
 {
 	// Special settings can be defined in children of server_list
 	"default_connect_settings":{
-		"remote_path":["$HOME/"],
+		"remote_path":["$HOME"],
 		"local_path":"~/SFTP-Local/{auto_generate}",
 		"network_timeout": 20,
 		"port":22,
