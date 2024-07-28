@@ -27,12 +27,19 @@ def accessable(file_stat,user_id,group_ids:()):
 def html_tmp(content):
 	return """
 	<html>
-		<style>{css}</style>
+		<style>
+		.icon_size{{
+			height:{size}px;
+			width:{size}px;
+		}}
+		{css}
+		</style>
 		<body>
 		{content}
 		</body>
 	</html>
 	""".format(
+		size = sublime.load_settings("Preferences.sublime-settings").get("font_size"),
 		css = sublime.load_resource(
 				sublime.load_settings(settings_name).get("style_css","Packages/SSH-Panel/style.css")
 			),
