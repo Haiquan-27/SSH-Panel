@@ -38,9 +38,9 @@ icon_style_data = {
 		"denied":"<span class='error'>denied</span>"
 	},
 	"image":{
-		"folder":"<img src='res://Packages/Theme - Spacegray/assets/folder-closed.png'>",
-		"folder_open":"<img src='res://Packages/Theme - Spacegray/assets/folder-open.png'>",
-		"file":"<img src='res://Packages/Theme - Default/common/icon_context.png'>",
+		"folder":"<img class='icon_size' src='res://Packages/Theme - Spacegray/assets/folder-closed.png'>",
+		"folder_open":"<img class='icon_size' src='res://Packages/Theme - Spacegray/assets/folder-open.png'>",
+		"file":"<img class='icon_size' src='res://Packages/Theme - Default/common/icon_context.png'>",
 		"menu":"[...]",
 		"drop":"[-]",
 		"error":"<span class='error'>error</span>",
@@ -877,7 +877,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			resource_path = self.path_by_resource(resource)
 			ele = "<p style='padding-left:{depth}px'>{file_icon}<a class='{style_class}' href='resource_click:{resource_id}'>{text}</a>{symbol}{focus_tip}<span class='operation_menu'>{operation_menu}</span></p>".format(
 					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_style["file"],
-					style_class = ("res_focus" if resource["focus"] else "res") + " " + ("no_accessible" if not resource["access"] else ""),
+					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else "res"),("no_accessible" if not resource["access"] else "")]),
 					resource_id = resource_id,
 					depth = resource["depth"] * 30,
 					text = (resource["name"]).

@@ -35,19 +35,16 @@ a{
 }
 
 .res_dir{
-	color: var(--foreground);
 	font-weight: bold;
-	line-height: 10px;
+	color: color(var(--foreground) alpha(0.9));
 }
 
-.res{
-	color: var(--foreground);
-	line-height: 10px;
+.res_file{
+	color: color(var(--foreground) alpha(0.9));
 }
 
 .res_focus{
 	border: 1px solid var(--bluish);
-	color: var(--foreground);
 	border-radius: 2px;
 }
 
