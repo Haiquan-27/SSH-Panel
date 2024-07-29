@@ -13,6 +13,11 @@ output_panel_phantomSet = None
 output_panel_phantom_list = []
 output_panel_name = "ssh-panel"
 
+def async_run(func): # 异步运行装饰器
+	def wrapper(*args,**kwargs):
+		t = threading.Thread(target=func,args=args,kwargs=kwargs,daemon=True).start()
+	return wrapper
+
 def accessable(file_stat,user_id,group_ids:()):
 	if user_id == 0:
 		return True
@@ -25,12 +30,13 @@ def accessable(file_stat,user_id,group_ids:()):
 		return False
 
 def html_tmp(content):
+	settings = sublime.load_settings("Preferences.sublime-settings")
 	return """
 	<html>
 		<style>
 		.icon_size{{
-			height:{size}px;
-			width:{size}px;
+			height:{h}px;
+			width:{w}px;
 		}}
 		{css}
 		</style>
@@ -39,9 +45,10 @@ def html_tmp(content):
 		</body>
 	</html>
 	""".format(
-		size = sublime.load_settings("Preferences.sublime-settings").get("font_size"),
+		h = 48 * settings.get("font_size") * 0.02,
+		w = 54 * settings.get("font_size") * 0.02,
 		css = sublime.load_resource(
-				sublime.load_settings(settings_name).get("style_css","Packages/SSH-Panel/style.css")
+				settings.get("style_css","Packages/SSH-Panel/style.css")
 			),
 		content = content
 	)
@@ -92,11 +99,6 @@ def html_str(s):
 
 class SSHPanelException(Exception):
 	pass
-
-def async_run(func): # 异步运行装饰器
-	def wrapper(*args,**kwargs):
-		t = threading.Thread(target=func,args=args,kwargs=kwargs,daemon=True).start()
-	return wrapper
 
 class SSHPanelLog():
 	def _msg_format(self,msg_type,msg_title,msg_content):
