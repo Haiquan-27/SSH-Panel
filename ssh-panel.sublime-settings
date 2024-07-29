@@ -53,5 +53,6 @@
 	"icon_quality":"@3x", // image icon quality,chiose in "" | "@2x" | "@3x"
 	"icon_color":"gray", // default icon color (normal files, folders),chiose in "blue" | "green" | "white" | "yellow" | "gray"
 	"quiet_log":false,
-	"debug_mode":false
+	"debug_mode":false,
+	"guide":true
 }
