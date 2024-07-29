@@ -11,6 +11,7 @@ from .util import *
 client_map = {} # client_id -> client
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
+icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
 icon_style = None
 icon_style_data = {
 	"emjio": { # utf-8 code
@@ -23,31 +24,34 @@ icon_style_data = {
 		"ok":b'\xe2\x9c\x94\xef\xb8\x8f'.decode("utf-8"),
 		"bus":b'\xe2\x8f\xb3'.decode("utf-8"),
 		"warning":b'\xe2\x9a\xa0\xef\xb8\x8f'.decode("utf-8"),
-		"denied":b'\xf0\x9f\x9a\xab'.decode("utf-8")
+		"denied":b'\xf0\x9f\x9a\xab'.decode("utf-8"),
+		"dir_symbol": False
 	},
 	"none":{
 		"folder":"",
 		"folder_open":"",
 		"file":"",
 		"menu":"[...]",
-		"drop":"[-]",
+		"drop":"[x]",
 		"error":"<span class='error'>error</span>",
 		"ok":"<span class='keyword'> OK</span>",
 		"bus":"<span class='warning'>[###  ]</span>",
 		"warning":"<span class='warning'> !</span>",
-		"denied":"<span class='error'>denied</span>"
+		"denied":"<span class='error'>denied</span>",
+		"dir_symbol": True
 	},
 	"image":{
-		"folder":"<img class='icon_size' src='res://Packages/Theme - Spacegray/assets/folder-closed.png'>",
-		"folder_open":"<img class='icon_size' src='res://Packages/Theme - Spacegray/assets/folder-open.png'>",
-		"file":"<img class='icon_size' src='res://Packages/Theme - Default/common/icon_context.png'>",
+		"folder":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/folder_closed@3x.png'>",
+		"folder_open":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/folder_open@3x.png'>",
+		"file":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/file_type_default@3x.png'>",
 		"menu":"[...]",
-		"drop":"[-]",
+		"drop":"[x]",
 		"error":"<span class='error'>error</span>",
 		"ok":"<span class='keyword'> OK</span>",
 		"bus":"<span class='warning'>[###  ]</span>",
 		"warning":"<span class='warning'> !</span>",
-		"denied":"<span class='error'>denied</span>"
+		"denied":"<span class='error'>denied</span>",
+		"dir_symbol": False
 	}
 }
 
@@ -58,12 +62,39 @@ def register_client(client):
 	new_id = str(_max_client_id)
 	client_map[new_id] = client
 	return new_id
+
 def update_client(id,client):
 	global client_map
 	client_map[id] = client
 
+def update_ext_icon():
+	global icon_data
+	icon_theme = sublime.load_settings(settings_name).get("icon_theme")
+	icon_quality = sublime.load_settings(settings_name).get("icon_quality")
+	scope_data = sublime.load_settings("scope.json")
+	resource_list = sublime.find_resources("*file_type_*%s.png"%icon_quality)
+	print(icon_theme)
+	# for ext in scope.split("."):
+	for path in resource_list:
+		file_name = os.path.splitext(os.path.split(path)[1])[0]
+		final_scope = file_name[10 : -1*len(icon_quality) if icon_quality else None] if path.startswith(icon_theme) else ""
+		if final_scope != "":
+			scope_info = scope_data.get(final_scope)
+			if scope_info:
+				for ext in scope_info["file_extensions"]:
+					ext = ext[1:] if ext[0] == os.path.extsep else ext
+					icon_data[ext] = "<img class='icon_size' src='res://%s'>"%path
+
+def update_icon():
+	update_ext_icon()
+	color = sublime.load_settings(settings_name).get("icon_color")
+	global icon_style_data
+	icon_style_data["image"]["folder"] = icon_style_data["image"]["folder"].format(color=color)
+	icon_style_data["image"]["folder_open"] = icon_style_data["image"]["folder_open"].format(color=color)
+	icon_style_data["image"]["file"] = icon_style_data["image"]["file"].format(color=color)
 
 def plugin_loaded():
+	update_icon()
 	if sublime.load_settings(settings_name).get("reconnect_on_start"):
 		for w in sublime.windows():
 			for v in w.views():
@@ -77,6 +108,7 @@ def plugin_loaded():
 
 def plugin_unloaded():
 	pass
+
 
 class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 	def __init__(self,window):
@@ -231,7 +263,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			self.window = window
 		global icon_style
 		icon_style = icon_style_data.get(settings.get("icon_style"),"none")
-		window = self.window = self.view.window()
+		window = self.window
 		user_settings = UserSettings()
 		if reload_from_view:
 			navication_view = self.view
@@ -530,6 +562,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			resource_path = self.path_by_resource(resource)
 			def on_done(path):
 				if path[-1] == self.client.remote_os_sep: return
+				f =  self.client.sftp_client.open(path,"a")
+				f.close()
 				new = _resource_create_file(
 					path,
 					self.client.sftp_client.lstat(path),
@@ -872,12 +906,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		if self.client == None:
 			return "<a href='reload:connect'>no connect</a>"
 		ele_list = []
-		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep
+		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
+		# os_sep_symbol = ""
 		for resource_id,resource in self.resource_data.items():
 			resource_path = self.path_by_resource(resource)
+			ext = os.path.splitext(resource["name"])[1][1:]
 			ele = "<p style='padding-left:{depth}px'>{file_icon}<a class='{style_class}' href='resource_click:{resource_id}'>{text}</a>{symbol}{focus_tip}<span class='operation_menu'>{operation_menu}</span></p>".format(
-					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_style["file"],
-					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else "res"),("no_accessible" if not resource["access"] else "")]),
+					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])),
+					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else ""),("no_accessible" if not resource["access"] else "")]),
 					resource_id = resource_id,
 					depth = resource["depth"] * 30,
 					text = (resource["name"]).
@@ -887,12 +923,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 								replace(" ","&nbsp;"),
 					symbol = os_sep_symbol if resource["is_dir"] else "",
 					operation_menu = ("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else "" +
-									 ("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "",
+									  ("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "",
 					focus_tip = self.focus_tip if resource["focus"] else ""
 				)
 			ele_list.append(ele)
-		# for id in ignore_id_list:
-		# 	del self.resource_data[id]
 		id_re_rule = re.compile(r"(?<=resource_click:)\d+")
 		def get_resource_path(ele):
 			id = id_re_rule.search(ele).group()
