@@ -1,0 +1,43 @@
+<style>
+	.keyword{
+		background-color: var(--foreground);
+		color: var(--background);
+		border: 1px solid var(--foreground);
+		border-radius: 2px;
+	}
+	.b_line{
+		text-decoration: underline;
+	}
+</style>
+<h1>Welcome to SSH-Panel</h1>
+<p>This is a SSH Remote editor for sublime text</p>
+<p>This Sublime Text plugin allow you to browse and edit files on remote servers Windows and Linux servers that support any openssh available</p>
+<h2>How to use?</h2>
+<h3>step 1</h3>
+<p>Check dependent Libraries (very important)</p>
+<p>for normal import of dependency libraries</p>
+<p>on Windows need: <span class="keyword">python3.dll</span></p>
+<p style="padding-left:20px">you can install from <a href="https://github.com/Haiquan-27/SSH-Panel-doc-annex">this repositories</a> and copy to installation directory of sublime , this path like <span class="b_line">"C:\Sublime Text\python3.dll"</span></p>
+<p>on Linux need: <span class="keyword">libffi</span></p>
+<p style="padding-left:20px">on Debian/Ubuntu,use <span class="b_line">sudo apt install libffi-dev</span></p>
+<p style="padding-left:20px">on Fedora/RHEL/CentOS,use <span class="b_line">sudo dnf install libffi-devel</span></p>
+<p style="padding-left:20px">on OpenSUSE,use <span class="b_line">sudo zypper install libffi-devel</span></p>
+<h3>step 2</h3>
+<p>install python3.8 dependent libraries following</p>
+<ul>
+	<li>bcrypt</li>
+	<li>cffi</li>
+	<li>cryptography</li>
+	<li>nacl</li>
+	<li>six</li>
+</ul>
+<p>you can install from <a href="https://github.com/Haiquan-27/SSH-Panel-doc-annex">this repositories</a> and copy to Lib\python38 path of sublime</p>
+<h3>step 3</h3>
+<p>restart sublime text</p>
+<h3>step 4</h3>
+<p>type <span class="keyword">Ctrl</span> <span class="keyword">Shift</span> <span class="keyword">P</span> open Command Panel and type <span class="b_line">"SSH-Panel: Edit Settings"</span> configure your connection options</p>
+<h3>step 5</h3>
+<p>use <span class="b_line">"SSH-Panel: Connect Server"</span> Command to retrieve server list</p>
+<p>CHECKED this and Select</p>
+<h2>Good Luck!</h2>
+<p>If you encounter any problems during,provide feedback on <a href="https://github.com/Haiquan-27/SSH-Panel/issues">issues</a></p>
