@@ -46,6 +46,12 @@
 	"reconnect_on_start":true,
 	"nav_bar_color_change": "-0x101010",
 	"icon_style":"image", // emjio | none | image
+	"icon_theme":"Packages/zzz A File Icon zzz/patches/general/multi/", // if [A File Icon] already installed,multi-color icons can be used
+	// "icon_theme":"Packages/zzz A File Icon zzz/patches/general/single/", // if [A File Icon] already installed,single-color icons can be used
+	// "icon_theme":"Packages/", // Match from all path
+	// "icon_theme":"Packages/Theme - Default/", // Match within a specific Theme path
+	"icon_quality":"@3x", // image icon quality,chiose in "" | "@2x" | "@3x"
+	"icon_color":"gray", // default icon color (normal files, folders),chiose in "blue" | "green" | "white" | "yellow" | "gray"
 	"quiet_log":false,
 	"debug_mode":false
 }
