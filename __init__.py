@@ -3,6 +3,9 @@ import sys
 import sublime
 
 def plugin_loaded():
+	settings = sublime.load_settings("ssh-panel.sublime-settings")
+	if settings.get("guide"):
+		return
 	try:
 		import bcrypt,cffi,cryptography,nacl,six
 	except ImportError:
@@ -11,7 +14,7 @@ def plugin_loaded():
 	except ModuleNotFoundError as e:
 		sublime.error_message("ssh-panel: missing dependencies:\n"+str(e.args))
 	# reload connect
-	if sublime.load_settings("ssh-panel.sublime-settings").get("reconnect_on_start",False):
+	if settings.get("reconnect_on_start",False):
 		for w in sublime.windows():
 			for v in w.views():
 				server_name = v.settings().get("ssh_panel_serverName",None)

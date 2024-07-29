@@ -73,7 +73,6 @@ def update_ext_icon():
 	icon_quality = sublime.load_settings(settings_name).get("icon_quality")
 	scope_data = sublime.load_settings("scope.json")
 	resource_list = sublime.find_resources("*file_type_*%s.png"%icon_quality)
-	print(icon_theme)
 	# for ext in scope.split("."):
 	for path in resource_list:
 		file_name = os.path.splitext(os.path.split(path)[1])[0]
@@ -94,6 +93,15 @@ def update_icon():
 	icon_style_data["image"]["file"] = icon_style_data["image"]["file"].format(color=color)
 
 def plugin_loaded():
+	settings = sublime.load_settings(settings_name)
+	if settings.get("guide"):
+		sublime.active_window().new_html_sheet(
+			"SSH-Panel | Guide",
+			sublime.load_resource('Packages/SSH-Panel/guide.html')
+		)
+		settings.set("guide",False)
+		sublime.save_settings(settings_name)
+
 	update_icon()
 	if sublime.load_settings(settings_name).get("reconnect_on_start"):
 		for w in sublime.windows():
@@ -643,7 +651,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 							# 创建空目录，递归进入创建空目录
 							os.makedirs(l_path, exist_ok=True)
 							os.chmod(l_path,stat.S_IMODE(fs.st_mode))
-							print(r_path,"**")
 							make_in_local(r_path) # 递归
 							current_resource = parent_bak
 						else: # 文件
@@ -656,7 +663,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 							# 直接get到本地
 							os.makedirs(os.path.split(l_path)[0], exist_ok=True)
 							self.client.file_sync(l_path,r_path,dir="get",sync_stat=True)
-							print(r_path)
 							pass
 						sublime.status_message("get [%s] to [%s]"%(r_path,l_path))
 						self.update_view_port()
