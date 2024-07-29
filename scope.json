@@ -1,0 +1,2360 @@
+{
+     "2": {
+          "scope": "source.actionscript.2",
+          "file_extensions": []
+     },
+     "applescript": {
+          "scope": "source.applescript",
+          "file_extensions": [
+               "applescript"
+          ]
+     },
+     "asp": {
+          "scope": "source.json.embedded.asp",
+          "file_extensions": [
+               "asp"
+          ]
+     },
+     "compound": {
+          "scope": "source.dosbatch.compound",
+          "file_extensions": []
+     },
+     "dosbatch": {
+          "scope": "source.dosbatch",
+          "file_extensions": [
+               "bat"
+          ]
+     },
+     "plain": {
+          "scope": "text.html.plain",
+          "file_extensions": []
+     },
+     "cs": {
+          "scope": "source.cs",
+          "file_extensions": [
+               "cs"
+          ]
+     },
+     "c++": {
+          "scope": "source.c++",
+          "file_extensions": [
+               "cpp",
+               "cc",
+               "cp",
+               "cxx",
+               "C",
+               "h",
+               "hh",
+               "hpp",
+               "hxx",
+               "inl",
+               "ipp",
+               "ixx"
+          ]
+     },
+     "c": {
+          "scope": "source.c",
+          "file_extensions": [
+               "c"
+          ]
+     },
+     "clojure": {
+          "scope": "source.clojure",
+          "file_extensions": [
+               "clj",
+               "cljc"
+          ]
+     },
+     "clojurescript": {
+          "scope": "source.clojure.clojurescript",
+          "file_extensions": [
+               "cljs"
+          ]
+     },
+     "css": {
+          "scope": "source.go.embedded-backtick-string.css",
+          "file_extensions": []
+     },
+     "d": {
+          "scope": "source.d",
+          "file_extensions": [
+               "d"
+          ]
+     },
+     "dmd": {
+          "scope": "source.build_output.dmd",
+          "file_extensions": []
+     },
+     "diff": {
+          "scope": "source.diff",
+          "file_extensions": [
+               "diff",
+               "patch"
+          ]
+     },
+     "erlang": {
+          "scope": "text.html.erlang",
+          "file_extensions": [
+               "erl",
+               "hrl"
+          ]
+     },
+     "attributes": {
+          "scope": "text.git.attributes",
+          "file_extensions": []
+     },
+     "ignorerevs": {
+          "scope": "text.git.blame.ignorerevs",
+          "file_extensions": []
+     },
+     "codeowners": {
+          "scope": "text.git.codeowners",
+          "file_extensions": []
+     },
+     "commit-message": {
+          "scope": "text.git.commit-message",
+          "file_extensions": []
+     },
+     "commit": {
+          "scope": "text.git.commit",
+          "file_extensions": []
+     },
+     "common": {
+          "scope": "text.git.common",
+          "file_extensions": []
+     },
+     "config": {
+          "scope": "text.git.config",
+          "file_extensions": []
+     },
+     "ignore": {
+          "scope": "text.git.ignore",
+          "file_extensions": []
+     },
+     "link": {
+          "scope": "text.git.link",
+          "file_extensions": []
+     },
+     "log": {
+          "scope": "text.plain.log",
+          "file_extensions": [
+               "log"
+          ]
+     },
+     "mailmap": {
+          "scope": "text.git.mailmap",
+          "file_extensions": []
+     },
+     "rebase": {
+          "scope": "text.git.rebase",
+          "file_extensions": []
+     },
+     "go": {
+          "scope": "text.html.markdown.go",
+          "file_extensions": [
+               "gomd",
+               "go.md",
+               "gojs",
+               "gohtml",
+               "go.html",
+               "gocss"
+          ]
+     },
+     "go-embedded-backtick-string": {
+          "scope": "text.xml.go-embedded-backtick-string",
+          "file_extensions": []
+     },
+     "embedded-backtick-string": {
+          "scope": "source.go.embedded-backtick-string",
+          "file_extensions": []
+     },
+     "html": {
+          "scope": "source.java.embedded.html",
+          "file_extensions": []
+     },
+     "js": {
+          "scope": "source.regexp.js",
+          "file_extensions": [
+               "js",
+               "mjs",
+               "cjs"
+          ]
+     },
+     "json": {
+          "scope": "source.json",
+          "file_extensions": [
+               "json",
+               "jsonc",
+               "sublime-build",
+               "sublime-color-scheme",
+               "sublime-commands",
+               "sublime-completions",
+               "sublime-keymap",
+               "sublime-macro",
+               "sublime-menu",
+               "sublime-mousemap",
+               "sublime-project",
+               "sublime-settings",
+               "sublime-theme",
+               "sublime-workspace",
+               "ipynb",
+               "gltf"
+          ]
+     },
+     "regexp": {
+          "scope": "source.regexp",
+          "file_extensions": []
+     },
+     "sql": {
+          "scope": "source.sql",
+          "file_extensions": [
+               "sql",
+               "ddl"
+          ]
+     },
+     "xml": {
+          "scope": "text.xml",
+          "file_extensions": [
+               "xml",
+               "tld",
+               "dtml",
+               "rng",
+               "rss",
+               "opml",
+               "svg"
+          ]
+     },
+     "dot": {
+          "scope": "source.dot",
+          "file_extensions": [
+               "dot"
+          ]
+     },
+     "groovy": {
+          "scope": "source.groovy",
+          "file_extensions": [
+               "groovy",
+               "gvy"
+          ]
+     },
+     "cabal": {
+          "scope": "source.cabal",
+          "file_extensions": [
+               "cabal"
+          ]
+     },
+     "haskell": {
+          "scope": "text.html.embedded.haskell",
+          "file_extensions": [
+               "hs",
+               "hs-boot"
+          ]
+     },
+     "basic": {
+          "scope": "source.regexp.basic",
+          "file_extensions": [
+               "html",
+               "htm",
+               "shtml"
+          ]
+     },
+     "jsp": {
+          "scope": "source.json.embedded.jsp",
+          "file_extensions": [
+               "jsp",
+               "jspf",
+               "jspx"
+          ]
+     },
+     "java": {
+          "scope": "source.java",
+          "file_extensions": [
+               "java"
+          ]
+     },
+     "java-props": {
+          "scope": "source.java-props",
+          "file_extensions": []
+     },
+     "javadoc": {
+          "scope": "text.html.javadoc",
+          "file_extensions": []
+     },
+     "jsx": {
+          "scope": "text.html.markdown.jsx",
+          "file_extensions": [
+               "mdx"
+          ]
+     },
+     "tsx": {
+          "scope": "source.tsx",
+          "file_extensions": []
+     },
+     "ts": {
+          "scope": "source.ts",
+          "file_extensions": []
+     },
+     "bibtex": {
+          "scope": "text.bibtex",
+          "file_extensions": []
+     },
+     "docstrip": {
+          "scope": "source.tex.docstrip",
+          "file_extensions": []
+     },
+     "latex": {
+          "scope": "text.tex.latex",
+          "file_extensions": [
+               "tex"
+          ]
+     },
+     "tex": {
+          "scope": "text.tex",
+          "file_extensions": [
+               "sty"
+          ]
+     },
+     "lisp": {
+          "scope": "source.lisp",
+          "file_extensions": [
+               "lisp",
+               "cl",
+               "clisp",
+               "l",
+               "mud",
+               "el",
+               "scm",
+               "ss",
+               "lsp"
+          ]
+     },
+     "lua": {
+          "scope": "source.lua",
+          "file_extensions": []
+     },
+     "build_output": {
+          "scope": "source.build_output",
+          "file_extensions": []
+     },
+     "makefile": {
+          "scope": "source.makefile",
+          "file_extensions": [
+               "mk",
+               "mak"
+          ]
+     },
+     "markdown": {
+          "scope": "source.shell.interactive.markdown",
+          "file_extensions": [
+               "md",
+               "mdown",
+               "mdwn",
+               "markdown"
+          ]
+     },
+     "multimarkdown": {
+          "scope": "text.html.markdown.multimarkdown",
+          "file_extensions": []
+     },
+     "matlab": {
+          "scope": "source.matlab",
+          "file_extensions": []
+     },
+     "objc++": {
+          "scope": "source.objc++",
+          "file_extensions": [
+               "mm",
+               "M"
+          ]
+     },
+     "objc": {
+          "scope": "source.objc",
+          "file_extensions": [
+               "m"
+          ]
+     },
+     "ocaml": {
+          "scope": "source.ocaml",
+          "file_extensions": [
+               "ml"
+          ]
+     },
+     "ocamllex": {
+          "scope": "source.ocamllex",
+          "file_extensions": []
+     },
+     "ocamlyacc": {
+          "scope": "source.ocamlyacc",
+          "file_extensions": []
+     },
+     "pascal": {
+          "scope": "source.pascal",
+          "file_extensions": [
+               "pas",
+               "p"
+          ]
+     },
+     "perl": {
+          "scope": "source.regexp.perl",
+          "file_extensions": [
+               "pl",
+               "pc",
+               "pm",
+               "pmc",
+               "pod"
+          ]
+     },
+     "angles": {
+          "scope": "source.regexp.perl.angles",
+          "file_extensions": []
+     },
+     "braces": {
+          "scope": "source.regexp.perl.braces",
+          "file_extensions": []
+     },
+     "brackets": {
+          "scope": "source.regexp.perl.brackets",
+          "file_extensions": []
+     },
+     "parens": {
+          "scope": "source.regexp.perl.parens",
+          "file_extensions": []
+     },
+     "php": {
+          "scope": "source.yaml.interpolated.php",
+          "file_extensions": [
+               "php",
+               "php3",
+               "php4",
+               "php5",
+               "php7",
+               "php8",
+               "phps",
+               "phpt"
+          ]
+     },
+     "python": {
+          "scope": "text.plain.python",
+          "file_extensions": [
+               ".python-version",
+               "py.typed",
+               "py",
+               "py3",
+               "pyw",
+               "pyi",
+               "pyx",
+               "pyx.in",
+               "pxd",
+               "pxd.in",
+               "pxi",
+               "pxi.in",
+               "rpy",
+               "cpy",
+               "gyp",
+               "gypi",
+               "vpy",
+               "smk",
+               "wscript",
+               "bazel"
+          ]
+     },
+     "r-console": {
+          "scope": "source.r-console",
+          "file_extensions": []
+     },
+     "r": {
+          "scope": "source.r",
+          "file_extensions": []
+     },
+     "rd": {
+          "scope": "text.tex.latex.rd",
+          "file_extensions": [
+               "rd"
+          ]
+     },
+     "rails": {
+          "scope": "source.sql.rails",
+          "file_extensions": [
+               "sql.erb",
+               "ruby.rail",
+               "rxml",
+               "builder",
+               "rails",
+               "rhtml",
+               "erb"
+          ]
+     },
+     "haml": {
+          "scope": "source.ruby.rails.embedded.haml",
+          "file_extensions": []
+     },
+     "file-pattern": {
+          "scope": "source.file-pattern",
+          "file_extensions": []
+     },
+     "regexp-replace": {
+          "scope": "source.regexp-replace",
+          "file_extensions": []
+     },
+     "restructuredtext": {
+          "scope": "text.restructuredtext",
+          "file_extensions": [
+               "rst",
+               "rest"
+          ]
+     },
+     "ruby": {
+          "scope": "source.shell.ruby",
+          "file_extensions": [
+               ".rvmrc",
+               ".ruby-version",
+               ".ruby-gemset",
+               ".rspec",
+               "rb",
+               "rbi",
+               "rbx",
+               "rjs",
+               "rabl",
+               "rake",
+               "capfile",
+               "jbuilder",
+               "gemspec",
+               "podspec",
+               "irbrc",
+               "pryrc",
+               "prawn"
+          ]
+     },
+     "build_results": {
+          "scope": "source.build_results",
+          "file_extensions": []
+     },
+     "rust": {
+          "scope": "source.rust",
+          "file_extensions": []
+     },
+     "scala": {
+          "scope": "source.scala",
+          "file_extensions": [
+               "scala",
+               "sbt"
+          ]
+     },
+     "bash": {
+          "scope": "commands.builtin.shell.bash",
+          "file_extensions": [
+               "sh",
+               "bash",
+               "ash"
+          ]
+     },
+     "shell": {
+          "scope": "source.shell",
+          "file_extensions": [
+               "sh",
+               "bash",
+               "ash",
+               "bat",
+               "ps1",
+               "psm1",
+               "psd1"
+          ]
+     },
+     "tcl": {
+          "scope": "source.tcl",
+          "file_extensions": [
+               "adp"
+          ]
+     },
+     "textile": {
+          "scope": "text.html.textile",
+          "file_extensions": []
+     },
+     "dtd": {
+          "scope": "text.xml.dtd",
+          "file_extensions": [
+               "dtd",
+               "ent"
+          ]
+     },
+     "xsl": {
+          "scope": "text.xml.xsl",
+          "file_extensions": [
+               "xsd",
+               "xsl"
+          ]
+     },
+     "yaml": {
+          "scope": "source.yaml",
+          "file_extensions": [
+               "yaml",
+               "yml"
+          ]
+     },
+     "colors": {
+          "scope": "source.colors",
+          "file_extensions": [
+               "color-helper-colors"
+          ]
+     },
+     "ini": {
+          "scope": "source.ini",
+          "file_extensions": [
+               "ini",
+               "cfg"
+          ]
+     },
+     "reg": {
+          "scope": "source.reg",
+          "file_extensions": [
+               "reg"
+          ]
+     },
+     "diagnostics": {
+          "scope": "output.lsp.diagnostics",
+          "file_extensions": []
+     },
+     "references": {
+          "scope": "output.lsp.references",
+          "file_extensions": []
+     },
+     "x86_64": {
+          "scope": "source.asm.x86_64",
+          "file_extensions": []
+     },
+     "gradle": {
+          "scope": "source.shell.gradle",
+          "file_extensions": [
+               "gradlew",
+               "gradle",
+               "gradle.kts",
+               "gradle",
+               "gradlew.bat"
+          ]
+     },
+     "maven": {
+          "scope": "source.shell.maven",
+          "file_extensions": [
+               "mvnw",
+               ".flattened-pom.xml",
+               "pom.xml",
+               "mvnw.cmd"
+          ]
+     },
+     "yarn": {
+          "scope": "source.yaml.yarn",
+          "file_extensions": [
+               ".yarnrc.yaml",
+               ".yarnrc.yml",
+               "yarn.lock",
+               "yarnw",
+               ".yarnclean",
+               ".yarnrc",
+               ".yarn-integrity",
+               ".yarn-metadata.json",
+               "yarnw.cmd"
+          ]
+     },
+     "ae": {
+          "scope": "binary.ae",
+          "file_extensions": [
+               "aep",
+               "aet"
+          ]
+     },
+     "ai": {
+          "scope": "binary.ai",
+          "file_extensions": [
+               "ai"
+          ]
+     },
+     "indesign": {
+          "scope": "binary.indesign",
+          "file_extensions": [
+               "indd",
+               "indl",
+               "indt",
+               "indb",
+               "inx",
+               "idml"
+          ]
+     },
+     "ps": {
+          "scope": "source.ps",
+          "file_extensions": [
+               "ps",
+               "eps",
+               "psb",
+               "psd"
+          ]
+     },
+     "premiere": {
+          "scope": "binary.premiere",
+          "file_extensions": [
+               "prel",
+               "prproj",
+               "psq"
+          ]
+     },
+     "archive": {
+          "scope": "binary.archive",
+          "file_extensions": [
+               "7z",
+               "7zip",
+               "gz",
+               "pzip",
+               "rar",
+               "saz",
+               "tar",
+               "tgz",
+               "wim",
+               "zip"
+          ]
+     },
+     "audio": {
+          "scope": "binary.audio",
+          "file_extensions": [
+               "mp3",
+               "m4p",
+               "aac",
+               "aiff",
+               "au",
+               "flac",
+               "m4a",
+               "mpc",
+               "mpp",
+               "oga",
+               "opus",
+               "ra",
+               "rm",
+               "wav",
+               "wma"
+          ]
+     },
+     "blender": {
+          "scope": "binary.blender",
+          "file_extensions": [
+               "blend",
+               "blend1",
+               "blend2",
+               "blend3"
+          ]
+     },
+     "font": {
+          "scope": "binary.font",
+          "file_extensions": [
+               "eot",
+               "otf",
+               "ttf",
+               "woff",
+               "woff2"
+          ]
+     },
+     "image": {
+          "scope": "binary.image",
+          "file_extensions": [
+               "bmp",
+               "emf",
+               "gif",
+               "jp2",
+               "jpeg",
+               "jpg",
+               "png",
+               "pnm",
+               "ppm",
+               "tga",
+               "tif",
+               "tiff",
+               "webp",
+               "xbm",
+               "xpm"
+          ]
+     },
+     "access": {
+          "scope": "binary.access",
+          "file_extensions": [
+               "adn",
+               "accdb",
+               "accdr",
+               "accdt",
+               "accda",
+               "mdw",
+               "accde",
+               "mam",
+               "maq",
+               "mar",
+               "mat",
+               "maf",
+               "laccdb"
+          ]
+     },
+     "excel": {
+          "scope": "binary.excel",
+          "file_extensions": [
+               "xls",
+               "xlsx",
+               "xlsm",
+               "xlsb",
+               "xlt"
+          ]
+     },
+     "onenote": {
+          "scope": "binary.onenote",
+          "file_extensions": [
+               "one"
+          ]
+     },
+     "powerpoint": {
+          "scope": "binary.powerpoint",
+          "file_extensions": [
+               "ppt",
+               "pptx",
+               "pps",
+               "ppsx"
+          ]
+     },
+     "word": {
+          "scope": "binary.word",
+          "file_extensions": [
+               "doc",
+               "docx",
+               "docm",
+               "docxml",
+               "dotm",
+               "dotx",
+               "wri"
+          ]
+     },
+     "pdf": {
+          "scope": "binary.pdf",
+          "file_extensions": [
+               "pdf"
+          ]
+     },
+     "qt": {
+          "scope": "text.plain.qt",
+          "file_extensions": [
+               "qbs",
+               "qbs.user",
+               "qrc",
+               "rcc",
+               "qm",
+               "qmlc"
+          ]
+     },
+     "video": {
+          "scope": "binary.video",
+          "file_extensions": [
+               "avi",
+               "mp4",
+               "mov",
+               "mkv",
+               "h264",
+               "webm",
+               "wmv",
+               "ogv",
+               "ogg",
+               "3gp",
+               "m4v",
+               "mpg",
+               "mpeg",
+               "3gpp",
+               "ogm"
+          ]
+     },
+     "lnk": {
+          "scope": "binary.lnk",
+          "file_extensions": [
+               "lnk"
+          ]
+     },
+     "cuda-c++": {
+          "scope": "source.cuda-c++",
+          "file_extensions": [
+               "cu",
+               "cuh"
+          ]
+     },
+     "header": {
+          "scope": "source.c++.header",
+          "file_extensions": [
+               "h",
+               "hh",
+               "hpp",
+               "hxx"
+          ]
+     },
+     "gulpfile": {
+          "scope": "source.js.gulpfile",
+          "file_extensions": [
+               "gulpfile.js",
+               "gulpfile.cjs",
+               "gulpfile.mjs",
+               "gulpfile.babel.js",
+               "gulpfile.babel.cjs",
+               "gulpfile.babel.mjs",
+               "gulpfile.coffee"
+          ]
+     },
+     "blame": {
+          "scope": "text.git.blame",
+          "file_extensions": [
+               "git-blame",
+               ".gitblame"
+          ]
+     },
+     "description": {
+          "scope": "text.git.description",
+          "file_extensions": [
+               "description",
+               ".gitdescription"
+          ]
+     },
+     "keep": {
+          "scope": "text.git.keep",
+          "file_extensions": [
+               ".gitkeep"
+          ]
+     },
+     "glyphs": {
+          "scope": "source.plist.glyphs",
+          "file_extensions": [
+               "glyphs"
+          ]
+     },
+     "jenkins": {
+          "scope": "source.groovy.jenkins",
+          "file_extensions": [
+               "Jenkinsfile",
+               "jenkins"
+          ]
+     },
+     "angularjs": {
+          "scope": "text.html.angularjs",
+          "file_extensions": [
+               "ng.html"
+          ]
+     },
+     "ngx": {
+          "scope": "text.html.ngx",
+          "file_extensions": [
+               "component.html"
+          ]
+     },
+     "npm": {
+          "scope": "source.shell.npm",
+          "file_extensions": [
+               ".npmignore",
+               "package-lock.json",
+               "package.json",
+               ".npmrc",
+               "npmrc"
+          ]
+     },
+     "astro": {
+          "scope": "source.astro",
+          "file_extensions": [
+               "astro",
+               "astro.config.js",
+               "astro.config.cjs",
+               "astro.config.mjs"
+          ]
+     },
+     "eslint": {
+          "scope": "source.yaml.eslint",
+          "file_extensions": [
+               ".eslintrc.yaml",
+               ".eslintrc.yml",
+               ".eslintignore",
+               ".eslintcache",
+               ".eslintrc",
+               ".eslintrc.json",
+               ".eslintrc.js",
+               ".eslintrc.cjs",
+               ".eslintrc.mjs"
+          ]
+     },
+     "gatsby": {
+          "scope": "source.js.gatsby",
+          "file_extensions": [
+               "gatsby-browser.js",
+               "gatsby-browser.cjs",
+               "gatsby-browser.mjs",
+               "gatsby-config.js",
+               "gatsby-config.cjs",
+               "gatsby-config.mjs",
+               "gatsby-node.js",
+               "gatsby-node.cjs",
+               "gatsby-node.mjs",
+               "gatsby-ssr.js",
+               "gatsby-ssr.cjs",
+               "gatsby-ssr.mjs"
+          ]
+     },
+     "gruntfile": {
+          "scope": "source.js.gruntfile",
+          "file_extensions": [
+               "gruntfile.js",
+               "gruntfile.cjs",
+               "gruntfile.mjs"
+          ]
+     },
+     "jest": {
+          "scope": "source.ts.jest",
+          "file_extensions": [
+               "jest.config.ts",
+               "jest.config.cts",
+               "jest.config.mts",
+               "jest.setup.ts",
+               "jest.setup.cts",
+               "jest.setup.mts",
+               "jest.config.json",
+               "jest.config.js",
+               "jest.config.cjs",
+               "jest.config.mjs",
+               "jest.config.mjs",
+               "jest.setup.js",
+               "jest.setup.cjs",
+               "jest.setup.mjs",
+               "jest.setup.mjs"
+          ]
+     },
+     "nextjs": {
+          "scope": "source.js.nextjs",
+          "file_extensions": [
+               "next.config.js",
+               "next.config.cjs",
+               "next.config.mjs"
+          ]
+     },
+     "nuxt": {
+          "scope": "source.js.nuxt",
+          "file_extensions": [
+               "nuxt.config.js",
+               "nuxt.config.cjs",
+               "nuxt.config.mjs"
+          ]
+     },
+     "pnpm": {
+          "scope": "source.yaml.pnpm",
+          "file_extensions": [
+               "pnpm-lock.yml",
+               "pnpm-lock.yaml",
+               "pnpm-workspace.yml",
+               "pnpm-workspace.yaml",
+               ".pnpmfile.js",
+               ".pnpmfile.cjs",
+               ".pnpmfile.mjs",
+               "global_pnpmfile.js",
+               "global_pnpmfile.cjs",
+               "global_pnpmfile.mjs"
+          ]
+     },
+     "postcss": {
+          "scope": "source.postcss",
+          "file_extensions": [
+               "pcss",
+               "postcss",
+               ".postcssrc",
+               "postcss.config.js",
+               "postcss.config.cjs",
+               "postcss.config.mjs"
+          ]
+     },
+     "puglint": {
+          "scope": "source.json.puglint",
+          "file_extensions": [
+               ".pug-lintrc",
+               ".pug-lintrc.json",
+               ".pug-lintrc.js",
+               ".pug-lintrc.cjs",
+               ".pug-lintrc.mjs"
+          ]
+     },
+     "rollup": {
+          "scope": "source.js.rollup",
+          "file_extensions": [
+               "rollup.config.js",
+               "rollup.config.cjs",
+               "rollup.config.mjs"
+          ]
+     },
+     "stylelint": {
+          "scope": "source.yaml.stylelint",
+          "file_extensions": [
+               ".stylelintrc.yaml",
+               ".stylelintrc.yml",
+               ".stylelintignore",
+               ".stylelintrc",
+               ".stylelintrc.json",
+               ".stylelintrc.js",
+               ".stylelintrc.cjs",
+               ".stylelintrc.mjs",
+               "stylelint.config.js",
+               "stylelint.config.cjs",
+               "stylelint.config.mjs"
+          ]
+     },
+     "tailwind": {
+          "scope": "source.ts.tailwind",
+          "file_extensions": [
+               "tailwind.config.ts",
+               "tailwind.config.cts",
+               "tailwind.config.mts",
+               "tailwind.css",
+               "tailwind.config.js",
+               "tailwind.config.cjs",
+               "tailwind.config.mjs"
+          ]
+     },
+     "vercel": {
+          "scope": "source.json.vercel",
+          "file_extensions": [
+               "vercel.json",
+               "vercel.config.js",
+               "vercel.config.cjs",
+               "vercel.config.mjs"
+          ]
+     },
+     "vite": {
+          "scope": "source.js.vite",
+          "file_extensions": [
+               "vite.config.js",
+               "vite.config.cjs",
+               "vite.config.mjs"
+          ]
+     },
+     "webpack": {
+          "scope": "source.js.webpack",
+          "file_extensions": [
+               "webpack.config.js",
+               "webpack.config.cjs",
+               "webpack.config.mjs",
+               "webpack.config.babel.js",
+               "webpack.config.babel.cjs",
+               "webpack.config.babel.mjs",
+               "webpack.dev.js",
+               "webpack.dev.cjs",
+               "webpack.dev.mjs",
+               "webpack.mix.js",
+               "webpack.mix.cjs",
+               "webpack.mix.mjs"
+          ]
+     },
+     "windi": {
+          "scope": "source.ts.windi",
+          "file_extensions": [
+               "windi.config.ts",
+               "windi.config.cts",
+               "windi.config.mts",
+               "windi.config.js",
+               "windi.config.cjs",
+               "windi.config.mjs"
+          ]
+     },
+     "adonisrc": {
+          "scope": "source.json.adonisrc",
+          "file_extensions": [
+               ".adonisrc.json"
+          ]
+     },
+     "babel": {
+          "scope": "source.json.babel",
+          "file_extensions": [
+               ".babelrc"
+          ]
+     },
+     "biome": {
+          "scope": "source.json.biome",
+          "file_extensions": [
+               "biome.json",
+               "biome.jsonc"
+          ]
+     },
+     "bower": {
+          "scope": "source.json.bower",
+          "file_extensions": [
+               "bower.json",
+               ".bowerrc"
+          ]
+     },
+     "composer": {
+          "scope": "source.json.composer",
+          "file_extensions": [
+               "composer.json",
+               "composer.lock"
+          ]
+     },
+     "haxelib": {
+          "scope": "source.json.haxelib",
+          "file_extensions": [
+               "haxelib.json"
+          ]
+     },
+     "settings": {
+          "scope": "text.plain.settings",
+          "file_extensions": [
+               ".htmlhintignore",
+               ".jshintignore",
+               ".jsbeautifyignore",
+               ".prettierignore",
+               ".htmlhintrc",
+               ".jshintrc",
+               ".jsbeautifyrc",
+               ".prettierrc",
+               ".releaserc"
+          ]
+     },
+     "sublime": {
+          "scope": "source.json.sublime",
+          "file_extensions": [
+               ".no-sublime-package",
+               ".sublime-project",
+               "hidden-color-scheme",
+               "hidden-theme",
+               "sublime-build",
+               "sublime-color-scheme",
+               "sublime-commands",
+               "sublime-completions",
+               "sublime-keymap",
+               "sublime-macro",
+               "sublime-menu",
+               "sublime-mousemap",
+               "sublime-project",
+               "sublime-settings",
+               "sublime-theme",
+               "sublime-workspace"
+          ]
+     },
+     "tern": {
+          "scope": "source.json.tern",
+          "file_extensions": [
+               ".tern-project",
+               ".tern-config"
+          ]
+     },
+     "terraform": {
+          "scope": "source.terraform",
+          "file_extensions": [
+               "tf",
+               "tfvars",
+               "hcl",
+               "tfstate"
+          ]
+     },
+     "license": {
+          "scope": "text.plain.license",
+          "file_extensions": [
+               "copying",
+               "copyright",
+               "license",
+               "license.apache",
+               "license.bsd",
+               "license.mit",
+               "license.gpl",
+               "license.gpl2",
+               "license.gpl3",
+               "copying.md",
+               "copyright.md",
+               "license.md"
+          ]
+     },
+     "twig": {
+          "scope": "text.html.twig",
+          "file_extensions": [
+               "twig",
+               "html.twig"
+          ]
+     },
+     "ada": {
+          "scope": "source.ada",
+          "file_extensions": [
+               "ada",
+               "adb",
+               "ads"
+          ]
+     },
+     "antlr": {
+          "scope": "source.antlr",
+          "file_extensions": [
+               "g",
+               "g4"
+          ]
+     },
+     "arduino": {
+          "scope": "source.arduino",
+          "file_extensions": [
+               "ino",
+               "pde"
+          ]
+     },
+     "asciidoc": {
+          "scope": "text.asciidoc",
+          "file_extensions": [
+               "asciidoc",
+               "adoc"
+          ]
+     },
+     "awk": {
+          "scope": "source.awk",
+          "file_extensions": [
+               "awk"
+          ]
+     },
+     "blade": {
+          "scope": "text.blade",
+          "file_extensions": [
+               "blade",
+               "blade.php"
+          ]
+     },
+     "buildpacks": {
+          "scope": "text.plain.buildpacks",
+          "file_extensions": [
+               ".buildpacks"
+          ]
+     },
+     "cad": {
+          "scope": "text.plain.cad",
+          "file_extensions": [
+               "cad",
+               "stl",
+               "stp",
+               "step",
+               "wrl"
+          ]
+     },
+     "Caddyfile": {
+          "scope": "source.Caddyfile",
+          "file_extensions": [
+               "Caddyfile"
+          ]
+     },
+     "cairo": {
+          "scope": "source.cairo",
+          "file_extensions": [
+               "cairo"
+          ]
+     },
+     "cmake": {
+          "scope": "source.cmake",
+          "file_extensions": [
+               "CMakeLists.txt",
+               "cmake"
+          ]
+     },
+     "cname": {
+          "scope": "text.plain.cname",
+          "file_extensions": [
+               "CNAME"
+          ]
+     },
+     "cobol": {
+          "scope": "source.cobol",
+          "file_extensions": [
+               "ccp",
+               "scbl",
+               "cbl",
+               "cpy",
+               "cob",
+               "dds",
+               "wks",
+               "pco"
+          ]
+     },
+     "coffee": {
+          "scope": "source.coffee",
+          "file_extensions": [
+               "coffee",
+               "Cakefile",
+               "coffee.erb",
+               "cson",
+               "cjsx"
+          ]
+     },
+     "cfc": {
+          "scope": "source.cfscript.cfc",
+          "file_extensions": [
+               "cfc",
+               "cfm",
+               "cfml"
+          ]
+     },
+     "containerfile": {
+          "scope": "source.containerfile",
+          "file_extensions": [
+               "Containerfile"
+          ]
+     },
+     "cb": {
+          "scope": "source.cb",
+          "file_extensions": [
+               "cb"
+          ]
+     },
+     "cottle": {
+          "scope": "source.cottle",
+          "file_extensions": [
+               "cottle"
+          ]
+     },
+     "crystal": {
+          "scope": "source.crystal",
+          "file_extensions": [
+               "cr"
+          ]
+     },
+     "csv": {
+          "scope": "text.csv",
+          "file_extensions": [
+               "csv"
+          ]
+     },
+     "cython": {
+          "scope": "source.cython",
+          "file_extensions": [
+               "pyx",
+               "pxi",
+               "pxd"
+          ]
+     },
+     "dart": {
+          "scope": "source.dart",
+          "file_extensions": [
+               "dart"
+          ]
+     },
+     "dockerfile": {
+          "scope": "source.dockerfile",
+          "file_extensions": [
+               "Dockerfile",
+               "dockerfile",
+               ".Dockerfile"
+          ]
+     },
+     "env": {
+          "scope": "source.env",
+          "file_extensions": [
+               ".env",
+               ".env.dist",
+               ".env.local",
+               ".env.sample",
+               ".env.example",
+               ".env.test",
+               ".env.test.local",
+               ".env.testing",
+               ".env.dev",
+               ".env.development",
+               ".env.development.local",
+               ".env.prod",
+               ".env.production",
+               ".env.production.local",
+               ".env.dusk.local",
+               ".env.staging",
+               ".env.default",
+               ".env.defaults",
+               ".envrc",
+               ".flaskenv"
+          ]
+     },
+     "edge": {
+          "scope": "text.html.edge",
+          "file_extensions": [
+               "edge",
+               "edge.html"
+          ]
+     },
+     "editorconfig": {
+          "scope": "source.ini.editorconfig",
+          "file_extensions": [
+               ".editorconfig"
+          ]
+     },
+     "ejs": {
+          "scope": "text.ejs",
+          "file_extensions": [
+               "ejs"
+          ]
+     },
+     "elixir": {
+          "scope": "text.elixir",
+          "file_extensions": [
+               "ex",
+               "exs",
+               "eex",
+               "html.eex",
+               "html.leex"
+          ]
+     },
+     "elm": {
+          "scope": "source.elm",
+          "file_extensions": [
+               "elm"
+          ]
+     },
+     "email": {
+          "scope": "text.email",
+          "file_extensions": [
+               "eml",
+               "msg",
+               "mbx",
+               "mboxz"
+          ]
+     },
+     "ember": {
+          "scope": "source.ember",
+          "file_extensions": [
+               "em",
+               "em.erb",
+               "ember",
+               "ember.erb",
+               "emberscript",
+               "emberscript.erb"
+          ]
+     },
+     "fsharp": {
+          "scope": "source.fsharp",
+          "file_extensions": [
+               "fs",
+               "fsi",
+               "fsx"
+          ]
+     },
+     "fastq": {
+          "scope": "text.plain.fastq",
+          "file_extensions": [
+               "fastq",
+               "fq",
+               "fasta",
+               "fa",
+               "gff",
+               "gff3",
+               "gtf"
+          ]
+     },
+     "fish": {
+          "scope": "source.shell.fish",
+          "file_extensions": [
+               "fish"
+          ]
+     },
+     "fortran": {
+          "scope": "source.fortran",
+          "file_extensions": [
+               "f",
+               "F",
+               "f03",
+               "F03",
+               "F08",
+               "f08",
+               "f77",
+               "F77",
+               "f90",
+               "F90",
+               "f95",
+               "F95",
+               "for",
+               "FOR",
+               "FPP",
+               "fpp",
+               "namelist"
+          ]
+     },
+     "genie": {
+          "scope": "source.genie",
+          "file_extensions": [
+               "gs"
+          ]
+     },
+     "pcb": {
+          "scope": "text.plain.pcb",
+          "file_extensions": [
+               "pcb"
+          ]
+     },
+     "gleam": {
+          "scope": "source.gleam",
+          "file_extensions": [
+               "gleam"
+          ]
+     },
+     "glsl": {
+          "scope": "source.glsl",
+          "file_extensions": [
+               "vsh",
+               "fsh",
+               "gsh",
+               "vshader",
+               "fshader",
+               "gshader",
+               "vert",
+               "frag",
+               "geom",
+               "tesc",
+               "tese",
+               "comp",
+               "glsl",
+               "mesh",
+               "rgen",
+               "rint",
+               "rahit",
+               "rchit",
+               "rmiss",
+               "rcall"
+          ]
+     },
+     "graphql": {
+          "scope": "source.graphql",
+          "file_extensions": [
+               "graphql",
+               "graphqls",
+               "gql"
+          ]
+     },
+     "hack": {
+          "scope": "source.hack",
+          "file_extensions": [
+               "hack"
+          ]
+     },
+     "handlebars": {
+          "scope": "text.html.handlebars",
+          "file_extensions": [
+               "handlebars",
+               "hbr",
+               "hbrs",
+               "hbs",
+               "hdbs",
+               "rac",
+               "stache"
+          ]
+     },
+     "harbour": {
+          "scope": "source.harbour",
+          "file_extensions": [
+               "ch",
+               "hb",
+               "idu",
+               "ppo",
+               "prg"
+          ]
+     },
+     "haxe": {
+          "scope": "source.haxe",
+          "file_extensions": [
+               "hx",
+               "hxsl",
+               "hscript"
+          ]
+     },
+     "http": {
+          "scope": "source.http",
+          "file_extensions": [
+               "http"
+          ]
+     },
+     "hxml": {
+          "scope": "source.hxml",
+          "file_extensions": [
+               "hxml"
+          ]
+     },
+     "jade": {
+          "scope": "text.jade",
+          "file_extensions": [
+               "jade"
+          ]
+     },
+     "jinja": {
+          "scope": "text.jinja",
+          "file_extensions": [
+               "j2",
+               "jinja",
+               "jinja2"
+          ]
+     },
+     "jq": {
+          "scope": "text.jq",
+          "file_extensions": [
+               "jq"
+          ]
+     },
+     "julia": {
+          "scope": "source.julia",
+          "file_extensions": [
+               "jl"
+          ]
+     },
+     "kdl": {
+          "scope": "source.kdl",
+          "file_extensions": [
+               "kdl"
+          ]
+     },
+     "Kotlin": {
+          "scope": "source.Kotlin",
+          "file_extensions": [
+               "kt",
+               "kts"
+          ]
+     },
+     "ksp": {
+          "scope": "source.ksp",
+          "file_extensions": [
+               "ksp"
+          ]
+     },
+     "less": {
+          "scope": "source.less",
+          "file_extensions": [
+               "less",
+               "css.less"
+          ]
+     },
+     "liquid": {
+          "scope": "text.html.liquid",
+          "file_extensions": [
+               "liquid"
+          ]
+     },
+     "lsl": {
+          "scope": "source.lsl",
+          "file_extensions": [
+               "lsl"
+          ]
+     },
+     "m3u": {
+          "scope": "text.m3u",
+          "file_extensions": [
+               "m3u",
+               "m3u8"
+          ]
+     },
+     "mcnp": {
+          "scope": "source.mcnp",
+          "file_extensions": [
+               "mcnp"
+          ]
+     },
+     "mel": {
+          "scope": "source.mel",
+          "file_extensions": [
+               "mel"
+          ]
+     },
+     "meson": {
+          "scope": "source.meson",
+          "file_extensions": [
+               "meson.build",
+               "meson_options.txt"
+          ]
+     },
+     "mint": {
+          "scope": "source.mint",
+          "file_extensions": [
+               "mint"
+          ]
+     },
+     "mustache": {
+          "scope": "txt.html.mustache",
+          "file_extensions": [
+               "hgn",
+               "hjs",
+               "mst",
+               "mu",
+               "mustache"
+          ]
+     },
+     "nginx": {
+          "scope": "source.nginx",
+          "file_extensions": [
+               "conf.erb",
+               "nginx.conf",
+               "mime.types",
+               "fastcgi_params",
+               "scgi_params",
+               "uwsgi_params"
+          ]
+     },
+     "nim_filter": {
+          "scope": "source.nim_filter",
+          "file_extensions": [
+               "nimf"
+          ]
+     },
+     "nim": {
+          "scope": "source.nim",
+          "file_extensions": [
+               "nim",
+               "nims",
+               "nimble"
+          ]
+     },
+     "nix": {
+          "scope": "source.nix",
+          "file_extensions": [
+               "nix"
+          ]
+     },
+     "nodejs": {
+          "scope": "text.plain.nodejs",
+          "file_extensions": [
+               ".node-version",
+               ".nvmrc"
+          ]
+     },
+     "nsis": {
+          "scope": "source.nsis",
+          "file_extensions": [
+               "nsi",
+               "nsh",
+               "bnsi",
+               "bnsh",
+               "nsdincgit"
+          ]
+     },
+     "odin": {
+          "scope": "source.odin",
+          "file_extensions": [
+               "odin"
+          ]
+     },
+     "ossl": {
+          "scope": "source.ossl",
+          "file_extensions": [
+               "ossl"
+          ]
+     },
+     "parquet": {
+          "scope": "source.parquet",
+          "file_extensions": [
+               "parquet"
+          ]
+     },
+     "pawn": {
+          "scope": "source.pawn",
+          "file_extensions": [
+               "pwn"
+          ]
+     },
+     "pine": {
+          "scope": "source.pine",
+          "file_extensions": [
+               "pine"
+          ]
+     },
+     "pkl": {
+          "scope": "source.pkl",
+          "file_extensions": [
+               "pkl",
+               "pcf"
+          ]
+     },
+     "note": {
+          "scope": "text.html.markdown.note",
+          "file_extensions": [
+               "note"
+          ]
+     },
+     "todo": {
+          "scope": "text.todo",
+          "file_extensions": [
+               "todo",
+               "tasks",
+               "todolist.txt"
+          ]
+     },
+     "powershell": {
+          "scope": "source.powershell",
+          "file_extensions": [
+               "ps1",
+               "psm1",
+               "psd1"
+          ]
+     },
+     "prisma": {
+          "scope": "source.prisma",
+          "file_extensions": [
+               "prisma"
+          ]
+     },
+     "prolog": {
+          "scope": "source.prolog",
+          "file_extensions": [
+               "pro",
+               "prolog",
+               "swiplrc",
+               "ecl"
+          ]
+     },
+     "proto": {
+          "scope": "source.proto",
+          "file_extensions": [
+               "proto",
+               "protodevel"
+          ]
+     },
+     "pug": {
+          "scope": "text.pug",
+          "file_extensions": [
+               "pug"
+          ]
+     },
+     "puppet": {
+          "scope": "source.puppet",
+          "file_extensions": [
+               "pp",
+               "epp"
+          ]
+     },
+     "purebasic": {
+          "scope": "source.purebasic",
+          "file_extensions": [
+               "pb",
+               "pbi"
+          ]
+     },
+     "qml": {
+          "scope": "source.qml",
+          "file_extensions": [
+               "qml",
+               "qmlproject",
+               "qmlproject.user"
+          ]
+     },
+     "racket": {
+          "scope": "source.racket",
+          "file_extensions": [
+               "rkt"
+          ]
+     },
+     "rbs": {
+          "scope": "text.plain.rbs",
+          "file_extensions": [
+               "rbs"
+          ]
+     },
+     "rsh": {
+          "scope": "source.rsh",
+          "file_extensions": [
+               "rsh"
+          ]
+     },
+     "readme": {
+          "scope": "text.plain.readme",
+          "file_extensions": [
+               "AUTHORS",
+               "NOTICE",
+               "README",
+               "RELEASE-NOTES"
+          ]
+     },
+     "slim": {
+          "scope": "text.slim",
+          "file_extensions": [
+               "slim",
+               "skim"
+          ]
+     },
+     "sass": {
+          "scope": "source.sass",
+          "file_extensions": [
+               "sass"
+          ]
+     },
+     "scheme": {
+          "scope": "source.scheme",
+          "file_extensions": [
+               "ms",
+               "sc",
+               "sch",
+               "scm",
+               "ss",
+               "scheme"
+          ]
+     },
+     "scss": {
+          "scope": "source.scss",
+          "file_extensions": [
+               "scss"
+          ]
+     },
+     "sketch": {
+          "scope": "text.plain.sketch",
+          "file_extensions": [
+               "sketch"
+          ]
+     },
+     "solidity": {
+          "scope": "source.solidity",
+          "file_extensions": [
+               "sol"
+          ]
+     },
+     "sp": {
+          "scope": "source.sp",
+          "file_extensions": [
+               "sp"
+          ]
+     },
+     "stata": {
+          "scope": "source.stata",
+          "file_extensions": [
+               "do",
+               "ado"
+          ]
+     },
+     "stylus": {
+          "scope": "source.stylus",
+          "file_extensions": [
+               "styl",
+               "stylus"
+          ]
+     },
+     "svelte": {
+          "scope": "text.html.svelte",
+          "file_extensions": [
+               "svlt",
+               "svelte"
+          ]
+     },
+     "systemverilog": {
+          "scope": "source.systemverilog",
+          "file_extensions": [
+               "sv",
+               "v",
+               "svh",
+               "vh"
+          ]
+     },
+     "toit": {
+          "scope": "source.toit",
+          "file_extensions": [
+               "toit"
+          ]
+     },
+     "toml": {
+          "scope": "source.toml",
+          "file_extensions": [
+               "toml",
+               "tml",
+               "Cargo.lock",
+               "Gopkg.lock",
+               "Pipfile"
+          ]
+     },
+     "typst": {
+          "scope": "text.typst",
+          "file_extensions": [
+               "typ"
+          ]
+     },
+     "shader": {
+          "scope": "source.shader",
+          "file_extensions": [
+               "cginc",
+               "shader"
+          ]
+     },
+     "uc": {
+          "scope": "source.uc",
+          "file_extensions": [
+               "uc"
+          ]
+     },
+     "v": {
+          "scope": "source.v",
+          "file_extensions": [
+               "v",
+               "vlang"
+          ]
+     },
+     "vala": {
+          "scope": "source.vala",
+          "file_extensions": [
+               "vala",
+               "vapi"
+          ]
+     },
+     "verilog": {
+          "scope": "source.verilog",
+          "file_extensions": [
+               "v",
+               "V"
+          ]
+     },
+     "vhdl": {
+          "scope": "source.vhdl",
+          "file_extensions": [
+               "vhd",
+               "vhdl",
+               "vho",
+               "vht"
+          ]
+     },
+     "viml": {
+          "scope": "source.viml",
+          "file_extensions": [
+               "vim",
+               ".vimrc"
+          ]
+     },
+     "visualstudio": {
+          "scope": "text.xml.visualstudio",
+          "file_extensions": [
+               "csproj",
+               "fsproj",
+               "shproj",
+               "sqlproj",
+               "vbproj",
+               "vcxproj",
+               "vsproj",
+               "props",
+               "resx",
+               "ruleset",
+               "settings",
+               "targets",
+               "wxl",
+               "wxs",
+               "xaml",
+               ".coverage",
+               "idl",
+               "sln"
+          ]
+     },
+     "vue": {
+          "scope": "text.html.vue",
+          "file_extensions": [
+               "vue"
+          ]
+     },
+     "vyper": {
+          "scope": "source.vyper",
+          "file_extensions": [
+               "vy"
+          ]
+     },
+     "wast": {
+          "scope": "source.wast",
+          "file_extensions": [
+               "wast",
+               "wat"
+          ]
+     },
+     "wgsl": {
+          "scope": "source.wgsl",
+          "file_extensions": [
+               "wgsl"
+          ]
+     },
+     "wit": {
+          "scope": "source.wit",
+          "file_extensions": [
+               "wit"
+          ]
+     },
+     "wolfram": {
+          "scope": "source.wolfram",
+          "file_extensions": [
+               "mt",
+               "wl",
+               "wls",
+               "wlt"
+          ]
+     },
+     "yul": {
+          "scope": "source.yul",
+          "file_extensions": [
+               "yul",
+               "yulp"
+          ]
+     },
+     "zig": {
+          "scope": "source.zig",
+          "file_extensions": [
+               "zig",
+               "zon"
+          ]
+     },
+     "bazel": {
+          "scope": "source.bazel",
+          "file_extensions": [
+               "BUILD",
+               "WORKSPACE",
+               "bazel",
+               "bzl"
+          ]
+     },
+     "docker": {
+          "scope": "source.yaml.docker",
+          "file_extensions": [
+               "docker-compose.yml",
+               ".dockerignore"
+          ]
+     },
+     "bunfig": {
+          "scope": "source.toml.bunfig",
+          "file_extensions": [
+               ".bunfig.toml",
+               "bunfig.toml"
+          ]
+     },
+     "bun": {
+          "scope": "source.ts.bun",
+          "file_extensions": [
+               "bun",
+               "lockdb"
+          ]
+     },
+     "unittest": {
+          "scope": "source.ts.unittest",
+          "file_extensions": [
+               "spec.ts",
+               "spec.cts",
+               "spec.mts",
+               "test.ts",
+               "test.cts",
+               "test.mts",
+               "spec.tsx",
+               "test.tsx",
+               "spec.js",
+               "spec.cjs",
+               "spec.mjs",
+               "test.js",
+               "test.cjs",
+               "test.mjs",
+               "spec.jsx",
+               "test.jsx"
+          ]
+     },
+     "vimrc": {
+          "scope": "source.viml.vimrc",
+          "file_extensions": [
+               ".vimrc",
+               ".gvimrc",
+               "_vimrc",
+               "_gvimrc"
+          ]
+     },
+     "plist": {
+          "scope": "text.plist",
+          "file_extensions": [
+               "plist",
+               "hidden-tmLanguage",
+               "hidden-tmTheme",
+               "hidden-tmSnippet",
+               "hidden-tmPreferences",
+               "tmLanguage",
+               "tmTheme",
+               "tmSnippet",
+               "tmPreferences"
+          ]
+     },
+     "snippet": {
+          "scope": "text.xml.sublime.snippet",
+          "file_extensions": [
+               "sublime-snippet"
+          ]
+     },
+     "svg": {
+          "scope": "text.xml.svg",
+          "file_extensions": [
+               "svg"
+          ]
+     },
+     "rss": {
+          "scope": "text.xml.rss",
+          "file_extensions": [
+               "rss"
+          ]
+     },
+     "ansible": {
+          "scope": "source.ansible",
+          "file_extensions": [
+               "ansible",
+               "ansible.yml",
+               "ansible.yaml"
+          ]
+     },
+     "appveyor": {
+          "scope": "source.yaml.appveyor",
+          "file_extensions": [
+               "appveyor.yml",
+               "appveyor.yaml",
+               ".appveyor.yml",
+               ".appveyor.yaml"
+          ]
+     },
+     "azure": {
+          "scope": "source.yaml.azure",
+          "file_extensions": [
+               "azure-pipelines.yml",
+               "azure-pipelines.yaml"
+          ]
+     },
+     "circleci": {
+          "scope": "source.yaml.circleci",
+          "file_extensions": [
+               "circle.yml"
+          ]
+     },
+     "clang-format": {
+          "scope": "source.yaml.clang-format",
+          "file_extensions": [
+               ".clang-format"
+          ]
+     },
+     "codecov": {
+          "scope": "source.yaml.codecov",
+          "file_extensions": [
+               "codecov.yml",
+               "codecov.yaml"
+          ]
+     },
+     "dependabot": {
+          "scope": "source.yaml.dependabot",
+          "file_extensions": [
+               "dependabot.yml",
+               "dependabot.yaml"
+          ]
+     },
+     "heroku": {
+          "scope": "source.yaml.heroku",
+          "file_extensions": [
+               "heroku.yml",
+               "heroku.yaml"
+          ]
+     },
+     "lock": {
+          "scope": "source.yaml.lock",
+          "file_extensions": [
+               "Gemfile.lock",
+               "Berksfile.lock"
+          ]
+     },
+     "procfile": {
+          "scope": "source.yaml.procfile",
+          "file_extensions": [
+               "Procfile"
+          ]
+     },
+     "syntax": {
+          "scope": "source.yaml.sublime.syntax",
+          "file_extensions": [
+               "sublime-syntax"
+          ]
+     },
+     "taskfile": {
+          "scope": "source.yaml.taskfile",
+          "file_extensions": [
+               "Taskfile"
+          ]
+     },
+     "travis": {
+          "scope": "source.yaml.travis",
+          "file_extensions": [
+               ".travis.yml",
+               ".travis.yaml"
+          ]
+     }
+}
