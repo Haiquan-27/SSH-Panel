@@ -37,10 +37,12 @@ a{
 .res_dir{
 	font-weight: bold;
 	color: color(var(--foreground) alpha(0.9));
+	padding-left:3px
 }
 
 .res_file{
 	color: color(var(--foreground) alpha(0.9));
+	padding-left:3px
 }
 
 .res_focus{
