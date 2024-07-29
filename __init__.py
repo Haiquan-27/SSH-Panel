@@ -5,11 +5,11 @@ import sublime
 def plugin_loaded():
 	try:
 		import bcrypt,cffi,cryptography,nacl,six
-	except ModuleNotFoundError as e:
-		sublime.error_message("ssh-panel: missing dependencies:\n"+str(e.args))
 	except ImportError:
 		if sublime.platform() == "windows":
 			sublime.error_message("ssh-panel: missing python3.dll (python3.8)\n")
+	except ModuleNotFoundError as e:
+		sublime.error_message("ssh-panel: missing dependencies:\n"+str(e.args))
 	# reload connect
 	if sublime.load_settings("ssh-panel.sublime-settings").get("reconnect_on_start",False):
 		for w in sublime.windows():
