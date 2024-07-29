@@ -2,11 +2,6 @@ import os
 import sys
 import sublime
 
-sys.path.append(os.path.dirname(__file__))
-# add dependencies on package initialization
-sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
-
-
 def plugin_loaded():
 	try:
 		import bcrypt,cffi,cryptography,nacl,six
