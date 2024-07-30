@@ -7,7 +7,6 @@ body{
 	min-width: 1000px;
 	padding-left: 3px;
 }
-
 a{
 	color: var(--yellowish);
 	text-decoration: none;
