@@ -108,11 +108,12 @@ def plugin_loaded():
 			for v in w.views():
 				server_name = v.settings().get("ssh_panel_serverName",None)
 				if server_name:
-					v.run_command("ssh_panel_create_connect",args={
-						"server_name": server_name,
-						"connect_now": False,
-						"reload_from_view": True
-					})
+					SshPanelCreateConnectCommand(v).run(
+						edit = sublime.Edit,
+						server_name = server_name,
+						connect_now = False,
+						reload_from_view = True
+					)
 
 def plugin_unloaded():
 	pass
@@ -159,36 +160,30 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 								'keyword' if p_value != default_settings.get(p_name,None) else
 								'info',
 					line = "%s : %s"%(p_name,p_value))
-			self.window.run_command(
-				cmd="ssh_panel_output",
-				args={
-					"content": html_tmp(content=html_ele),
-					"is_html": True,
-					"new_line": False,
-					"clean": True
-				}
+			SshPanelOutputCommand(self.window.active_view()).run(
+				edit = sublime.Edit,
+				content = html_tmp(content=html_ele),
+				is_html = True,
+				new_line = False,
+				clean = True,
 			)
 
 		def on_done(index):
 			server_name,user_config,error_parameter_list = self.select
 			if index == -1: return
 			if error_parameter_list != []: return
-			self.window.run_command(
-				cmd = "ssh_panel_create_connect",
-				args={
-					"server_name":server_name,
-					"connect_now":True,
-					"reload_from_view":False
-				}
+			SshPanelCreateConnectCommand(self.window.active_view()).run(
+				edit = sublime.Edit,
+				server_name = server_name,
+				connect_now = True,
+				reload_from_view = False
 			)
-			self.window.run_command(
-				cmd="ssh_panel_output",
-				args={
-					"content": "",
-					"is_html": False,
-					"new_line": False,
-					"clean": True
-				}
+			SshPanelOutputCommand(self.window.active_view()).run(
+				edit = sublime.Edit,
+				content = "",
+				is_html = False,
+				new_line = False,
+				clean = True,
 			)
 			self.window.destroy_output_panel(output_panel_name)
 
@@ -266,7 +261,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		settings = sublime.load_settings(settings_name)
 		if settings.get("new_window",True):
 			sublime.active_window().run_command("new_window")
-			window = sublime.windows()[-1]
+			# window = sublime.windows()[-1]
+			window = sublime.active_window()
 			window.set_sidebar_visible(False)
 			self.window = window
 		global icon_style
@@ -463,14 +459,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					username = self.client.user_settings_config["username"],
 					platform = self.client.remote_platform
 				)
-				self.window.run_command(
-					cmd="ssh_panel_output",
-					args={
-						"content": html_tmp(content=html_ele),
-						"is_html": True,
-						"new_line": False,
-						"clean": True
-					}
+				SshPanelOutputCommand(self.window.active_view()).run(
+					edit = sublime.Edit,
+					content = html_tmp(content=html_ele),
+					is_html = True,
+					new_line = False,
+					clean = True,
 				)
 			if what == "help":
 				html_ele = """
@@ -484,14 +478,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					<p><span class='keyword'>[-] </span>Remove root path from view<p>
 					<p><span class='keyword'>[...] </span>Object menu<p>
 				"""
-				self.window.run_command(
-					cmd="ssh_panel_output",
-					args={
-						"content": html_tmp(content=html_ele),
-						"is_html": True,
-						"new_line": False,
-						"clean": True
-					}
+				SshPanelOutputCommand(self.window.active_view()).run(
+					edit = sublime.Edit,
+					content = html_tmp(content=html_ele),
+					is_html = True,
+					new_line = False,
+					clean = True,
 				)
 		def add_root_path(_):
 			def on_done(path):
@@ -524,15 +516,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					html_ele = "<p><span class='symbol'>$</span>%s</p>"%html_str(cmd)+\
 								"<p>%s</p>"%html_str(res[1].read().decode("utf8"))+\
 								"<p class='error'>%s</p>"%html_str(res[2].read().decode("utf8"))
-					self.window.run_command(
-						cmd="ssh_panel_output",
-						args={
-								"content": html_tmp(content=html_ele),
-								"is_html": True,
-								"new_line": True,
-								"clean": False
-							}
-						)
+					SshPanelOutputCommand(self.window.active_view()).run(
+						edit = sublime.Edit,
+						content = html_tmp(content=html_ele),
+						is_html = True,
+						new_line = True,
+						clean = True,
+					)
 				except Exception as e:
 					LOG.E("interattach failed",str(e.args))
 			self.window.show_input_panel(
@@ -542,9 +532,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				None,
 				None)
 		def edit_settings(_):
-			self.window.run_command("ssh_panel_edit_settings",args={
-				"settings_file": "settings"
-			})
+			SshPanelEditSettingsCommand(self.window).run(
+				settings_file = "settings"
+			)
 		def show_panel(_):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
 		def _resource_create_file(path,fs,parent_resource):
@@ -705,15 +695,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					size = str(resource_stat.st_size / 1024)+"mb",
 					atime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(resource_stat.st_atime)),
 					mtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(resource_stat.st_mtime)))
-			self.window.run_command(
-					cmd="ssh_panel_output",
-					args={
-						"content": html_tmp(content=html_ele),
-						"is_html": True,
-						"new_line": False,
-						"clean": True
-					}
-				)
+			SshPanelOutputCommand(self.window.active_view()).run(
+				edit = sublime.Edit,
+				content = html_tmp(content=html_ele),
+				is_html = True,
+				new_line = False,
+				clean = True,
+			)
 		def resource_delete(id):
 			resource = self.resource_data[id]
 			resource_path = self.path_by_resource(resource)
