@@ -519,12 +519,13 @@ class ClientObj():
 			res.append(fs_item)
 		return res
 
-	def file_sync(self,local_path,remote_path,dir,sync_stat=False): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True): # 写入并保持远程文件原始权限
 		# try:
 		if dir == "put":
-			with self.sftp_client.open(remote_path,"w") as rf:
-				with open(local_path,"rb") as lf:
-					rf.write(lf.read())
+			# with self.sftp_client.open(remote_path,"w") as rf:
+			# 	with open(local_path,"rb") as lf:
+			# 		rf.write(lf.read())
+			self.sftp_client.put(local_path, remote_path,transfer_callback)
 			if sync_stat:
 				local_stat = os.stat(local_path)
 				local_atime = local_stat.st_atime
@@ -534,9 +535,10 @@ class ClientObj():
 			LOG.D("remote:%s sync"%remote_path)
 		elif dir == "get":
 			os.makedirs(os.path.split(local_path)[0],exist_ok=True)
-			with open(local_path,"wb") as lf:
-				with self.sftp_client.open(remote_path,"rb") as rf:
-					lf.write(rf.read())
+			# with open(local_path,"wb") as lf:
+			# 	with self.sftp_client.open(remote_path,"rb") as rf:
+			# 		lf.write(rf.read())
+			self.sftp_client.get(remote_path,local_path,transfer_callback)
 			if sync_stat:
 				remote_stat = self.sftp_client.stat(remote_path)
 				remote_atime = remote_stat.st_atime
