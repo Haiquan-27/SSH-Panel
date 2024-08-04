@@ -58,7 +58,10 @@ sudo yum install libffi-devel
 * `quiet_log` 当有消息时不会立即弹出消息面板
 * `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
 * `icon_style` 显示在文件或目录前的图标样式，值为`emjio` | `none` | `image`之一
-* `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff) 字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色
+* `icon_theme` 如果设置了`"icon_style":"image"`,则此值用于指定图标所在主题包的路径
+* `icon_quality` 如果设置了`"icon_style":"image"`，则此值用于指定被显示的图标使用的分辨率前缀，此前缀一般定义在大多数主题包中图标文件名的前段，可选`""` | `"@2x"` | `"@3x"`
+* `icon_color` 如果设置了`"icon_style":"image"`，则此值用于指定一般文件和目录图标的颜色，但不会影响主题包中的图标,可选`"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
+* `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff) 字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色，用于区分显示导航面板视图
 > 如果想使用原视图的背景色则可设置为 "0"
 ### 路径:
 * `remote_path` 远程主机上的路径，你可以使用远程主机上的环境变量，例如"$HOME"、"%userprofile%"，值是一个路径或路径列表
