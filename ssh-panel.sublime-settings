@@ -46,12 +46,10 @@
 	"style_css":"Packages/SSH-Panel/style.css",
 	"new_window":true, // open new window when connect
 	"reconnect_on_start":true,
+	"file_reload":"auto", // Synchronize remote files where click file,chiose from "auto" | "always" | "never"
 	"nav_bar_color_change": "-0x101010",
 	"icon_style":"image", // emjio | none | image
-	"icon_theme":"Packages/zzz A File Icon zzz/patches/general/multi/", // if [A File Icon] already installed,multi-color icons can be used
-	// "icon_theme":"Packages/zzz A File Icon zzz/patches/general/single/", // if [A File Icon] already installed,single-color icons can be used
-	// "icon_theme":"Packages/", // Match from all path
-	// "icon_theme":"Packages/Theme - Default/", // Match within a specific Theme path
+	"icon_theme":"Packages/Theme - Default/", // Match within a specific Theme path
 	"icon_quality":"@3x", // image icon quality,chiose from "" | "@2x" | "@3x"
 	"icon_color":"gray", // default icon color (normal files, folders),chiose from "blue" | "green" | "white" | "yellow" | "gray"
 	"quiet_log":false,
