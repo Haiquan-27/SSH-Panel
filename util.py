@@ -30,10 +30,18 @@ def accessable(file_stat,user_id,group_ids:()):
 		return False
 
 def html_tmp(content):
-	settings = sublime.load_settings("Preferences.sublime-settings")
+	# font_size = sublime.load_settings("Preferences.sublime-settings").get("font_size")
+	font_size = 16
 	return """
 	<html>
 		<style>
+		.res{{
+			font-size:{f}px;
+			line-height:{tlh}px;
+		}}
+		.resource_line{{
+			line-height:{rlh}px;
+		}}
 		.icon_size{{
 			height:{h}px;
 			width:{w}px;
@@ -45,10 +53,13 @@ def html_tmp(content):
 		</body>
 	</html>
 	""".format(
-		h = 48 * settings.get("font_size") * 0.02,
-		w = 54 * settings.get("font_size") * 0.02,
+		f = font_size, 			# resource font
+		rlh = font_size + 8, 		# resource line height
+		tlh = font_size * 1.2,		# resource text line height
+		h = 48 * font_size * 0.025, 	# icon height
+		w = 54 * font_size * 0.025, 	# icon width
 		css = sublime.load_resource(
-				settings.get("style_css","Packages/SSH-Panel/style.css")
+				sublime.load_settings(settings_name).get("style_css","Packages/SSH-Panel/style.css")
 			),
 		content = content
 	)
