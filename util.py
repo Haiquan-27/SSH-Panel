@@ -102,7 +102,7 @@ class SSHPanelException(Exception):
 
 class SSHPanelLog():
 	def _msg_format(self,msg_type,msg_title,msg_content):
-		console_content = "\n"+"#"*20+" ssh-panel[%s]:%s "%(msg_type,msg_title)+"#"*20+"\n"
+		console_content = "\n" + "SSH-Panel[%s]:%s "%(msg_type,msg_title) + "\n"
 		html_ele = {
 			"warning":"<p class=warning>Warning:%s</p>"%msg_title,
 			"error":"<p class=error>Error:%s</p>"%msg_title,
