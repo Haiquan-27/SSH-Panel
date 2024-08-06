@@ -5,7 +5,9 @@
 		"local_path":"~/SFTP-Local/{auto_generate}",
 		"network_timeout": 20,
 		"port":22,
-		"known_hosts_file":"",	// if fill in,will getting houst from known_hosts_file
+		"known_hosts_file":"",		// if fill in,will getting houst from known_hosts_file
+		"umask":"022",				// *nix file umask for "Add File" and "Add Folder"
+		"terminus_encoding":"utf-8", 	// Choose your terminal code
 		"always_fingerprint_confirm": false
 	},
 	"server_settings":{
@@ -25,8 +27,8 @@
 			"private_key":["RSAKey","~/.ssh/id_rsa"],			// ssh-keygen -t rsa [-m PEM]
 			// "private_key":["DSSKey","~/.ssh/id_dsa"]			// ssh-keygen -t dsa [-m PEM]
 			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
-			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"] // ssh-keygen -t ed25519 [-m PEM]
-			"need_passphrase":false								// (optional) default is false, if is true will prompt intput when connect
+			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"]	// ssh-keygen -t ed25519 [-m PEM]
+			"need_passphrase":false	// (optional) default is false, if is true will prompt intput when connect
 			// ...
 		},
 		// use gssapi connect
@@ -50,8 +52,8 @@
 	// "icon_theme":"Packages/zzz A File Icon zzz/patches/general/single/", // if [A File Icon] already installed,single-color icons can be used
 	// "icon_theme":"Packages/", // Match from all path
 	// "icon_theme":"Packages/Theme - Default/", // Match within a specific Theme path
-	"icon_quality":"@3x", // image icon quality,chiose in "" | "@2x" | "@3x"
-	"icon_color":"gray", // default icon color (normal files, folders),chiose in "blue" | "green" | "white" | "yellow" | "gray"
+	"icon_quality":"@3x", // image icon quality,chiose from "" | "@2x" | "@3x"
+	"icon_color":"gray", // default icon color (normal files, folders),chiose from "blue" | "green" | "white" | "yellow" | "gray"
 	"quiet_log":false,
 	"debug_mode":false,
 	"guide":true
