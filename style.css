@@ -35,18 +35,18 @@ a{
 
 .res_dir{
 	font-weight: bold;
-	color: color(var(--foreground) alpha(0.9));
-	padding-left:3px
+	color: color(var(--foreground) alpha(0.8));
+	padding-left: 4px;
 }
 
 .res_file{
-	color: color(var(--foreground) alpha(0.9));
-	padding-left:3px
+	color: color(var(--foreground) alpha(0.8));
+	padding-left: 4px;
 }
 
 .res_focus{
-	border: 1px solid var(--bluish);
-	border-radius: 2px;
+	border: 2px solid var(--bluish);
+	border-radius: 3px;
 }
 
 .no_accessible{
