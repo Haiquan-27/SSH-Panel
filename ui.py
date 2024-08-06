@@ -32,24 +32,24 @@ icon_style_data = {
 		"file":"",
 		"menu":"[...]",
 		"drop":"[x]",
-		"error":"<span class='error'>error</span>",
+		"error":"<span class='error'> error</span>",
 		"ok":"<span class='keyword'> OK</span>",
 		"bus":"<span class='warning'>[###  ]</span>",
 		"warning":"<span class='warning'> !</span>",
-		"denied":"<span class='error'>denied</span>",
+		"denied":"<span class='error'> denied</span>",
 		"dir_symbol": True
 	},
 	"image":{
 		"folder":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/folder_closed@3x.png'>",
 		"folder_open":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/folder_open@3x.png'>",
 		"file":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/file_type_default@3x.png'>",
-		"menu":"[...]",
+		"menu":b'\xe2\x98\xb0'.decode("utf-8"),
 		"drop":"[x]",
-		"error":"<span class='error'>error</span>",
-		"ok":"<span class='keyword'> OK</span>",
-		"bus":"<span class='warning'>[###  ]</span>",
-		"warning":"<span class='warning'> !</span>",
-		"denied":"<span class='error'>denied</span>",
+		"error":" <span class='error'>error</span>",
+		"ok":" <span class='keyword'>OK</span>",
+		"bus":" <span style='color:color(var(--greenish) alpha(0.8))'>*</span><span style='color:color(var(--greenish) alpha(1))'>*</span><span style='color:color(var(--greenish) alpha(0.8))'>*</span>",
+		"warning":" <span class='warning'>!</span>",
+		"denied":" <span class='error'>denied</span>",
 		"dir_symbol": False
 	}
 }
@@ -451,10 +451,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				elif self.client.user_settings.auth_method == AUTH_METHOD_GSSAPI:
 					auth_method = "GSSAPI"
 				html_ele = """
-					<p><span class='keyword'>hostname:</span>{hostname}<p>
-					<p><span class='keyword'>auth method:</span>{auth_method}<p>
-					<p><span class='keyword'>username:</span>{username}<p>
-					<p><span class='keyword'>remote platform:</span>{platform}<p>
+					<p><span class='keyword'>hostname:</span>{hostname}</p>
+					<p><span class='keyword'>auth method:</span>{auth_method}</p>
+					<p><span class='keyword'>username:</span>{username}</p>
+					<p><span class='keyword'>remote platform:</span>{platform}</p>
 				""".format(
 					hostname = self.client.user_settings_config["hostname"],
 					auth_method = auth_method,
@@ -470,15 +470,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				)
 			if what == "help":
 				html_ele = """
-					<p><span class='keyword'>[?] </span>Help<p>
-					<p><span class='keyword'>[i] </span>Show server infomation<p>
-					<p><span class='keyword'>[R] </span>Refresh ans sync file list<p>
-					<p><span class='keyword'>[E] </span>Edit settings<p>
-					<p><span class='keyword'>[T] </span>Simple terminal<p>
-					<p><span class='keyword'>[P] </span>Show panel<p>
-					<p><span class='keyword'>[+] </span>Add new root path<p>
-					<p><span class='keyword'>[-] </span>Remove root path from view<p>
-					<p><span class='keyword'>[...] </span>Object menu<p>
+					<p><span class='keyword'>[?] </span>Help</p>
+					<p><span class='keyword'>[i] </span>Show server infomation</p>
+					<p><span class='keyword'>[R] </span>Refresh ans sync file list</p>
+					<p><span class='keyword'>[E] </span>Edit settings</p>
+					<p><span class='keyword'>[T] </span>Simple terminal</p>
+					<p><span class='keyword'>[P] </span>Show panel</p>
+					<p><span class='keyword'>[+] </span>Add new root path</p>
+					<p><span class='keyword'>[-] </span>Remove root path from view</p>
+					<p><span class='keyword'>[...] </span>Object menu</p>
 				"""
 				SshPanelOutputCommand(self.window.active_view()).run(
 					edit = sublime.Edit,
@@ -790,14 +790,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			resource_path = self.rpath_by_resource(resource)
 			resource_stat = self.client.sftp_client.lstat(resource_path)
 			html_ele = """
-					<p><span class='keyword'>path:</span>{path}<p>
-					<p><span class='keyword'>is directory:</span>{is_dir}<p>
-					<p><span class='keyword'>uid:</span>{uid}<p>
-					<p><span class='keyword'>gid:</span>{gid}<p>
-					<p><span class='keyword'>mode:</span>{mode}<p>
-					<p><span class='keyword'>size:</span>{size}<p>
-					<p><span class='keyword'>access time:</span>{atime}<p>
-					<p><span class='keyword'>modify time:</span>{mtime}<p>
+					<p><span class='keyword'>path:</span>{path}</p>
+					<p><span class='keyword'>is directory:</span>{is_dir}</p>
+					<p><span class='keyword'>uid:</span>{uid}</p>
+					<p><span class='keyword'>gid:</span>{gid}</p>
+					<p><span class='keyword'>mode:</span>{mode}</p>
+					<p><span class='keyword'>size:</span>{size}</p>
+					<p><span class='keyword'>access time:</span>{atime}</p>
+					<p><span class='keyword'>modify time:</span>{mtime}</p>
 				""".format(
 					path = resource_path,
 					is_dir = resource["is_dir"],
@@ -963,23 +963,33 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					lambda i: operation_menu[i][1](id) if i!=-1 else None,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT
 				)
-		with async_Lock:
-			if self.BUS_LOCK:
-				sublime.message_dialog("SSH-Panel operation busy")
-			else:
+		if self.BUS_LOCK:
+			sublime.message_dialog("SSH-Panel operation busy")
+		else:
+			with async_Lock:
 				# if operation in available_operation:
 				eval("{operation}('{args}')".format(operation=operation,args=args))
 
 	def sync_transfer_callback(self,on_done):
-	# 负责获取接受sftp put/get进度的callback方法
-	# 在完成时调用on_done
+		# 负责获取接受sftp put/get进度的callback方法
+		# 在完成时调用on_done
+		start_t = time.time()
 		def transfer(load_size,full_size):
+			p = load_size/full_size
+			full_size = full_size >> 10
+			load_size = load_size >> 10
+			full_size_s = "{:,}".format(full_size)
+			load_size_s = "{:0>{w},}".format(load_size,w=len(full_size_s))
+			sublime.status_message("SSH-Panel loading [%s] %s/%skb %s%% %skb/s"%(
+				(">"*int(100*p)+"|").ljust(100,"<"),
+				load_size_s,
+				full_size_s,
+				int(p*100),
+				"{:,.2f}".format(load_size / (time.time() - start_t))
+			))
 			if load_size == full_size:
 				if on_done:
 					on_done()
-			else:
-				p = load_size/full_size
-				sublime.status_message("SSH-Panel loading [%s]"%("#"*int(100*p)))
 		return transfer
 
 	def file_sync(self,local_path,remote_path,dir,on_done=None):
@@ -1003,20 +1013,29 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		remote_path = self.rpath_by_resource(resource)
 		local_path  = self.lpath_by_resource(resource)
 		LOG.D("path_hash_map",path_hash_map)
-		if (not self.window.open_file(local_path,sublime.TRANSIENT).is_dirty()) or (not os.path.exists(local_path)):
+		file_reload = sublime.load_settings(settings_name).get("file_reload","auto")
+		if os.path.exists(local_path) and file_reload == "auto":
+			self.window.open_file(local_path,sublime.TRANSIENT)
+			return
+		fv = [v for v in self.window.views(include_transient=True) if v.file_name() == local_path]
+		fv = fv[0] if fv else None
+		if file_reload != "never" and (((fv == None or fv.is_dirty() == False) or file_reload == "auto") or file_reload == "always"):
+			if fv:
+				fv.close()
+				print("closed")
 			os.makedirs(os.path.split(local_path)[0], exist_ok=True)
 			try:
 				self.BUS_LOCK = True
 				resource["status"] = ["bus"]
 				self.update_view_port()
 				def on_transfer_over():
+					self.BUS_LOCK = False
 					resource["status"] = ["ok"]
 					self.update_view_port()
 					self.window.open_file(local_path,sublime.TRANSIENT)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 				if self.client.sftp_client.stat(remote_path).st_size == 0: # sftp_client.py -> _transfer_with_callback : if len(data) == 0: break
 					on_transfer_over()
-				self.BUS_LOCK = False
 			except Exception as e:
 				self.BUS_LOCK = False
 				resource["status"] = ["error"]
@@ -1147,7 +1166,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		for resource_id,resource in self.resource_data.items():
 			resource_path = self.rpath_by_resource(resource)
 			ext = os.path.splitext(resource["name"])[1][1:]
-			ele = "<p style='padding-left:{depth}px'>{file_icon}<a class='{style_class}' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
+			ele = "<p class='resource_line' style='padding-left:{depth}px;padding-bottom:4px'>{file_icon}<a class='{style_class} res' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
 					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])),
 					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else ""),("no_accessible" if not resource["access"] else "")]),
 					resource_id = resource_id,
