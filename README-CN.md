@@ -2,7 +2,7 @@ SSH-Panel
 =========
 这个Sublime Text插件可用于浏览和编辑远程服务器上的文件
 
-支持可使用openssh的Windows、Linux服务器
+支持任何可用openssh的Windows和Linux服务器
 
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/recording-v1.2.1.gif)
 
@@ -53,7 +53,7 @@ sudo yum install libffi-devel
 * `default_connect_settings` 所有连接使用的默认参数
 * `server_settings` 配置连接的首选项
 * `debug_mode` 是否启用Debug模式
-* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#style-coustom)
+* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#自定义样式)
 * `new_window` 当连接时打开一个新的窗口
 * `quiet_log` 当有消息时不会立即弹出消息面板
 * `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
@@ -94,7 +94,9 @@ sudo yum install libffi-devel
 * `gss_kex` 使用gss kex，值为bool
 * `gss_deleg_creds` gss deleg creds
 * `gss_trust_dns` gss trust dns
-
+### 杂项
+* `umask` 用于`*nix`文件系统中文件掩码的设置，在`Add File`和`Add Folder`上应用
+* `terminus_encoding` 用于设置终端的字符编码，例如当远程主机为windows时将此项设置为所属地区常用的语言字符编码，请根据chcp代码选择字符编码[详见此处](#terminus_encoding编码表)
 ## 例子
 ```js
 "server_settings":{
@@ -136,7 +138,7 @@ sudo yum install libffi-devel
 	},
 ```
 
-# Using
+# 开始使用
 打开命令选择面板并选择`SSH-Panel: Connect Server`命令
 
 然后选择你的服务器名称进行连接
@@ -154,7 +156,7 @@ sudo yum install libffi-devel
 * `[-]` :从目录视图中删除路径
 你可以点击文件或目录右侧的`[...]`按钮查看其属性或在下方创建新的对象
 
-# Style coustom
+# 自定义样式
 
 你可以通过自定义*style_css*项控制显示在output_panel和navication_view中的html样式
 
@@ -169,7 +171,7 @@ sudo yum install libffi-devel
 .symbol{}
 .title_bar{}
 .res_dir{}
-.res{}
+.res_file{}
 .res_focus{}
 .operation_menu{}
 .warning{}
@@ -179,7 +181,42 @@ sudo yum install libffi-devel
 .no_accessible{}
 ```
 
-# Feedback
+## terminus_encoding编码表
+| windows CHCP | Encoding Name | Language  |
+|--------------|---------------|-----------|
+| 437          | cp437         | English (English)  |
+| 720          | cp720         | العربية (Arabic)  |
+| 737          | cp737         | Ελληνικά (Greek)  |
+| 775          | cp775         | Balti (Baltic)  |
+| 850          | cp850         | Multilingue (Multilingual)  |
+| 852          | cp852         | Středoevropské (Central European) |
+| 855          | cp855         | Кирилица (Cyrillic)  |
+| 857          | cp857         | Türkçe (Turkish)  |
+| 860          | cp860         | Português (Portuguese)  |
+| 861          | cp861         | Íslenska (Icelandic)  |
+| 862          | cp862         | עִבְרִית (Hebrew)  |
+| 863          | cp863         | Français Canadienne (Canadian French) |
+| 864          | cp864         | العربية (Arabic)  |
+| 865          | cp865         | Nordsprog (Nordic)  |
+| 866          | cp866         | Русский (Russian)  |
+| 869          | cp869         | Ελληνικά (Greek)  |
+| 874          | cp874         | ไทย (Thai)  |
+| 932          | shift_jis     | 日本語 (Japanese)  |
+| 936          | gb18030/gb2312| 简体中文 (Simplified Chinese)  |
+| 949          | euc_kr        | 한국어 (Korean)  |
+| 950          | big5          | 繁體中文 (Traditional Chinese)  |
+| 1250         | windows-1250  | Středoevropské (Central European)  |
+| 1251         | windows-1251  | Кирилица (Cyrillic)  |
+| 1252         | windows-1252  | Западноевропейское (Western European)  |
+| 1253         | windows-1253  | Ελληνικά (Greek)  |
+| 1254         | windows-1254  | Türkçe (Turkish)  |
+| 1255         | windows-1255  | עִבְרִית (Hebrew)  |
+| 1256         | windows-1256  | العربية (Arabic)  |
+| 1257         | windows-1257  | Balti (Baltic)  |
+| 1258         | windows-1258  | Tiếng Việt (Vietnamese)  |
+| 65001        | utf-8         | Unicode (UTF-8)  |
+
+# 反馈
 欢迎提供建议或提供代码
 
 如果你喜欢这个项目可以给我点个star :)

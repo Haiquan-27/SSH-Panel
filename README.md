@@ -102,6 +102,10 @@ After the first connection, this path will be save to the user configuration and
 * `gss_deleg_creds` gss deleg creds
 * `gss_trust_dns` gss trust dns
 
+### miscellaneous
+* `umask` `*nix` file system umask for `Add File` and `Add Folder`
+* `terminus_encoding` The character encoding of the terminal, for example, when the remote host is Windows, set this option to the commonly used language character encoding in the region. Please select the character encoding based on the CHCP code [see details](#terminus-encoding)
+
 ## Example
 ```js
 "server_settings":{
@@ -176,7 +180,7 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 .symbol{}
 .title_bar{}
 .res_dir{}
-.res{}
+.res_file{}
 .res_focus{}
 .operation_menu{}
 .warning{}
@@ -185,6 +189,41 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 .debug{}
 .no_accessible{}
 ```
+
+## Terminus encoding
+| windows CHCP | Encoding Name | Language  |
+|--------------|---------------|-----------|
+| 437          | cp437         | English (English)  |
+| 720          | cp720         | العربية (Arabic)  |
+| 737          | cp737         | Ελληνικά (Greek)  |
+| 775          | cp775         | Balti (Baltic)  |
+| 850          | cp850         | Multilingue (Multilingual)  |
+| 852          | cp852         | Středoevropské (Central European) |
+| 855          | cp855         | Кирилица (Cyrillic)  |
+| 857          | cp857         | Türkçe (Turkish)  |
+| 860          | cp860         | Português (Portuguese)  |
+| 861          | cp861         | Íslenska (Icelandic)  |
+| 862          | cp862         | עִבְרִית (Hebrew)  |
+| 863          | cp863         | Français Canadienne (Canadian French) |
+| 864          | cp864         | العربية (Arabic)  |
+| 865          | cp865         | Nordsprog (Nordic)  |
+| 866          | cp866         | Русский (Russian)  |
+| 869          | cp869         | Ελληνικά (Greek)  |
+| 874          | cp874         | ไทย (Thai)  |
+| 932          | shift_jis     | 日本語 (Japanese)  |
+| 936          | gb18030/gb2312| 简体中文 (Simplified Chinese)  |
+| 949          | euc_kr        | 한국어 (Korean)  |
+| 950          | big5          | 繁體中文 (Traditional Chinese)  |
+| 1250         | windows-1250  | Středoevropské (Central European)  |
+| 1251         | windows-1251  | Кирилица (Cyrillic)  |
+| 1252         | windows-1252  | Западноевропейское (Western European)  |
+| 1253         | windows-1253  | Ελληνικά (Greek)  |
+| 1254         | windows-1254  | Türkçe (Turkish)  |
+| 1255         | windows-1255  | עִבְרִית (Hebrew)  |
+| 1256         | windows-1256  | العربية (Arabic)  |
+| 1257         | windows-1257  | Balti (Baltic)  |
+| 1258         | windows-1258  | Tiếng Việt (Vietnamese)  |
+| 65001        | utf-8         | Unicode (UTF-8)  |
 
 # Feedback
 welcome report issues and commit code.
