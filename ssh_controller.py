@@ -198,6 +198,7 @@ class ClientObj():
 		self.transport = None
 		self.sftp_client = None
 		self.remote_platform = "unknown"
+		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
 	@property
@@ -410,8 +411,9 @@ class ClientObj():
 		test_platform = self.get_platform()
 		self.remote_platform = test_platform if test_platform else "unknown"
 		self.env = self.get_env()
+		self.umask = int(self.user_settings_config["umask"],8)
 		self.user_settings.save_config()
-		self.user_settings_config["remote_path"] = [self.remote_expandvars(rp) for rp in self.user_settings_config["remote_path"]]
+		self.user_settings_config["remote_path"] = [self.remote_expandvars(rp[:-1] if rp[-1] == self.remote_os_sep and rp != "/" else rp) for rp in self.user_settings_config["remote_path"]]
 		try:
 			self.userid = self.get_userid()
 		except:
