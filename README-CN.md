@@ -49,54 +49,68 @@ sudo yum install libffi-devel
 
 ## 参数注解:
 
-### 根下:
 * `default_connect_settings` 所有连接使用的默认参数
 * `server_settings` 配置连接的首选项
-* `debug_mode` 是否启用Debug模式
-* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#自定义样式)
-* `new_window` 当连接时打开一个新的窗口
-* `quiet_log` 当有消息时不会立即弹出消息面板
-* `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
-* `icon_style` 显示在文件或目录前的图标样式，值为`emjio` | `none` | `image`之一
-* `icon_theme` 如果设置了`"icon_style":"image"`,则此值用于指定图标所在主题包的路径
-* `icon_quality` 如果设置了`"icon_style":"image"`，则此值用于指定被显示的图标使用的分辨率前缀，此前缀一般定义在大多数主题包中图标文件名的前段，可选`""` | `"@2x"` | `"@3x"`
-* `icon_color` 如果设置了`"icon_style":"image"`，则此值用于指定一般文件和目录图标的颜色，但不会影响主题包中的图标,可选`"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
-* `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff) 字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色，用于区分显示导航面板视图
-> 如果想使用原视图的背景色则可设置为 "0"
+
 ### 路径:
 * `remote_path` 远程主机上的路径，你可以使用远程主机上的环境变量，例如"$HOME"、"%userprofile%"，值是一个路径或路径列表
-> 每个远程根路径将会被分别映射到`local_path`的子目录下，子目录名称是由路径名生成的摘要字符串
+	> 每个远程根路径将会被分别映射到`local_path`的子目录下，子目录名称是由路径名生成的摘要字符串
 * `local_path` 用于同步的本地目录路径，如果为空将会在当前用户家目录下自动生成，可以使用本地环境变量
-> "{auto_generate}"会被替换为由配置与时间戳生成的uuid字符串,用于生成唯一的uuid路径
-> 在第一次连接后此路径将会写入到用户配置中，用于下次连接使用
+	> "{auto_generate}"会被替换为由配置与时间戳生成的uuid字符串,用于生成唯一的uuid路径
+	> 在第一次连接后此路径将会写入到用户配置中，用于下次连接使用
+
 ### 连接和认证:
 * `network_timeout` 用于认证和连接到远程主机的超时秒数
 * `port` 服务器上的SSH服务端口，默认22
 * `known_hosts_file` 本地know_hosts文件路径，如果设置此项则
-> 连接时使用known_hosts_file中记录的主机密钥算法
-> 如主机未在know_hosts_file中记录，则会提示是否添加主机公钥
-> 当在连接成功后得到的主机公钥与known_host_file中记录的公钥不匹配时将会警告并强制关闭当前连接
+	> 连接时使用known_hosts_file中记录的主机密钥算法
+	> 如主机未在know_hosts_file中记录，则会提示是否添加主机公钥
+	> 当在连接成功后得到的主机公钥与known_host_file中记录的公钥不匹配时将会警告并强制关闭当前连接
 * `username` 远程主机上的用户名
 * `hostname` 远程主机IP或域名
 * `always_fingerprint_confirm` 每次连接要求确认主机指纹，如果设置了`known_hosts_file`则直接通过known_hosts_file验证主机指纹
+
 #### 如果服务器使用账户密码进行认证，应使用如下选项:
 * `password` 密码明文
 * `save_password` 是否在配置文件中保存密码明文，如果设为false密码将在连接操作后被删除，值为bool
+
 #### 如果服务器使用公私密钥对进行认证，应使用如下选项:
 * `private_key` 用于设置加密算法和私钥文件路径，此项只在服务器要求使用公私密钥对进行认证时有效
-> 密钥算法支持"RSAKey"、"DSSKey"、"ECDSAKey"、"Ed25519Key"
-> 此项的值是一个2元素的列表，格式为[{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
-> !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
+	> 密钥算法支持"RSAKey"、"DSSKey"、"ECDSAKey"、"Ed25519Key"
+	> 此项的值是一个2元素的列表，格式为[{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
+	> !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
 * `"need_passphrase"` 告知插件此密钥生成时是否使用了passphrase，值为bool
+
 #### 如果服务器使用GSSAPI进行认证，应使用如下选项:
 * `gss_host` 远程主机IP或域名，如果使用此项`hostname`将不被使用
 * `gss_auth` 启用gss认证，值为bool
 * `gss_kex` 使用gss kex，值为bool
 * `gss_deleg_creds` gss deleg creds
 * `gss_trust_dns` gss trust dns
+
 ### 杂项
 * `umask` 用于`*nix`文件系统中文件掩码的设置，在`Add File`和`Add Folder`上应用
 * `terminus_encoding` 用于设置终端的字符编码，例如当远程主机为windows时将此项设置为所属地区常用的语言字符编码，请根据chcp代码选择字符编码[详见此处](#terminus_encoding编码表)
+* `new_window` 当新建连接时打开一个新的窗口
+* `reconnect_on_start` 是否在启动sublime text时自动打开上次关闭的连接
+* `style_css` 自定义css样式，类型是sublime resource，默认*Packages/SSH-Panel/style.css* [详见此处](#自定义样式)
+* `file_reload` 在选中文件时重新进行文件同步，可选`auto` | `always` | `never`
+	- `auto` 如果文件已经被载入到本地，后续选中该文件时不会被重新载入，否则文件将被载入一次
+	- `always` 无论何时选中文件，都将进行重新载入
+	- `never` 不进行载入，即使选中文件
+* `icon_style` 显示在文件或目录前的图标样式，值为`emjio` | `none` | `image`之一
+* `icon_theme` 如果设置了`"icon_style":"image"`,则此值用于指定图标所在主题包的路径,例如这样设置：
+	- `"Packages/"`  在所有的包路径下匹配
+	- `"Packages/Theme - Default/"`  在特定的主题包路径下匹配
+	- `"Packages/zzz A File Icon zzz/patches/general/multi/"`  如果安装了 `A File Icon` 可以使用其下的多色图标
+	- `"Packages/zzz A File Icon zzz/patches/general/single/"`  如果安装了 `A File Icon` 可以使用其下的单色图标
+* `icon_quality` 如果设置了`"icon_style":"image"`，则此值用于指定被显示的图标使用的分辨率前缀，此前缀一般定义在大多数主题包中图标文件名的前段，可选`""` | `"@2x"` | `"@3x"`
+* `icon_color` 如果设置了`"icon_style":"image"`，则此值用于指定一般文件和目录图标的颜色，但不会影响主题包中的图标,可选`"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
+* `nav_bar_color_change` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff)，值为字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色，用于区分显示导航面板视图
+	> 如果想使用原视图的背景色则可设置为 "0"
+* `quiet_log` 当有消息时不会立即弹出消息面板
+* `debug_mode` 是否启用Debug模式
+
 ## 例子
 ```js
 "server_settings":{
