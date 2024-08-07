@@ -789,6 +789,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			resource = self.resource_data[id]
 			resource_path = self.rpath_by_resource(resource)
 			resource_stat = self.client.sftp_client.lstat(resource_path)
+			size = resource_stat.st_size
+			def h_size(size):
+				bl = size.bit_length()
+				sc = 1 if bl % 10 == 0 else 0
+				offset = int(bl/10) - sc
+				offset = 0 if offset == -1 else offset
+				h_s = str(size >> (offset * 10))
+				h_u = ["Bytes","KB","MB","GB","TB","PB"][offset]
+				return "%s-%s"%(h_s,h_u)
 			html_ele = """
 					<p><span class='keyword'>path:</span>{path}</p>
 					<p><span class='keyword'>is directory:</span>{is_dir}</p>
@@ -804,7 +813,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					uid = resource_stat.st_uid,
 					gid = resource_stat.st_gid,
 					mode = resource["mode"],
-					size = str(resource_stat.st_size / 1024)+"mb",
+					size = "{a:,} ({b})".format(a=size,b=h_size(size)),
 					atime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(resource_stat.st_atime)),
 					mtime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(resource_stat.st_mtime)))
 			SshPanelOutputCommand(self.window.active_view()).run(
@@ -832,7 +841,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						try:
 							child_list = list(self.client.sftp_client.listdir_iter(_remote_path))
 						except Exception as e:
-							print("!!!",_remote_path)
 							denied_list.append(_remote_path)
 						for fs in child_list:
 							r_path = _remote_path + remote_os_sep + fs.filename
@@ -845,7 +853,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						file_list.sort()
 					walk_dir(resource_path)
 					if len(denied_list) != 0:
-						print("!!!")
 						resource["status"] = ["warning"]
 						LOG.W("Walk %s Falied,cannot access"%(resource_path),denied_list)
 						self.update_view_port()
@@ -980,11 +987,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			load_size = load_size >> 10
 			full_size_s = "{:,}".format(full_size)
 			load_size_s = "{:0>{w},}".format(load_size,w=len(full_size_s))
-			sublime.status_message("SSH-Panel loading [%s] %s/%skb %s%% %skb/s"%(
-				(">"*int(100*p)+"|").ljust(100,"<"),
+			sublime.status_message("SSH-Panel loading [%s] %s/%skb | %skb/s"%(
+				(" "*int(100*p)+str(int(p*100))+"%|").ljust(100," "),
 				load_size_s,
 				full_size_s,
-				int(p*100),
 				"{:,.2f}".format(load_size / (time.time() - start_t))
 			))
 			if load_size == full_size:
@@ -1022,7 +1028,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		if file_reload != "never" and (((fv == None or fv.is_dirty() == False) or file_reload == "auto") or file_reload == "always"):
 			if fv:
 				fv.close()
-				print("closed")
 			os.makedirs(os.path.split(local_path)[0], exist_ok=True)
 			try:
 				self.BUS_LOCK = True
