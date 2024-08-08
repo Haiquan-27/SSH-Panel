@@ -1,0 +1,42 @@
+[
+    {
+        "id": "preferences",
+        "children":
+        [
+            {
+                "caption": "Package Settings",
+                "id": "package-settings",
+                "children":
+                [
+                    {
+                        "caption": "SSH-Panel",
+                        "children":
+                        [
+                            {
+                                "caption": "Settings",
+                                "command": "ssh_panel_edit_settings",
+                                "args": {"settings_file":"settings"}
+                            },
+                            {
+                                "caption": "Style Coustom",
+                                "command": "ssh_panel_edit_settings",
+                                "args": {"settings_file":"style"}
+                            },
+                            { "caption": "-" },
+                            {
+                                "caption": "Changelog",
+                                "command": "open_file",
+                                "args": {"file": "${packages}/SSH-Panel/CHANGELOG.md"}
+                            },
+                            {
+                                "caption": "README",
+                                "command": "open_file",
+                                "args": {"file": "${packages}/SSH-Panel/README.md"}
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
