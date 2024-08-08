@@ -7,6 +7,7 @@ import base64
 import stat
 
 # DEBUG = None
+version = "1.3.0"
 settings_name = "ssh-panel.sublime-settings"
 async_Lock = threading.Lock()
 output_panel_phantomSet = None
@@ -30,8 +31,10 @@ def accessable(file_stat,user_id,group_ids:()):
 		return False
 
 def html_tmp(content):
-	# font_size = sublime.load_settings("Preferences.sublime-settings").get("font_size")
-	font_size = 16
+	font_size = sublime.load_settings(settings_name).get("font_size")
+	if font_size == "auto":
+		font_size = sublime.load_settings("Preferences.sublime-settings").get("font_size")
+	font_size = int(font_size)
 	return """
 	<html>
 		<style>
@@ -41,6 +44,7 @@ def html_tmp(content):
 		}}
 		.resource_line{{
 			line-height:{rlh}px;
+			padding-bottom:4px;
 		}}
 		.icon_size{{
 			height:{h}px;
