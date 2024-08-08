@@ -53,9 +53,10 @@ class UserSettings():
 		connect_parameter = {}
 		if isinstance(user_parameter["remote_path"],str):
 			user_parameter["remote_path"] = [user_parameter["remote_path"]]
-		if (user_parameter.get("username",None) and
-			user_parameter.get("password",None) and
-			user_parameter.get("hostname",None)
+		user_parameter_keys = user_parameter.keys()
+		if ("username" in user_parameter_keys and
+			"password" in user_parameter_keys and
+			"hostname" in user_parameter_keys
 			):
 			auth_parameter = {
 				"username":user_parameter.get("username"),
@@ -64,9 +65,9 @@ class UserSettings():
 				"save_password":user_parameter.get("save_password",True)
 			}
 			auth_method = AUTH_METHOD_PASSWORD
-		elif (user_parameter.get("username",None) and 
-			user_parameter.get("hostname",None) and
-			user_parameter.get("private_key",None) and
+		elif ("username" in user_parameter_keys and
+			"hostname" in user_parameter_keys and
+			"private_key" in user_parameter_keys and
 			len(user_parameter.get("private_key")) == 2 and
 			user_parameter.get("private_key")[0] in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"]
 			):
@@ -79,12 +80,12 @@ class UserSettings():
 				"need_passphrase":user_parameter.get("need_passphrase",False)
 			}
 			auth_method = AUTH_METHOD_PRIVATEKEY
-		elif(user_parameter.get("username",None) and 
-			user_parameter.get("gss_host",None) and
-			user_parameter.get("gss_auth",None) and
-			user_parameter.get("gss_kex",None) and
-			user_parameter.get("gss_deleg_creds",None) and
-			user_parameter.get("gss_trust_dns",None)):
+		elif("username" in user_parameter_keys and
+			"gss_host" in user_parameter_keys and
+			"gss_auth" in user_parameter_keys and
+			"gss_kex" in user_parameter_keys and
+			"gss_deleg_creds" in user_parameter_keys and
+			"gss_trust_dns" in user_parameter_keys):
 			auth_parameter = {
 				"username":user_parameter.get("username"),
 				"gss_host":user_parameter.get("gss_host"),
@@ -165,9 +166,9 @@ class UserSettings():
 	def config(self):
 		return UserSettings.to_config(self.auth_parameter,self.connect_parameter)
 
-	def save_config(self):
+	def save_config(self,config=None):
 		server_name = self.server_name
-		save_config = self.config # 没初始化会报错
+		save_config = config if config else self.config
 		if server_name and save_config:
 			st_settings = sublime.load_settings(settings_name)
 			server_settings = st_settings.get("server_settings")
@@ -231,7 +232,8 @@ class ClientObj():
 			user_settings_config
 		)
 
-	def connect(self):
+	def connect(self,callback=None):
+	# 如果有输入密码的环节，需要使用callback获取程序流
 		user_settings = self.user_settings
 		user_settings_config = user_settings.config
 		port = user_settings_config["port"]
@@ -309,7 +311,7 @@ class ClientObj():
 				self.transport.close()
 				return
 
-		def auth_done():
+		def auth_done(): # 认证完成
 			LOG.I("Client loaded over",{
 				"time use": time.time() - start_time,
 				"remote OS": self.remote_platform,
@@ -323,17 +325,22 @@ class ClientObj():
 			else:
 				# self.interattach = self.client.exec_command("/bin/sh")
 				LOG.D("Shell","bash")
-			# 检查hostkey
+			# 是否检查hostkey
 			if need_fingerprint_confirm:
 				hostkey = hostkeys.lookup(hostname)[server_pkey.get_name()]
 				if hostkey.asbytes() == server_pkey.asbytes():
 					LOG.D("HostKey check OK")
+					callback()
+					return
 				else:
 					LOG.E("REMOTE HOST IDENTIFICATION HAS CHANGED!",{
 						"host fingerprint": server_fingerprint,
 					})
 					self.transport.close()
 					return
+			else:
+				callback()
+				return
 
 		# 身份认证
 		if user_settings.auth_method == AUTH_METHOD_PASSWORD:
@@ -344,15 +351,20 @@ class ClientObj():
 						password = password
 					)
 					LOG.I("Password Authentication Successful")
+					if user_settings_config["save_password"]:
+						# 修改属性在load_client处执行保存
+						ua = user_settings.auth_parameter
+						ua["password"] = password
+						user_settings.auth_parameter = ua
+					self.load_client(auth_done)
 				except Exception as e:
 					LOG.E("Password Authentication Failed",str(e.args))
-				self.load_client(auth_done)
-			if not user_settings_config["save_password"]:
-				sublime.active_window().show_input_panel(
-						"password:",
+			if user_settings_config["password"] == "":
+				ip = sublime.active_window().show_input_panel(
+						"Password(invisible):",
 						"",
 						auth_password,
-						None,
+						lambda s: ip.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme'),
 						lambda: LOG.I("Connect Clean")
 					)
 			else:
@@ -375,11 +387,11 @@ class ClientObj():
 			except Exception as e:
 				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
 			if user_settings_config["need_passphrase"]:
-				sublime.active_window().show_input_panel(
+				ip = sublime.active_window().show_input_panel(
 						"passphrase:",
 						"",
 						lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)),
-						None,
+						lambda s: ip.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme'),
 						lambda: LOG.I("Connect Clean")
 					)
 			else:
