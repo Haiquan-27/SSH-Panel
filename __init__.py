@@ -2,8 +2,6 @@ import os
 import sys
 import sublime
 
-version = "1.3.0"
-
 def plugin_loaded():
 	settings = sublime.load_settings("ssh-panel.sublime-settings")
 	if settings.get("guide"):
