@@ -2,9 +2,12 @@ import threading
 import sublime_plugin
 import sublime
 import os
+import sys
 import hashlib
 import base64
 import stat
+import urllib.request
+import ssl
 
 # DEBUG = None
 version = "1.3.0"
@@ -13,6 +16,7 @@ async_Lock = threading.Lock()
 output_panel_phantomSet = None
 output_panel_phantom_list = []
 output_panel_name = "ssh-panel"
+dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public"
 
 def async_run(func): # 异步运行装饰器
 	def wrapper(*args,**kwargs):
@@ -103,6 +107,32 @@ def pkey_fingerprint(pkey): # 返回paramiko.Pkey的hash base64摘要
 			base64.encodebytes(eval("hashlib.%s"%abstract_algorithm_name)(pkey.asbytes()).digest()).decode("utf8").replace("\n",""),
 		)
 
+@async_run
+def request_dependencies():
+	with async_Lock:
+		platform = sublime.platform()
+		request_file = {
+			"linux":"linux.zip",
+			"windows":"windows.zip"
+			# "osx":"osx.zip"
+		}[platform]
+		libs_path = [p for p in sys.path if p.endswith(os.path.sep.join(["","Lib","python38"])) and os.path.isdir(p)][-1]
+		url = "/".join([dependencies_url,request_file])
+		output = os.path.join(libs_path,'sshpaneldep-temp.zip')
+
+		try:
+			urllib.request.urlretrieve(url,output,reporthook=lambda a,b,c: print(a,b,c))
+		except urllib.error.URLError as e:
+			print(type(e.args[0]),e.args[0])
+			if isinstance(e.args[0],ssl.SSLCertVerificationError):
+				if sublime.yes_no_cancel_dialog(
+						msg = "Current SSL Cert Verification cannot be authenticated,whether to continue?",
+						yes_title = "Continue(use unverified)"
+				) == sublime.DIALOG_YES:
+					ssl._create_default_https_context = ssl._create_unverified_context
+					urllib.request.urlretrieve(url,output,reporthook=lambda a,b,c: print(a,b,c))
+		except Exception as e:
+			print("???"+str(e.args))
 
 def html_str(s):
 	return s.\
