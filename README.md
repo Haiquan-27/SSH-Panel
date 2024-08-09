@@ -9,6 +9,7 @@ Windows and Linux servers that support any openssh available
 
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)
 
 # Installation
 
