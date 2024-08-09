@@ -16,7 +16,7 @@ async_Lock = threading.Lock()
 output_panel_phantomSet = None
 output_panel_phantom_list = []
 output_panel_name = "ssh-panel"
-dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public"
+LOG = None
 
 def async_run(func): # 异步运行装饰器
 	def wrapper(*args,**kwargs):
@@ -107,33 +107,6 @@ def pkey_fingerprint(pkey): # 返回paramiko.Pkey的hash base64摘要
 			base64.encodebytes(eval("hashlib.%s"%abstract_algorithm_name)(pkey.asbytes()).digest()).decode("utf8").replace("\n",""),
 		)
 
-@async_run
-def request_dependencies():
-	with async_Lock:
-		platform = sublime.platform()
-		request_file = {
-			"linux":"linux.zip",
-			"windows":"windows.zip"
-			# "osx":"osx.zip"
-		}[platform]
-		libs_path = [p for p in sys.path if p.endswith(os.path.sep.join(["","Lib","python38"])) and os.path.isdir(p)][-1]
-		url = "/".join([dependencies_url,request_file])
-		output = os.path.join(libs_path,'sshpaneldep-temp.zip')
-
-		try:
-			urllib.request.urlretrieve(url,output,reporthook=lambda a,b,c: print(a,b,c))
-		except urllib.error.URLError as e:
-			print(type(e.args[0]),e.args[0])
-			if isinstance(e.args[0],ssl.SSLCertVerificationError):
-				if sublime.yes_no_cancel_dialog(
-						msg = "Current SSL Cert Verification cannot be authenticated,whether to continue?",
-						yes_title = "Continue(use unverified)"
-				) == sublime.DIALOG_YES:
-					ssl._create_default_https_context = ssl._create_unverified_context
-					urllib.request.urlretrieve(url,output,reporthook=lambda a,b,c: print(a,b,c))
-		except Exception as e:
-			print("???"+str(e.args))
-
 def html_str(s):
 	return s.\
 	replace("&","&amp;").\
@@ -168,16 +141,14 @@ class SSHPanelLog():
 		return (console_content,html_tmp(content=html_ele))
 
 	def _log(self,msg_tuple):
-		sublime.active_window().run_command(
-					cmd="ssh_panel_output",
-					args={
-						"content": msg_tuple[1] if int(sublime.version()) >= 4000 else msg_tuple[0],
-						"is_html": int(sublime.version()) >= 4000,
-						"new_line": True,
-						"clean": False,
-						"display": not sublime.load_settings(settings_name).get("quiet_log")
-					}
-				)
+		SshPanelOutputCommand(sublime.active_window().active_view()).run(
+			sublime.Edit,
+			content = msg_tuple[1] if int(sublime.version()) >= 4000 else msg_tuple[0],
+			is_html = int(sublime.version()) >= 4000,
+			new_line = True,
+			clean = False,
+			display = not sublime.load_settings(settings_name).get("quiet_log")
+		)
 		print(msg_tuple[0])
 
 	def W(self,msg_title,msg_content=""):
@@ -199,6 +170,8 @@ class SSHPanelLog():
 		if sublime.load_settings(settings_name).get("debug_mode"):
 			msg_tuple = self._msg_format("debug",msg_title,msg_content)
 			self._log(msg_tuple)
+
+LOG = SSHPanelLog()
 
 class SshPanelOutputCommand(sublime_plugin.TextCommand):
 	def __init__(self,view):
