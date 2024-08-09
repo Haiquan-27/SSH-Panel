@@ -4,14 +4,20 @@ import os
 import json
 import re
 import time
-from .ssh_controller import *
+import zipfile
 from .util import *
+try:
+	from .ssh_controller import *
+except Exception as e:
+	if isinstance(e, (ImportError,ModuleNotFoundError)):
+		LOG.I("Dependencies lost type , Please exec <span class='keyword'>view.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
 
 client_map = {} # client_id -> client
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
 icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
 icon_style = None
+dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{platform}.zip"
 icon_style_data = {
 	"emjio": { # utf-8 code
 		"folder":b'\xf0\x9f\x93\x81'.decode("utf-8"),
@@ -91,9 +97,37 @@ def update_icon():
 	icon_style_data["image"]["folder_open"] = icon_style_data["image"]["folder_open"].format(color=color)
 	icon_style_data["image"]["file"] = icon_style_data["image"]["file"].format(color=color)
 
+def update_color_scheme():
+	# 先将当前view样式保存为SSH-Panel.hidden-color-scheme
+	view = sublime.active_window().active_view()
+	style = view.style()
+	new_style_global = {}
+	new_style_global["background"] = style.get("background")
+	new_style_global["foreground"] = style.get("foreground")
+	theme_path = os.path.join(
+		sublime.packages_path(),
+		"User",
+		"SSH-Panel",
+		"SSH-Panel.hidden-color-scheme"
+	)
+	os.makedirs(os.path.split(theme_path)[0],exist_ok=True)
+	with open(theme_path,"w") as f:
+		f.write(
+			json.dumps(
+				{
+					"globals":new_style_global,
+					"variables":{},
+					"name":"SSH-Panel"
+				},
+				indent=5,
+				ensure_ascii=False
+			)
+		)
+
 def plugin_loaded():
 	settings = sublime.load_settings(settings_name)
 	window = sublime.active_window()
+	update_color_scheme()
 	# Open ChangeLog
 	version_storage_file = os.path.join(
 		sublime.packages_path(),
@@ -113,20 +147,20 @@ def plugin_loaded():
 		print(storage_version+"-",version)
 		window.run_command('open_file', {'file': "${packages}/SSH-Panel/CHANGELOG.md"})
 	# Open Guide
-	if settings.get("guide"):
-		if int(sublime.version()) >= 4065:
-			window.new_html_sheet(
-				"SSH-Panel | Guide",
-				sublime.load_resource('Packages/SSH-Panel/guide.html')
-			)
-			settings.set("guide",False)
-			sublime.save_settings(settings_name)
-		else:
-			window.show_input_panel(
-				"SSH-Panel | Guide",
-				"https://github.com/Haiquan-27/SSH-Panel",
-				lambda url : window.run_command("open_url",args={"url":url}),
-		)
+	# if settings.get("guide"):
+	# 	if int(sublime.version()) >= 4065:
+	# 		window.new_html_sheet(
+	# 			"SSH-Panel | Guide",
+	# 			sublime.load_resource('Packages/SSH-Panel/guide.html')
+	# 		)
+	# 		settings.set("guide",False)
+	# 		sublime.save_settings(settings_name)
+	# 	else:
+	# 		window.show_input_panel(
+	# 			"SSH-Panel | Guide",
+	# 			"https://github.com/Haiquan-27/SSH-Panel",
+	# 			lambda url : window.run_command("open_url",args={"url":url}),
+	# 	)
 	# Reconnect on start
 	if sublime.load_settings(settings_name).get("reconnect_on_start"):
 		for w in sublime.windows():
@@ -1289,3 +1323,95 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 			for remote_path in client.user_settings_config["remote_path"]:
 				del path_hash_map[remote_path]
 			del client_map[client_id]
+
+class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
+	def run(self):
+		global dependencies_url
+		libs_path = [p for p in sys.path if p.endswith(os.path.sep.join(["","Lib","python38"])) and os.path.isdir(p) and not p.endswith(os.path.sep.join(["Data","Lib","python38"])) ][-1]
+		dependencies_url = dependencies_url.format(platform=sublime.platform())
+		zip_pack = os.path.join(libs_path,'sshpaneldep-temp.zip')
+		print(dependencies_url,zip_pack)
+		self.libs_path = libs_path
+		self.zip_pack = zip_pack
+		self.request_dependencies()
+
+	@async_run
+	def request_dependencies(self):
+		zip_pack = self.zip_pack
+		def on_transfer_over():
+			if sublime.yes_no_cancel_dialog("Package install done,unpack and install now?") == sublime.DIALOG_YES:
+				self.unpack_install()
+				os.remove(self.zip_pack)
+		with async_Lock:
+			try:
+				urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback(on_transfer_over))
+			except urllib.error.URLError as e:
+				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
+				LOG.W("Current SSL Cert Verification cannot be authenticated")
+				if isinstance(e.args[0],ssl.SSLCertVerificationError):
+					if sublime.yes_no_cancel_dialog(
+							msg = "Current SSL Cert Verification cannot be authenticated,whether to continue?",
+							yes_title = "Continue(use unverified)",
+							title = "SSH-Panel Install dependencies"
+					) == sublime.DIALOG_YES:
+						ssl._create_default_https_context = ssl._create_unverified_context
+						self.progress_bar(0)
+						sublime.status_message("SSH-Panel connecting ...")
+						urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback(on_transfer_over))
+				else:
+					LOG.I("connot download file: %s"%dependencies_url)
+			except Exception as e:
+				LOG.E("Error %s"%(str(e.args)))
+
+	def progress_bar(self,p):
+		SshPanelOutputCommand(self.window.active_view()).run(
+			sublime.Edit,
+			content=html_tmp("""
+			<p style='width:10000px'>Downloading <span class='keyword'>%s</span></p>
+			<p style='width:10000px'>to <span class='keyword'>%s</span></p>
+			<p style='width:1000px'>
+				<div style='border: 2px solid var(--foreground));width:1000px;height:50px'>
+					<div style='background-color:var(--foreground);width:%spx;height:50px'></div>
+				</div>
+			</p>"""%(dependencies_url,self.zip_pack,int(p*1000))),
+			is_html=True,
+			display=True,
+			clean=True,
+			new_line=False
+		)
+
+	def sync_transfer_callback(self,on_done=None):
+		start_t = time.time() - 0.001
+		def transfer(load_pack,pack_size,full_size):
+			load_size = load_pack * pack_size
+			p = load_size/full_size
+			full_size = full_size >> 10
+			load_size = load_size >> 10
+			full_size_s = "{:,}".format(full_size)
+			load_size_s = "{:0>{w},}".format(load_size,w=len(full_size_s))
+			self.progress_bar(p)
+			sublime.status_message("SSH-Panel download %s [%s] %s/%skb | %skb/s"%(
+				dependencies_url,
+				(" "*int(100*p)+str(int(p*100))+"%|").ljust(100," "),
+				load_size_s,
+				full_size_s,
+				"{:,.2f}".format(load_size / (time.time() - start_t))
+			))
+			if load_size >= full_size:
+				if on_done:
+					on_done()
+		return transfer
+
+	def unpack_install(self):
+		zip_pack = self.zip_pack
+		unpack_list = []
+		with zipfile.ZipFile(zip_pack, "r") as zf:
+			if "python3.dll" in zf.filename:
+				unpack_list.append("python3.dll")
+				zf.extract("python3.dll",os.path.split(sublime.executable_path())[0])
+			for fi in zf.infolist():
+				if fi.filename[-1] != "/" and fi.filename.startswith("dist-packages/"):
+					fi.filename = fi.filename[14:]
+					zf.extract(fi,self.libs_path)
+					unpack_list.append(fi.filename)
+			LOG.I("unpack file",unpack_list)
