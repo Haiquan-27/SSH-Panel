@@ -1344,7 +1344,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 				os.remove(self.zip_pack)
 		with async_Lock:
 			try:
-				urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback(on_transfer_over))
+				urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
 			except urllib.error.URLError as e:
 				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
 				LOG.W("Current SSL Cert Verification cannot be authenticated")
@@ -1357,11 +1357,12 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 						ssl._create_default_https_context = ssl._create_unverified_context
 						self.progress_bar(0)
 						sublime.status_message("SSH-Panel connecting ...")
-						urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback(on_transfer_over))
+						urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
 				else:
 					LOG.I("connot download file: %s"%dependencies_url)
 			except Exception as e:
 				LOG.E("Error %s"%(str(e.args)))
+			on_transfer_over()
 
 	def progress_bar(self,p):
 		SshPanelOutputCommand(self.window.active_view()).run(
@@ -1377,7 +1378,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			is_html=True,
 			display=True,
 			clean=True,
-			new_line=False
+			new_line=True
 		)
 
 	def sync_transfer_callback(self,on_done=None):
@@ -1403,9 +1404,8 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		return transfer
 
 	def unpack_install(self):
-		zip_pack = self.zip_pack
 		unpack_list = []
-		with zipfile.ZipFile(zip_pack, "r") as zf:
+		with zipfile.ZipFile(self.zip_pack, "r") as zf:
 			if "python3.dll" in zf.filename:
 				unpack_list.append("python3.dll")
 				zf.extract("python3.dll",os.path.split(sublime.executable_path())[0])
