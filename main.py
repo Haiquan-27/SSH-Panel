@@ -316,10 +316,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			window.set_view_index(navication_view,0,0)
 			window.focus_group(1)
 		self.user_settings = user_settings
+		navication_view.settings().set("ssh_panel_clientID",self.client_id)
+		navication_view.settings().set("ssh_panel_serverName",server_name)
 		self.init_navcation_view(navication_view)
 		self.navication_view = navication_view
-		self.navication_view.settings().set("ssh_panel_clientID",self.client_id)
-		self.navication_view.settings().set("ssh_panel_serverName",self.client.user_settings.server_name)
 		for remote_path in self.client.user_settings_config["remote_path"]:
 			self.add_root_path(path=remote_path,focus=True)
 		self.update_view_port()
@@ -363,14 +363,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			self.client = client
 			client.connect(self.reload_list)
 
-
 	def reload_list(self):
 		self._max_resource_id = -1
 		self.resource_data = {}
-		self.navication_view.settings().erase("color_scheme")
 		if self.client:
 			for remote_path in self.client.user_settings_config["remote_path"]:
 				self.add_root_path(path=remote_path,focus=True)
+		self.navication_view.settings().erase("color_scheme")
 		self.update_view_port()
 
 	def add_path(self,remote_path,root_path):
@@ -452,7 +451,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		# 	"resource_put_dir",
 		# 	"resource_put_file",
 		#	"resource_copy_path",
-		#	"resource_open_local"
+		#	"resource_open_local",
+		#	"resource_force_load"
 		# ]
 		operation,args = href.split(":")
 		def reload(what):
@@ -924,6 +924,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT
 			)
 
+		def resource_force_load(id):
+			select_resource = self.resource_data[id]
+			if select_resource["is_dir"]:
+				os.makedirs(l_path,exist_ok=True)
+			else:
+				self.open_resource_file(select_resource,force_load=True)
+
 		def resource_open_local(id):
 			select_resource = self.resource_data[id]
 			l_path = self.lpath_by_resource(select_resource)
@@ -974,6 +981,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				("Show Info",resource_info),
 				("Delete",resource_delete),
 				("Copy Path",resource_copy_path),
+				("Focus load",resource_force_load),
 				("Open Containing Folder…",resource_open_local)
 			]
 			if self.resource_data[id]["is_dir"]:
@@ -1042,7 +1050,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				"error": str(e.args)
 			})
 
-	def open_resource_file(self,resource):
+	def open_resource_file(self,resource,force_load=False):
 		remote_path = self.rpath_by_resource(resource)
 		local_path  = self.lpath_by_resource(resource)
 		LOG.D("path_hash_map",path_hash_map)
@@ -1056,7 +1064,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		else:
 			fv = [v for v in self.window.views() if v.file_name() == local_path]
 		fv = fv[0] if fv else None
-		if file_reload != "never" and (((fv == None or fv.is_dirty() == False) or file_reload == "auto") or file_reload == "always"):
+		# load_f 是否载入
+		load_f = (file_reload != "never" and (((fv == None or fv.is_dirty() == False) or file_reload == "auto") or file_reload == "always")) or force_load
+		if load_f:
 			if fv:
 				fv.close()
 			os.makedirs(os.path.split(local_path)[0], exist_ok=True)
