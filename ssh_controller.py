@@ -15,8 +15,6 @@ AUTH_METHOD_PASSWORD = 0	# 0: username and password
 AUTH_METHOD_PRIVATEKEY = 1	# 1: username and private_key	
 AUTH_METHOD_GSSAPI = 2		# 2: username and gssapi	
 
-LOG = SSHPanelLog()
-
 class UserSettings():
 	def __init__(self):
 		self.server_name = None
