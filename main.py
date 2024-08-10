@@ -1406,7 +1406,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def unpack_install(self):
 		unpack_list = []
 		with zipfile.ZipFile(self.zip_pack, "r") as zf:
-			if "python3.dll" in zf.filename:
+			if "python3.dll" in zf.namelist():
 				unpack_list.append("python3.dll")
 				zf.extract("python3.dll",os.path.split(sublime.executable_path())[0])
 			for fi in zf.infolist():
