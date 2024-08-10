@@ -10,7 +10,7 @@ try:
 	from .ssh_controller import *
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError)):
-		LOG.I("Dependencies lost type , Please exec <span class='keyword'>view.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
+		LOG.I("Dependencies lost type , Please exec <span class='keyword'>window.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
 
 client_map = {} # client_id -> client
 _max_client_id = -1
