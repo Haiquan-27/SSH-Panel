@@ -5,19 +5,20 @@ import json
 import re
 import time
 import zipfile
+import sys
 from .util import *
+Dependencies_LOST = False
 try:
 	from .ssh_controller import *
 except Exception as e:
-	if isinstance(e, (ImportError,ModuleNotFoundError)):
-		LOG.I("Dependencies lost type , Please exec <span class='keyword'>window.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
-
+	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
+		Dependencies_LOST = True
 client_map = {} # client_id -> client
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
 icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
-icon_style = None
-dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{platform}.zip"
+icon_style = None # set value with update_icon() (icon_style_data value)
+dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{py_version}_{platform}{arch}.zip"
 icon_style_data = {
 	"emjio": { # utf-8 code
 		"folder":b'\xf0\x9f\x93\x81'.decode("utf-8"),
@@ -52,7 +53,7 @@ icon_style_data = {
 		"menu":b'\xe2\x98\xb0'.decode("utf-8"),
 		"drop":"[x]",
 		"error":" <span class='error'>error</span>",
-		"ok":" <span class='keyword'>OK</span>",
+		"ok":" <span class='keyword'>%s</span>"%b'\xe2\x80\xa2'.decode("utf-8"),
 		"bus":" <span style='color:color(var(--greenish) alpha(0.8))'>*</span><span style='color:color(var(--greenish) alpha(1))'>*</span><span style='color:color(var(--greenish) alpha(0.8))'>*</span>",
 		"warning":" <span class='warning'>!</span>",
 		"denied":" <span class='error'>denied</span>",
@@ -91,11 +92,14 @@ def update_ext_icon():
 
 def update_icon():
 	update_ext_icon()
-	color = sublime.load_settings(settings_name).get("icon_color")
+	settings = sublime.load_settings(settings_name)
+	color = settings.get("icon_color")
 	global icon_style_data
 	icon_style_data["image"]["folder"] = icon_style_data["image"]["folder"].format(color=color)
 	icon_style_data["image"]["folder_open"] = icon_style_data["image"]["folder_open"].format(color=color)
 	icon_style_data["image"]["file"] = icon_style_data["image"]["file"].format(color=color)
+	global icon_style
+	icon_style = icon_style_data.get(settings.get("icon_style"),"none")
 
 def update_color_scheme():
 	# 先将当前view样式保存为SSH-Panel.hidden-color-scheme
@@ -125,6 +129,9 @@ def update_color_scheme():
 		)
 
 def plugin_loaded():
+	if Dependencies_LOST:
+		LOG.I("Dependencies lost , Please exec <span class='keyword'>view.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
+		sys.stdout.write("Please exec: view.run_command('ssh_panel_install_dependencies')\n")
 	settings = sublime.load_settings(settings_name)
 	window = sublime.active_window()
 	update_color_scheme()
@@ -321,24 +328,18 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.focus_resource = None
 		update_icon()
 		settings = sublime.load_settings(settings_name)
-		user_settings = UserSettings()
-		user_settings.init_from_settings_file(server_name)
+		self.user_settings = UserSettings()
+		self.user_settings.init_from_settings_file(server_name)
+		self.window = sublime.active_window()
 		if settings.get("new_window",True) and not reload_from_view:
 			sublime.active_window().run_command("new_window")
-			# window = sublime.windows()[-1]
-			window = sublime.active_window()
-			window.set_sidebar_visible(False)
-			self.window = window
-		if connect_now:
-			self.connect_post(user_settings)
-		global icon_style
-		icon_style = icon_style_data.get(settings.get("icon_style"),"none")
-		window = self.window
+			self.window = sublime.windows()[-1]
+			self.window.set_sidebar_visible(False)
 		if reload_from_view:
 			navication_view = self.view
-			user_settings.init_from_settings_file(navication_view.settings().get("ssh_panel_serverName"))
+			self.user_settings.init_from_settings_file(navication_view.settings().get("ssh_panel_serverName"))
 		else:
-			window.set_layout({
+			self.window.set_layout({
 				'cells': [
 						[0, 0, 1, 1],
 						[1, 0, 2, 1]
@@ -346,18 +347,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				'cols': [0.0, 0.2, 1.0],
 				'rows': [0.0, 1.0]
 			})
-			navication_view = window.new_file()
-			window.set_view_index(navication_view,0,0)
-			window.focus_group(1)
-		self.user_settings = user_settings
+			navication_view = self.window.new_file()
+			self.window.set_view_index(navication_view,0,0)
+			self.window.focus_group(1)
 		navication_view.settings().set("ssh_panel_clientID",self.client_id)
 		navication_view.settings().set("ssh_panel_serverName",server_name)
 		self.init_navcation_view(navication_view)
 		self.navication_view = navication_view
-		for remote_path in self.client.user_settings_config["remote_path"]:
-			self.add_root_path(path=remote_path,focus=True)
-		self.update_view_port()
-
+		if connect_now:
+			self.connect_post(self.reload_list)
 
 	@property
 	def user_settings(self):
@@ -381,9 +379,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.update_view_port()
 
 	@async_run
-	def connect_post(self,user_settings):
+	def connect_post(self,callback=None):
 		# 这个函数必须是异步的，否则self.run()会卡主进程
 		# client.connect() 如果需要输入密码，在输入密码后client才可用
+		user_settings = self.user_settings if self.user_settings else UserSettings()
 		self._max_resource_id = -1
 		self.resource_data = {}
 		window = sublime.active_window()
@@ -395,7 +394,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			else:
 				self.client_id = register_client(client)
 			self.client = client
-			client.connect(self.reload_list)
+			client.connect(callback)
 
 	def reload_list(self):
 		self._max_resource_id = -1
@@ -494,7 +493,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				self.focus_resource = None
 				self.reload_list()
 			elif what == "connect":
-				self.connect_post(self.user_settings)
+				self.connect_post()
 
 		def show(what):
 			if what == "info":
@@ -692,6 +691,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		def resource_put_dir(id):
 			@async_run
 			def callback(dir_list):
+				if isinstance(dir_list,str):
+					dir_list = [dir_list]
 				if len(dir_list) == 0: return
 				select_resource = self.resource_data[id]
 				remote_os_sep = self.client.remote_os_sep
@@ -736,7 +737,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					self.update_view_port()
 				self.BUS_LOCK = False
 				LOG.I("Put %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
-			sublime.select_folder_dialog(callback,multi_select=True)
+				if int(sublime.version()) >= 4075:
+					sublime.select_folder_dialog(callback,multi_select=True)
+				else:
+					sublime.active_window().show_input_panel(
+						"local folder path:",
+						"",
+						callback,None,None
+					)
 
 		def resource_put_file(id):
 			select_resource = self.resource_data[id]
@@ -744,6 +752,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			put_path = self.rpath_by_resource(select_resource)
 			put_path = put_path[:-1] if put_path[-1] == remote_os_sep else put_path
 			def callback(file_list):
+				if isinstance(file_list,str):
+					file_list = [file_list]
 				if len(file_list) == 0: return
 				self.BUS_LOCK = True
 				for file in file_list:
@@ -761,7 +771,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					new["focus"] = True
 				self.BUS_LOCK = False
 				self.update_view_port()
-			sublime.open_dialog(callback,multi_select=True)
+			if int(sublime.version()) >= 4075:
+				sublime.open_dialog(callback,multi_select=True)
+			else:
+				sublime.active_window().show_input_panel(
+					"local file path:",
+					"",
+					callback,None,None
+				)
 
 		def resource_copy_path(id):
 			select_resource = self.resource_data[id]
@@ -841,7 +858,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				)
 			else:
 				self.window.show_quick_panel(
-					["Clone [%s] to local"%get_path,"clean"],
+					["Clone [%s] to local"%remote_path,"clean"],
 					on_selected,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT
 				)
@@ -970,13 +987,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			l_path = self.lpath_by_resource(select_resource)
 			if select_resource["is_dir"]:
 				if os.path.exists(l_path):
-					self.window.run_command("open_folder",args= {"dirs": [l_path]})
+					self.window.run_command("open_dir",args= {"dir": l_path})
 				else:
-					if sublime.yes_no_cancel_dialog("Directory '%s' has not been Get\nCreate in local now?"%l_path) == sublime.DialogResult.YES:
+					if sublime.yes_no_cancel_dialog("Directory '%s' has not been Get\nCreate in local now?"%l_path) == (sublime.DialogResult.YES if int(sublime.version()) >= 4132 else 1):
 						os.makedirs(l_path,exist_ok=True)
-						self.window.run_command("open_folder",args= {"dirs": [l_path]})
+						self.window.run_command("open_dir",args= {"dir": l_path})
 			else:
-				self.window.run_command("open_folder",args= {"dirs": [os.path.split(l_path)[0]]})
+				self.window.run_command("open_dir",args= {"dir": os.path.split(l_path)[0],"file":os.path.split(l_path)[1]})
 
 		def resource_click(id):
 			try:
@@ -1089,7 +1106,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		local_path  = self.lpath_by_resource(resource)
 		LOG.D("path_hash_map",path_hash_map)
 		file_reload = sublime.load_settings(settings_name).get("file_reload","auto")
-		NF = sublime.TRANSIENT if int(sublime.version()) >= 4096 else sublime.NewFileFlags.NONE
+		NF = sublime.TRANSIENT if int(sublime.version()) >= 4096 else (sublime.NewFileFlags.NONE if int(sublime.version()) >= 4132 else 0)
 		if os.path.exists(local_path) and file_reload == "auto":
 			self.window.open_file(local_path,NF)
 			return
@@ -1328,7 +1345,11 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		global dependencies_url
 		libs_path = [p for p in sys.path if p.endswith(os.path.sep.join(["","Lib","python38"])) and os.path.isdir(p) and not p.endswith(os.path.sep.join(["Data","Lib","python38"])) ][-1]
-		dependencies_url = dependencies_url.format(platform=sublime.platform())
+		dependencies_url = dependencies_url.format(
+			py_version = "py%d%d"%sys.version_info[:2], # py33 | py38
+			platform = sublime.platform(), # 'osx' | 'linux' | 'windows'
+			arch = sublime.arch() # 'x32' | 'x64' | 'arm64'
+		)
 		zip_pack = os.path.join(libs_path,'sshpaneldep-temp.zip')
 		print(dependencies_url,zip_pack)
 		self.libs_path = libs_path

@@ -6,10 +6,7 @@ import stat
 import time
 import re
 import sys
-dependencies_path = os.path.join(os.path.dirname(__file__), 'dependencies')
-sys.path.append(dependencies_path)
 import paramiko
-sys.path.remove(dependencies_path)
 
 AUTH_METHOD_PASSWORD = 0	# 0: username and password	
 AUTH_METHOD_PRIVATEKEY = 1	# 1: username and private_key	
@@ -99,7 +96,7 @@ class UserSettings():
 			connect_parameter[s] = user_parameter.get(s,default_parameter[s])
 
 		connect_parameter["known_hosts_file"] = os.path.expandvars(connect_parameter["known_hosts_file"])
-
+		connect_parameter["remote_path"] = user_parameter["remote_path"]
 		return (
 				auth_parameter,
 				connect_parameter,
@@ -223,8 +220,8 @@ class ClientObj():
 				1
 			)
 		# 转为绝对路径，转换其中的变量
-		user_settings_config["local_path"] = os.path.expanduser(os.path.expandvars(user_settings_config["local_path"]))
-		user_settings_config["known_hosts_file"] = os.path.expanduser(os.path.expandvars(user_settings_config["known_hosts_file"]))
+		user_settings_config["local_path"] = os.path.normpath(os.path.expanduser(os.path.expandvars(user_settings_config["local_path"])))
+		user_settings_config["known_hosts_file"] = os.path.normpath(os.path.expanduser(os.path.expandvars(user_settings_config["known_hosts_file"]))) if user_settings_config["known_hosts_file"] else ""
 		self._user_settings.init_from_parameter(
 			self._user_settings.server_name,
 			user_settings_config
@@ -328,17 +325,15 @@ class ClientObj():
 				hostkey = hostkeys.lookup(hostname)[server_pkey.get_name()]
 				if hostkey.asbytes() == server_pkey.asbytes():
 					LOG.D("HostKey check OK")
-					callback()
-					return
 				else:
 					LOG.E("REMOTE HOST IDENTIFICATION HAS CHANGED!",{
 						"host fingerprint": server_fingerprint,
 					})
 					self.transport.close()
 					return
-			else:
+			if callback:
 				callback()
-				return
+			return
 
 		# 身份认证
 		if user_settings.auth_method == AUTH_METHOD_PASSWORD:
@@ -358,6 +353,7 @@ class ClientObj():
 				except Exception as e:
 					LOG.E("Password Authentication Failed",str(e.args))
 			if user_settings_config["password"] == "":
+				# NameError: free variable 'ip' referenced before assignment in enclosing scope
 				ip = sublime.active_window().show_input_panel(
 						"Password(invisible):",
 						"",
@@ -385,6 +381,7 @@ class ClientObj():
 			except Exception as e:
 				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
 			if user_settings_config["need_passphrase"]:
+				# NameError: free variable 'ip' referenced before assignment in enclosing scope
 				ip = sublime.active_window().show_input_panel(
 						"passphrase:",
 						"",

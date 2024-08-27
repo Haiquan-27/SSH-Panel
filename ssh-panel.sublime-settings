@@ -1,7 +1,6 @@
 {
 	// Special settings can be defined in children of server_list
 	"default_connect_settings":{
-		"remote_path":["$HOME"],
 		"local_path":"~/SFTP-Local/{auto_generate}",
 		"network_timeout": 20,
 		"port":22,
@@ -17,6 +16,7 @@
 			"hostname":"", // ip or domain name
 			"password":"", // if empty will prompt intput when connect
 			"save_password":false, // (optional) default is true
+			"remote_path":["$HOME"]
 			// ...
 		},
 		// use username and [private key] connect
@@ -28,7 +28,8 @@
 			// "private_key":["DSSKey","~/.ssh/id_dsa"]			// ssh-keygen -t dsa [-m PEM]
 			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
 			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"]	// ssh-keygen -t ed25519 [-m PEM]
-			"need_passphrase":false	// (optional) default is false, if is true will prompt intput when connect
+			"need_passphrase":false,	// (optional) default is false, if is true will prompt intput when connect
+			"remote_path":["$HOME"]
 			// ...
 		},
 		// use gssapi connect
@@ -39,6 +40,7 @@
 			"gss_kex":true,
 			"gss_deleg_creds":true,
 			"gss_trust_dns":true,
+			"remote_path":["$HOME"]
 			// ...
 		},
 		// ...

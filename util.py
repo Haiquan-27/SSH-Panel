@@ -37,7 +37,7 @@ def accessable(file_stat,user_id,group_ids:()):
 def html_tmp(content):
 	font_size = sublime.load_settings(settings_name).get("font_size")
 	if font_size == "auto":
-		font_size = sublime.load_settings("Preferences.sublime-settings").get("font_size")
+		font_size = sublime.load_settings("Preferences.sublime-settings").get("font_size",16)
 	font_size = int(font_size)
 	return """
 	<html>
@@ -149,7 +149,7 @@ class SSHPanelLog():
 			clean = False,
 			display = not sublime.load_settings(settings_name).get("quiet_log")
 		)
-		print(msg_tuple[0])
+		sys.stdout.write(msg_tuple[0] + "\n")
 
 	def W(self,msg_title,msg_content=""):
 		msg_tuple = self._msg_format("warning",msg_title,msg_content)
