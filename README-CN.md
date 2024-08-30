@@ -7,7 +7,9 @@ SSH-Panel
 | 多连接 | 状态信息 |
 |--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)         |
+
 | 文件操作 | 图标适配 |
+|--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
 
 # Installation
@@ -33,7 +35,7 @@ sudo zypper install libffi-devel
 ```
 ### 安装python依赖库
 * 使用`ssh_panel_install_dependencies`自动安装(推荐)
-> 打开console执行`view.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
+> 打开console执行`window.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
 * 或手动安装

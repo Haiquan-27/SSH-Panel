@@ -56,6 +56,5 @@
 	"icon_color":"gray", // default icon color (normal files, folders),chiose from "blue" | "green" | "white" | "yellow" | "gray"
 	"font_size":"auto", // font size of file navigation bar,value is integer or "auto"
 	"quiet_log":false,
-	"debug_mode":false,
-	"guide":true
+	"debug_mode":false
 }

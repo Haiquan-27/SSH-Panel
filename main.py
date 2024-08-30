@@ -6,10 +6,13 @@ import re
 import time
 import zipfile
 import sys
-from .util import *
+from .tools.util import *
+
+version = "1.3.1"
+
 Dependencies_LOST = False
 try:
-	from .ssh_controller import *
+	from .tools.ssh_controller import *
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
 		Dependencies_LOST = True
@@ -130,8 +133,8 @@ def update_color_scheme():
 
 def plugin_loaded():
 	if Dependencies_LOST:
-		LOG.I("Dependencies lost , Please exec <span class='keyword'>view.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
-		sys.stdout.write("Please exec: view.run_command('ssh_panel_install_dependencies')\n")
+		LOG.I("Dependencies lost , Please exec <span class='keyword'>window.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
+		sys.stdout.write("Please exec: window.run_command('ssh_panel_install_dependencies')\n")
 	settings = sublime.load_settings(settings_name)
 	window = sublime.active_window()
 	update_color_scheme()
@@ -150,25 +153,9 @@ def plugin_loaded():
 		f.seek(0)
 		f.truncate()
 		f.write(version)
-	if storage_version != version and settings.get("guide") == False:
+	if storage_version != version:
 		print(storage_version+"-",version)
 		window.run_command('open_file', {'file': "${packages}/SSH-Panel/CHANGELOG.md"})
-	# Open Guide
-	# if settings.get("guide"):
-	# 	if int(sublime.version()) >= 4065:
-	# 		window.new_html_sheet(
-	# 			"SSH-Panel | Guide",
-	# 			sublime.load_resource('Packages/SSH-Panel/guide.html')
-	# 		)
-	# 		settings.set("guide",False)
-	# 		sublime.save_settings(settings_name)
-	# 	else:
-	# 		window.show_input_panel(
-	# 			"SSH-Panel | Guide",
-	# 			"https://github.com/Haiquan-27/SSH-Panel",
-	# 			lambda url : window.run_command("open_url",args={"url":url}),
-	# 	)
-	# Reconnect on start
 	if sublime.load_settings(settings_name).get("reconnect_on_start"):
 		for w in sublime.windows():
 			for v in w.views():
@@ -1350,7 +1337,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		}[str(sys.version_info[1])]
 		libs_path = ""
 		for p in sys.path:
-			if endswith(os.path.sep.join(["","Lib",py_version])) and os.path.isdir(p):
+			if p.endswith(os.path.sep.join(["","Lib",py_version])) and os.path.isdir(p):
 				if p.endswith(os.path.sep.join(["","Data","Lib",py_version])) or \
 				p == os.path.join(os.path.split(sublime.packages_path())[0],"Lib",py_version): # protable version / normal install
 					libs_path = p
@@ -1372,16 +1359,21 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def request_dependencies(self):
 		zip_pack = self.zip_pack
 		def on_transfer_over():
-			if sublime.yes_no_cancel_dialog("Package install done,unpack and install now?") == sublime.DIALOG_YES:
+			if sublime.yes_no_cancel_dialog("Package download done,unpack and install now?") == sublime.DIALOG_YES:
 				self.unpack_install()
 				os.remove(self.zip_pack)
+				sublime.message_dialog("Package install done,Please restart Sublime Text")
 		with async_Lock:
 			try:
 				urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+				on_transfer_over()
 			except urllib.error.URLError as e:
 				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
-				LOG.W("Current SSL Cert Verification cannot be authenticated")
+				if "404" in str(e):
+					LOG.E("UNSUPPORTED PLATFORM")
+					return
 				if isinstance(e.args[0],ssl.SSLCertVerificationError):
+					LOG.W("Current SSL Cert Verification cannot be authenticated")
 					if sublime.yes_no_cancel_dialog(
 							msg = "Current SSL Cert Verification cannot be authenticated,whether to continue?",
 							yes_title = "Continue(use unverified)",
@@ -1391,11 +1383,11 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 						self.progress_bar(0)
 						sublime.status_message("SSH-Panel connecting ...")
 						urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+						on_transfer_over()
 				else:
 					LOG.I("connot download file: %s"%dependencies_url)
 			except Exception as e:
 				LOG.E("Error %s"%(str(e.args)))
-			on_transfer_over()
 
 	def progress_bar(self,p):
 		SshPanelOutputCommand(self.window.active_view()).run(
