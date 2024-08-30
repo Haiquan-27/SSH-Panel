@@ -154,7 +154,6 @@ def plugin_loaded():
 		f.truncate()
 		f.write(version)
 	if storage_version != version:
-		print(storage_version+"-",version)
 		window.run_command('open_file', {'file': "${packages}/SSH-Panel/CHANGELOG.md"})
 	if sublime.load_settings(settings_name).get("reconnect_on_start"):
 		for w in sublime.windows():
@@ -1350,7 +1349,6 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			arch = sublime.arch() # 'x32' | 'x64' | 'arm64'
 		)
 		zip_pack = os.path.join(libs_path,'sshpaneldep-temp.zip')
-		print(dependencies_url,zip_pack)
 		self.libs_path = libs_path
 		self.zip_pack = zip_pack
 		self.request_dependencies()
@@ -1371,8 +1369,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
 				if "404" in str(e):
 					LOG.E("UNSUPPORTED PLATFORM")
-					return
-				if isinstance(e.args[0],ssl.SSLCertVerificationError):
+				elif sys.version_info[1] == 8 and isinstance(e.args[0],ssl.SSLCertVerificationError):
 					LOG.W("Current SSL Cert Verification cannot be authenticated")
 					if sublime.yes_no_cancel_dialog(
 							msg = "Current SSL Cert Verification cannot be authenticated,whether to continue?",
