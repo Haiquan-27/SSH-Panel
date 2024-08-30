@@ -4,50 +4,50 @@ SSH-Panel
 
 支持任何可用openssh的Windows和Linux服务器
 
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)
+| 多连接 | 状态信息 |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)         |
+| 文件操作 | 图标适配 |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
 
-# Install
+# Installation
 
-## 1. 检查依赖库 (**非常重要**)
-### 在Windows上你需要:
-* python3.dll
-> 你可以从[这个仓库](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载并复制到sublime text的**安装目录**下
+## 1. 安装此包
+* 使用 Package Control(推荐)
+> 打开 `Package Control: install` 菜单并键入 **"SSH-Panel"** 即可安装
 
-### 在Windows上你需要:
-* 安装 **libffi**
+* 或手动安装
+> 下载项目zip文件并解压到"{插件包路径}/SSH-Panel"
+
+## 2. 安装依赖库 (**非常重要**)
+### 如果你使用Linux,需要安装 **libffi**
 ```bash
 # if Debian / Ubuntu
 apt-get install libffi-dev
 # if Fedora / CentOS / RHEL
 sudo yum install libffi-devel
+# if Arch / Manjaro `untest`
+sudo pacman -S libffi
+# if Opensuse `untest`
+sudo zypper install libffi-devel
 ```
-
-### 以下python3.8依赖库
-* bcrypt
-* cffi
-* cryptography
-* nacl
-* six
-> 你可以从[这个仓库](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载并复制到sublime text 的**Lib\python38**路径下
-
-## 2. 安装此包
-### 你可以使用*Package Control*安装或*手动安装*
-* 使用 Package Control
-> 打开 `Package Control: install` 菜单并键入 **"SSH-Panel"** 即可安装
-
-* 手动安装
-> 下载项目zip文件并解压到**"{你的插件包路径}/SSH-Panel"**
+### 安装python依赖库
+* 使用`ssh_panel_install_dependencies`自动安装(推荐)
+> 打开console执行`view.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
+* 或手动安装
+1. 将[此项目](https://github.com/Haiquan-27/SSH-Panel-doc-annex)下载到本地
+2. 根据您的系统平台和sublime text版本选择需要的文件复制到sublime text的相应加载路径中
 
 ## 3. 重启sublime text
-
 
 # Settings
 
 设置服务器连接参数
 
-打开命令面板菜单，选择`SSH-Panel: Edit Settings`命令，编辑配置文件
+打开命令面板菜单，选择`SSH-Panel: Edit Settings`命令，编辑并保存配置文件
 
 ## 参数注解:
 
@@ -116,42 +116,49 @@ sudo yum install libffi-devel
 ## 例子
 ```js
 "server_settings":{
-		// 使用账户名和密码进行连接
-		"MyServer0":{
-			"username":"",
-			"hostname":"", // ip或域名
-			"password":"", // 如果为空将会在连接时提示输入
-			"save_password":false, // (可选) 默认为true
-			// 路径
-			"remote_path":"/", // 指定绝对路径
-			// "remote_path":"%HOME/", // 带变量的路径
-			// "remote_path":["/var","/etc"], // 使用列表
-			"local_path":"~/SFTP-Local/{auto_generate}" // 自动生成
-			// ...
-		},
-		// 使用用户名和私钥进行连接
-		"MyServer1":{
-			"username":"",
-			"hostname":"",
-			"private_key":["RSAKey","~/.ssh/id_rsa"],			// ssh-keygen -t rsa [-m PEM]
-			// "private_key":["DSSKey","~/.ssh/id_dsa"]			// ssh-keygen -t dsa [-m PEM]
-			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
-			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"] // ssh-keygen -t ed25519 [-m PEM]
-			"need_passphrase":false								// (可选) 默认为false，如果为true将在连接时提示输入passphrase
-			// ...
-		},
-		// 使用gssapi进行连接
-		"MyServer2":{
-			"username":"",
-			"gss_host":"",
-			"gss_auth":true,
-			"gss_kex":true,
-			"gss_deleg_creds":true,
-			"gss_trust_dns":true
-			// ...
-		},
+	// 连接到Debian Linux
+	// 使用口令登陆
+	"Debian":{
+		"username":"root",
+		"hostname":"192.168.1.100",
+		"password":"",
+		"save_password":false,
+		"remote_path":[ // 添加多个路径
+			"$HOME/Project", // 可使用变量
+			"/var/log"
+		],
+		"local_path":"~/SFTP-Local/{auto_generate}"
 		// ...
 	},
+	// 连接到Ubuntu Linux，ssh端口为2244
+	// 使用rsa密钥认证
+	// 指定本地同步路径
+	"Ubuntu":{
+		"username":"test",
+		"hostname":"Ubuntu", // NetBIOS / DNS 名称
+		"port":2244,
+		"private_key":["RSAKey","~/.ssh/id_rsa"],
+		"need_passphrase":false，
+		"remote_path":[
+			"/etc/apache2"
+		],
+		"local_path":"~/SFTP-Local/Ubuntu" // 不使用自动生成
+		// ...
+	},
+	// 连接到Windows Server 2016
+	// 使用口令登陆
+	// 记住密码
+	"Windows Server 2016":{
+		"username":"Administrator",
+		"hostname":"192.168.1.120",
+		"password":"pasSSssswd@#120120",
+		"save_password":true,
+		"terminus_encoding":"GB2312" // 设置终端编码
+		"remote_path":"D:\\Project" // 字符串路径
+		"local_path":"~/SFTP-Local/{auto_generate}"
+	}
+	// ...
+},
 ```
 
 # 开始使用

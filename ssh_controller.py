@@ -353,14 +353,7 @@ class ClientObj():
 				except Exception as e:
 					LOG.E("Password Authentication Failed",str(e.args))
 			if user_settings_config["password"] == "":
-				# NameError: free variable 'ip' referenced before assignment in enclosing scope
-				ip = sublime.active_window().show_input_panel(
-						"Password(invisible):",
-						"",
-						auth_password,
-						lambda s: ip.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme'),
-						lambda: LOG.I("Connect Clean")
-					)
+				password_input(auth_password)
 			else:
 				auth_password(user_settings_config["password"])
 
@@ -381,14 +374,7 @@ class ClientObj():
 			except Exception as e:
 				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
 			if user_settings_config["need_passphrase"]:
-				# NameError: free variable 'ip' referenced before assignment in enclosing scope
-				ip = sublime.active_window().show_input_panel(
-						"passphrase:",
-						"",
-						lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)),
-						lambda s: ip.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme'),
-						lambda: LOG.I("Connect Clean")
-					)
+				password_input(lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)))
 			else:
 				auth_private_key(pkey.from_private_key_file(pkey_file))
 			self.load_client(auth_done)
