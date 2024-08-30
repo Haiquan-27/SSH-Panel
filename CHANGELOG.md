@@ -4,7 +4,11 @@ SSH-Panel Changelog
 v1.3.1 Latest
 -------------
 Supplementary Support for Sublime Text 3211
-
+Fix new_window error
+Fix "remote_path":["$HOME"] was accidentally deleted on reconnected
+Fix local_path path bug on windows
+Remove inner dependencies
+Add multi platform support
 
 v1.3.0 (2024-8-10)
 ------------------
