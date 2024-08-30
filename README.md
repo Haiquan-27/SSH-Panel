@@ -7,44 +7,44 @@ Windows and Linux servers that support any openssh available
 
 [此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
 
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
-![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)
+| Multiple connections | Status infomation |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)         |
+| File Operation | Icon adaptation |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
 
 # Installation
 
-## 1. Check dependent Libraries (**very important**)
-### on Windows you need:
-* python3.dll
-> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **installation directory** of sublime
+## 1. Install Package
+* Use Package Control(recommend)
+> Open Command Panel Select `Package Control: install` and type `"SSH-Panel"` to Install
 
-### on Linux you need:
-* install **libffi**
+* or manual install
+> download project zip file and extract to "{package path}/SSH-Panel"
+
+## 2. Install dependency (**very important**)
+### if Linux,need **libffi**
 ```bash
 # if Debian / Ubuntu
 apt-get install libffi-dev
 # if Fedora / CentOS / RHEL
 sudo yum install libffi-devel
+# if Arch / Manjaro `untest`
+sudo pacman -S libffi
+# if Opensuse `untest`
+sudo zypper install libffi-devel
 ```
-
-### python3.8 dependent libraries following
-* bcrypt
-* cffi
-* cryptography
-* nacl
-* six
-> you can install from [this repositories](https://github.com/Haiquan-27/SSH-Panel-doc-annex) and copy to **Lib\python38** path of sublime
-
-## 2. Install Package
-### You can using Package Control or Manual installation
-* using Package Control
-> Open `Package Control: install` menu and type **"SSH-Panel"** to install
-
-* Manual installation
-> Download this package as ZIP file and extract to **"{you packages path}/SSH-Panel"**
+### install python library
+* auto install with `ssh_panel_install_dependencies`(recommend)
+> open console and exec `view.run_command('ssh_panel_install_dependencies')`,it will automatically install the required dependencies
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
+![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
+* or manual install
+1. download [this project](https://github.com/Haiquan-27/SSH-Panel-doc-annex)locally
+2. Select the required file and copy it to the corresponding loading path of sublime text based on your system platform and sublime text version
 
 ## 3. restart sublime text
-
 
 # Settings
 
@@ -123,42 +123,48 @@ After the first connection, this path will be save to the user configuration and
 ## Example
 ```js
 "server_settings":{
-		// use password and username connect
-		"MyServer0":{
-			"username":"",
-			"hostname":"", // ip or domain name
-			"password":"", // if empty will prompt intput when connect
-			"save_password":false, // (optional) default is true
-			// ...
-		},
-		// use username and [private key] connect
-		"MyServer1":{
-			"username":"",
-			"hostname":"",
-			"private_key":["RSAKey","~/.ssh/id_rsa"],			// ssh-keygen -t rsa [-m PEM]
-			// "private_key":["DSSKey","~/.ssh/id_dsa"]			// ssh-keygen -t dsa [-m PEM]
-			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
-			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"] // ssh-keygen -t ed25519 [-m PEM]
-			"need_passphrase":false								// (optional) default is false, if is true will prompt intput when connect
-			// path
-			"remote_path":"/", // absolute path
-			// "remote_path":["/var","/etc"], // path list
-			// "remote_path":"%HOME/", // using environment variables (remote host)
-			"local_path":"~/SFTP-Local/{auto_generate}" // auto generate
-			// ...
-		},
-		// use gssapi connect
-		"MyServer2":{
-			"username":"",
-			"gss_host":"",
-			"gss_auth":true,
-			"gss_kex":true,
-			"gss_deleg_creds":true,
-			"gss_trust_dns":true
-			// ...
-		},
+	// Connect Debian Linux,use password
+	"Debian":{
+		"username":"root",
+		"hostname":"192.168.1.100",
+		"password":"",
+		"save_password":false,
+		"remote_path":[ // Add multiple paths
+			"$HOME/Project", // remote system variables
+			"/var/log"
+		],
+		"local_path":"~/SFTP-Local/{auto_generate}"
 		// ...
 	},
+	// Connect Ubuntu Linux，ssh port is 2244
+	// Use RSA key authentication
+	// Specify local synchronization path
+	"Ubuntu":{
+		"username":"test",
+		"hostname":"TestServer", // NetBIOS / DNS Name
+		"port":2244,
+		"private_key":["RSAKey","~/.ssh/id_rsa"],
+		"need_passphrase":false，
+		"remote_path":[
+			"/etc/apache2"
+		],
+		"local_path":"~/SFTP-Local/Ubuntu" // specially designated
+		// ...
+	},
+	// Connect Windows Server 2016
+	// Use Password
+	// Save Password
+	"Windows Server 2016":{
+		"username":"Administrator",
+		"hostname":"192.168.1.120",
+		"password":"pasSSssswd@#120120",
+		"save_password":true,
+		"terminus_encoding":"GB2312" // terminal character encoding
+		"remote_path":"D:\\Project" // suport string path
+		"local_path":"~/SFTP-Local/{auto_generate}"
+	}
+	// ...
+},
 ```
 
 # Using

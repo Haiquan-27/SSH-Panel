@@ -18,7 +18,7 @@ _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
 icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
 icon_style = None # set value with update_icon() (icon_style_data value)
-dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{py_version}_{platform}{arch}.zip"
+dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{py_version}_{platform}_{arch}.zip"
 icon_style_data = {
 	"emjio": { # utf-8 code
 		"folder":b'\xf0\x9f\x93\x81'.decode("utf-8"),
@@ -737,14 +737,14 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					self.update_view_port()
 				self.BUS_LOCK = False
 				LOG.I("Put %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
-				if int(sublime.version()) >= 4075:
-					sublime.select_folder_dialog(callback,multi_select=True)
-				else:
-					sublime.active_window().show_input_panel(
-						"local folder path:",
-						"",
-						callback,None,None
-					)
+			if int(sublime.version()) >= 4075:
+				sublime.select_folder_dialog(callback,multi_select=True)
+			else:
+				sublime.active_window().show_input_panel(
+					"local folder path:",
+					"",
+					callback,None,None
+				)
 
 		def resource_put_file(id):
 			select_resource = self.resource_data[id]
@@ -1344,7 +1344,19 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def run(self):
 		global dependencies_url
-		libs_path = [p for p in sys.path if p.endswith(os.path.sep.join(["","Lib","python38"])) and os.path.isdir(p) and not p.endswith(os.path.sep.join(["Data","Lib","python38"])) ][-1]
+		py_version = {
+			"3":"python3.3",
+			"8":"python38"
+		}[str(sys.version_info[1])]
+		libs_path = ""
+		for p in sys.path:
+			if endswith(os.path.sep.join(["","Lib",py_version])) and os.path.isdir(p):
+				if p.endswith(os.path.sep.join(["","Data","Lib",py_version])) or \
+				p == os.path.join(os.path.split(sublime.packages_path())[0],"Lib",py_version): # protable version / normal install
+					libs_path = p
+					break
+		if libs_path == "":
+			LOG.E("Lib path(%s) not found"%py_version,sys.path)
 		dependencies_url = dependencies_url.format(
 			py_version = "py%d%d"%sys.version_info[:2], # py33 | py38
 			platform = sublime.platform(), # 'osx' | 'linux' | 'windows'
