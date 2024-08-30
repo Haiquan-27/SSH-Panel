@@ -10,7 +10,9 @@ Windows and Linux servers that support any openssh available
 | Multiple connections | Status infomation |
 |--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w1.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w3.png)         |
+
 | File Operation | Icon adaptation |
+|--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
 
 # Installation
@@ -36,7 +38,7 @@ sudo zypper install libffi-devel
 ```
 ### install python library
 * auto install with `ssh_panel_install_dependencies`(recommend)
-> open console and exec `view.run_command('ssh_panel_install_dependencies')`,it will automatically install the required dependencies
+> open console and exec `window.run_command('ssh_panel_install_dependencies')`,it will automatically install the required dependencies
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
 * or manual install
@@ -159,7 +161,7 @@ After the first connection, this path will be save to the user configuration and
 		"password":"pasSSssswd@#120120",
 		"save_password":true,
 		"terminus_encoding":"GB2312" // terminal character encoding
-		"remote_path":"D:\\Project" // suport string path
+		"remote_path":"D:\\Project" // support string path
 		"local_path":"~/SFTP-Local/{auto_generate}"
 	}
 	// ...

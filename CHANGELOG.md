@@ -1,8 +1,13 @@
 SSH-Panel Changelog
 ===================
 
-v1.3.0 Latest
+v1.3.1 Latest
 -------------
+Supplementary Support for Sublime Text 3211
+
+
+v1.3.0 (2024-8-10)
+------------------
 * Add Menu Option
 - `"Copy Path"`
 - `"Open Containing Folder…"`
