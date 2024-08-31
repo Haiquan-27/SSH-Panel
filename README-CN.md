@@ -35,7 +35,12 @@ sudo zypper install libffi-devel
 ```
 ### 安装python依赖库
 * 使用`ssh_panel_install_dependencies`自动安装(推荐)
-> 打开console执行`window.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
+打开console执行`window.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
+> 可选择github(默认)或gitee的仓库源
+```python
+window.run_command('ssh_panel_install_dependencies',args={"source":"github"}) # download from https://gitee.com/Haiquan27/SSH-Panel-doc-annex/releases/download/public/
+window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # download from https://gitee.com/Haiquan27/SSH-Panel-doc-annex/releases/download/public/
+```
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
 * 或手动安装
