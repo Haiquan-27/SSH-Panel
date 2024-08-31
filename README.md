@@ -38,7 +38,12 @@ sudo zypper install libffi-devel
 ```
 ### install python library
 * auto install with `ssh_panel_install_dependencies`(recommend)
-> open console and exec `window.run_command('ssh_panel_install_dependencies')`,it will automatically install the required dependencies
+open console and exec `window.run_command('ssh_panel_install_dependencies')`,it will automatically install the required dependencies
+> you can choose download source from github(default) or gitee
+```python
+window.run_command('ssh_panel_install_dependencies',args={"source":"github"}) # download from https://gitee.com/Haiquan27/SSH-Panel-doc-annex/releases/download/public/
+window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # download from https://gitee.com/Haiquan27/SSH-Panel-doc-annex/releases/download/public/
+```
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w4.png)
 ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w2.png)
 * or manual install

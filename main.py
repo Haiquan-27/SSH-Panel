@@ -21,7 +21,11 @@ _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
 icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
 icon_style = None # set value with update_icon() (icon_style_data value)
-dependencies_url = "https://github.com/Haiquan-27/SSH-Panel-doc-annex/releases/download/public/{py_version}_{platform}_{arch}.zip"
+dependencies_source = {
+	"github":"github.com/Haiquan-27/SSH-Panel-doc-annex",
+	"gitee":"gitee.com/Haiquan27/SSH-Panel-doc-annex"
+}
+dependencies_url = "https://{source}/releases/download/public/{py_version}_{platform}_{arch}.zip"
 icon_style_data = {
 	"emjio": { # utf-8 code
 		"folder":b'\xf0\x9f\x93\x81'.decode("utf-8"),
@@ -134,7 +138,8 @@ def update_color_scheme():
 def plugin_loaded():
 	if Dependencies_LOST:
 		LOG.I("Dependencies lost , Please exec <span class='keyword'>window.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
-		sys.stdout.write("Please exec: window.run_command('ssh_panel_install_dependencies')\n")
+		sys.stdout.write("Please exec: window.run_command('ssh_panel_install_dependencies')                          # install from github\n")
+		sys.stdout.write("         or: window.run_command('ssh_panel_install_dependencies',args={'source':'gitee'})  # install from gitee\n")
 	settings = sublime.load_settings(settings_name)
 	window = sublime.active_window()
 	update_color_scheme()
@@ -1328,8 +1333,10 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 			del client_map[client_id]
 
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
-	def run(self):
-		global dependencies_url
+	def run(self,source="github"):
+		if "SSH-Panel.tools.ssh_controller" in sys.modules:
+			LOG.I("All modules have been successfully import, no need to download dependencies, Exit")
+			return
 		py_version = {
 			"3":"python3.3",
 			"8":"python38"
@@ -1343,7 +1350,8 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 					break
 		if libs_path == "":
 			LOG.E("Lib path(%s) not found"%py_version,sys.path)
-		dependencies_url = dependencies_url.format(
+		self.dependencies_url = dependencies_url.format(
+			source = dependencies_source[source],
 			py_version = "py%d%d"%sys.version_info[:2], # py33 | py38
 			platform = sublime.platform(), # 'osx' | 'linux' | 'windows'
 			arch = sublime.arch() # 'x32' | 'x64' | 'arm64'
@@ -1351,11 +1359,30 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		zip_pack = os.path.join(libs_path,'sshpaneldep-temp.zip')
 		self.libs_path = libs_path
 		self.zip_pack = zip_pack
+		self.loading = 0
+		# self.loading_char = '⣾⣽⣻⢿⡿⣟⣯⣷'
+		# self.loading_char = '○◔◑◕●'
+		self.loading_char = '◢◣◤◥'
+		# self.loading_char = '◰◳◲◱'
+		self.loading_lock = threading.Lock()
 		self.request_dependencies()
+
+	@async_run
+	def loading_run(self):
+		with self.loading_lock:
+			if self.loading >= 0:
+				self.loading = (self.loading + 1) % len(self.loading_char)
+				c = self.loading_char[self.loading]
+				sublime.status_message("SSH-Panel: Wating Connect %s"%c)
+				# sublime.set_timeout(self.loading_run, 100)
+				event = threading.Event()
+				event.wait(0.1)
+				self.loading_run()
 
 	@async_run
 	def request_dependencies(self):
 		zip_pack = self.zip_pack
+		self.loading_run()
 		def on_transfer_over():
 			if sublime.yes_no_cancel_dialog("Package download done,unpack and install now?") == sublime.DIALOG_YES:
 				self.unpack_install()
@@ -1363,7 +1390,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 				sublime.message_dialog("Package install done,Please restart Sublime Text")
 		with async_Lock:
 			try:
-				urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+				urllib.request.urlretrieve(self.dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
 				on_transfer_over()
 			except urllib.error.URLError as e:
 				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
@@ -1379,14 +1406,19 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 						ssl._create_default_https_context = ssl._create_unverified_context
 						self.progress_bar(0)
 						sublime.status_message("SSH-Panel connecting ...")
-						urllib.request.urlretrieve(dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+						urllib.request.urlretrieve(self.dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
 						on_transfer_over()
 				else:
-					LOG.I("connot download file: %s"%dependencies_url)
+					LOG.I("connot download file: %s"%self.dependencies_url)
 			except Exception as e:
 				LOG.E("Error %s"%(str(e.args)))
+			finally:
+				with self.loading_lock:
+					self.loading = -1
 
 	def progress_bar(self,p):
+		with self.loading_lock:
+			self.loading = -1
 		SshPanelOutputCommand(self.window.active_view()).run(
 			sublime.Edit,
 			content=html_tmp("""
@@ -1396,7 +1428,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 				<div style='border: 2px solid var(--foreground));width:1000px;height:50px'>
 					<div style='background-color:var(--foreground);width:%spx;height:50px'></div>
 				</div>
-			</p>"""%(dependencies_url,self.zip_pack,int(p*1000))),
+			</p>"""%(self.dependencies_url,self.zip_pack,int(p*1000))),
 			is_html=True,
 			display=True,
 			clean=True,
@@ -1414,7 +1446,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			load_size_s = "{:0>{w},}".format(load_size,w=len(full_size_s))
 			self.progress_bar(p)
 			sublime.status_message("SSH-Panel download %s [%s] %s/%skb | %skb/s"%(
-				dependencies_url,
+				self.dependencies_url,
 				(" "*int(100*p)+str(int(p*100))+"%|").ljust(100," "),
 				load_size_s,
 				full_size_s,
@@ -1430,7 +1462,10 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		with zipfile.ZipFile(self.zip_pack, "r") as zf:
 			if "python3.dll" in zf.namelist():
 				unpack_list.append("python3.dll")
-				zf.extract("python3.dll",os.path.split(sublime.executable_path())[0])
+				try:
+					zf.extract("python3.dll",os.path.split(sublime.executable_path())[0])
+				except PermissionError as e:
+					LOG.I("python3.dll exists,skip")
 			for fi in zf.infolist():
 				if fi.filename[-1] != "/" and fi.filename.startswith("dist-packages/"):
 					fi.filename = fi.filename[14:]
