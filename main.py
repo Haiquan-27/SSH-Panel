@@ -484,7 +484,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				self.focus_resource = None
 				self.reload_list()
 			elif what == "connect":
-				self.connect_post()
+				self.connect_post(self.reload_list)
 
 		def show(what):
 			if what == "info":
