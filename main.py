@@ -787,9 +787,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			remote_os_sep = self.client.remote_os_sep
 			remote_path = self.rpath_by_resource(select_resource)
 			remote_path = remote_path[:-1] if remote_path[-1] == remote_os_sep else remote_path
-			path_hash,local_path_root,_ = path_hash_map.get(select_resource["root_path"] if select_resource["root_path"] else self.rpath_by_resource(select_resource))
+			root_path = select_resource["root_path"]
+			path_hash,local_path_root,_ = path_hash_map.get(root_path if root_path else self.rpath_by_resource(select_resource))
 			save_hash_root = os.path.sep.join([local_path_root,path_hash]) # local_path_root/path_hash
-			remote_path_parent = remote_os_sep.join(remote_path.split(remote_os_sep)[:-1])
 			@async_run
 			def on_selected(i):
 				if i != 0: return # YES
@@ -800,7 +800,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					new = None
 					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)):
 						r_path = _remote_path + remote_os_sep + fs.filename
-						l_path = save_hash_root + os.path.sep.join(r_path[len(remote_path_parent):].split(remote_os_sep))
+						l_path = save_hash_root + os.path.sep.join(r_path[len(root_path):].split(remote_os_sep))
 						if(stat.S_ISDIR(fs.st_mode)): # 目录
 							new = _resource_create_dir(
 								r_path,
