@@ -800,7 +800,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					new = None
 					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)):
 						r_path = _remote_path + remote_os_sep + fs.filename
-						l_path = save_hash_root + os.path.sep.join(r_path[len(root_path):].split(remote_os_sep))
+						l_path = save_hash_root + os.path.sep.join(r_path[len(root_path if root_path else select_resource["name"]):].split(remote_os_sep))
 						if(stat.S_ISDIR(fs.st_mode)): # 目录
 							new = _resource_create_dir(
 								r_path,
@@ -1236,9 +1236,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		global path_hash_map
 		remote_path = self.rpath_by_resource(resource)
 		remote_os_sep = self.client.remote_os_sep
-		path_hash,local_path_root,_ = path_hash_map.get(resource["root_path"])
+		path_hash,local_path_root,_ = path_hash_map.get(resource["root_path"]) if resource["root_path"] != "" else path_hash_map.get(resource["name"])
 		save_hash_root = os.path.sep.join([local_path_root,path_hash]) # local_path_root/path_hash
-		if resource["root_path"] == "/":
+		if resource["root_path"] == "":
+			local_path = save_hash_root
+		elif resource["root_path"] == "/":
 			local_path = save_hash_root + os.path.sep.join(remote_path.split(remote_os_sep))
 		else:
 			local_path = save_hash_root + os.path.sep.join(remote_path.replace(resource["root_path"],"",1).split(remote_os_sep)) # local_path_root/path_hash/remote_mapping_path
@@ -1251,7 +1253,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			return "<a class='debug' href='reload:connect'>no connect</a>"
 		ele_list = []
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
-		# os_sep_symbol = ""
 		for resource_id,resource in self.resource_data.items():
 			resource_path = self.rpath_by_resource(resource)
 			ext = os.path.splitext(resource["name"])[1][1:]
@@ -1308,7 +1309,7 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 						LOG.D("save remote",{
 							"local_path" : local_file,
 							"remote_path": remote_file
-							})
+						})
 					except Exception as e:
 						LOG.E("file sync failed",{
 							"local_path" : local_file,
