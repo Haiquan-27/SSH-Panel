@@ -8,7 +8,7 @@ import zipfile
 import sys
 from .tools.util import *
 
-version = "1.3.1"
+version = "1.3.2"
 
 Dependencies_LOST = False
 try:
