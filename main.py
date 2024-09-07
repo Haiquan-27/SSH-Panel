@@ -86,7 +86,6 @@ def update_ext_icon():
 	icon_quality = sublime.load_settings(settings_name).get("icon_quality")
 	scope_data = sublime.load_settings("scope.json")
 	resource_list = sublime.find_resources("*file_type_*%s.png"%icon_quality)
-	# for ext in scope.split("."):
 	for path in resource_list:
 		file_name = os.path.splitext(os.path.split(path)[1])[0]
 		final_scope = file_name[10 : -1*len(icon_quality) if icon_quality else None] if path.startswith(icon_theme) else ""
@@ -808,7 +807,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 								current_resource
 							) # 创建目录资源
 							new["expand"] = True
-							new["focus"] = True
+							new["focus"] = False
 							new["status"] = ["bus"]
 							parent_bak = current_resource.copy()
 							current_resource = new
@@ -824,7 +823,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 								fs,
 								current_resource
 							) # 创建文件资源
-							new["focus"] = True
+							new["focus"] = False
 							new["status"] = ["bus"]
 							# 直接get到本地
 							os.makedirs(os.path.split(l_path)[0], exist_ok=True)
@@ -1136,6 +1135,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
 	def add_root_path(self,path,focus=False):
 		id = self._new_resource_id()
+		path = path if path[-1] != self.client.remote_os_sep else path[:-1]
 		global path_hash_map
 		fs = self.client.sftp_client.lstat(path)
 		resource = {
