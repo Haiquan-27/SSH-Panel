@@ -683,7 +683,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			def callback(dir_list):
 				if isinstance(dir_list,str):
 					dir_list = [dir_list]
-				if len(dir_list) == 0: return
+				if not dir_list: return
 				select_resource = self.resource_data[id]
 				remote_os_sep = self.client.remote_os_sep
 				put_path = self.rpath_by_resource(select_resource)
@@ -710,10 +710,17 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						local_dir_path = root_path + os.path.sep + rel_path
 						remote_dir_path = put_path + remote_os_sep + rel_remote_path
 						fs = os.stat(local_dir_path)
-						self.client.sftp_client.mkdir(
-							path = remote_dir_path,
-							mode = stat.S_IMODE(fs.st_mode)
-						)
+						remote_dir_exists = False
+						try:
+							self.client.sftp_client.stat(remote_dir_path)
+							remote_dir_exists = True
+						except FileNotFoundError:
+							remote_dir_exists = False
+						if not remote_dir_exists:
+							self.client.sftp_client.mkdir(
+								path = remote_dir_path,
+								mode = stat.S_IMODE(fs.st_mode)
+							)
 						SUM_D.append(remote_dir_path)
 						for file in sub_files:
 							l_path = local_dir_path + os.path.sep + file
