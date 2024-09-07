@@ -361,14 +361,11 @@ class ClientObj():
 			pkey_kex = user_settings_config["private_key"][0]
 			pkey_file = user_settings_config["private_key"][1]
 			def auth_private_key(pkey):
-				try:
-					self.transport.auth_publickey(
-						username = user_settings_config["username"],
-						key = pkey
-					)
-					LOG.I("Key Authentication Successful")
-				except Exception as e:
-					LOG.E("Key Authentication Failed",str(e.args))
+				self.transport.auth_publickey(
+					username = user_settings_config["username"],
+					key = pkey
+				)
+				LOG.I("Key Authentication Successful")
 			try:
 				pkey = eval("paramiko.%s"%pkey_kex)
 			except Exception as e:
@@ -376,7 +373,10 @@ class ClientObj():
 			if user_settings_config["need_passphrase"]:
 				password_input(lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)))
 			else:
-				auth_private_key(pkey.from_private_key_file(pkey_file))
+				try:
+					auth_private_key(pkey.from_private_key_file(pkey_file))
+				except Exception as e:
+					LOG.E("Key Authentication Failed",str(e.args))
 			self.load_client(auth_done)
 
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
