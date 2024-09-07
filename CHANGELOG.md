@@ -1,8 +1,14 @@
 SSH-Panel Changelog
 ===================
 
-v1.3.1 Latest
+v1.3.2 Latest
 -------------
+Fix path error in `Clone Folder`
+Fix `Copy Path` function of the main path nodes
+Fix `Put Folder` cannot overwrite directory
+
+v1.3.1 (2024-8-31)
+------------------
 Supplementary Support for Sublime Text 3211
 Fix new_window error
 Fix "remote_path":["$HOME"] was accidentally deleted on reconnected
