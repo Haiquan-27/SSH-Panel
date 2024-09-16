@@ -6,6 +6,10 @@ import re
 import time
 import zipfile
 import sys
+import weakref
+from .tools import util
+from importlib import reload
+reload(util)
 from .tools.util import *
 
 version = "1.3.2"
@@ -298,13 +302,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.window = None
 		self.PhantomSet = None # phantom 管理器
 		self.phantom_items = []
-		self.client = None
+		self._client = None
 		self.client_id = None
 		self.BUS_LOCK = False
 		self.resource_data = None
 		self._max_resource_id = 0
 		self._user_settings = None
-		self.focus_resource = None
 		self.navication_view = None
 		self.hidden_menu = True
 
@@ -315,7 +318,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		):
 		self.resource_data = {}
 		self._max_resource_id = -1
-		self.focus_resource = None
 		update_icon()
 		settings = sublime.load_settings(settings_name)
 		self.user_settings = UserSettings()
@@ -346,6 +348,31 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.navication_view = navication_view
 		if connect_now:
 			self.connect_post(self.reload_list)
+
+	@property
+	def client(self):
+		return self._client
+
+	@client.setter
+	def client(self,value):
+		self._client = value
+		self._client.command_ref = weakref.ref(self)
+
+	@property
+	def focus_resource(self):
+		res = None
+		for _,resource in self.resource_data.items():
+			if resource["focus"]:
+				res = resource
+		return res
+
+	@focus_resource.setter
+	def focus_resource(self,value):
+		for _,resource in self.resource_data.items():
+			if value == resource:
+				resource["focus"] = True
+			else:
+				resource["focus"] = False
 
 	@property
 	def user_settings(self):
@@ -413,8 +440,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					resource_item["expand"] = False # 目录是否展开
 				resource_item["focus"] = False # 是否选中
 				resource_item["where"] = remote_path
-				if self.focus_resource:
-					resource_item["depth"] = self.focus_resource["depth"] + 1
+				focus_resource = self.focus_resource
+				if focus_resource:
+					resource_item["depth"] = focus_resource["depth"] + 1
 				else:
 					resource_item["depth"] = 0 # 所在目录深度
 				id = self._new_resource_id()
@@ -993,14 +1021,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				self.window.run_command("open_dir",args= {"dir": os.path.split(l_path)[0],"file":os.path.split(l_path)[1]})
 
 		def resource_click(id):
+			resource_data = self.resource_data
+			resource = resource_data[id]
 			try:
-				resource_data = self.resource_data
-				resource = resource_data[id]
 				resource["focus"] = not resource["focus"]
 				resource_path = self.rpath_by_resource(resource)
 				if resource["focus"]:
-					if self.focus_resource and self.focus_resource != resource: # 是否取消上一次的焦点
-						self.focus_resource["focus"] = False
+					focus_resource = self.focus_resource
+					if focus_resource and focus_resource != resource: # 是否取消上一次的焦点
+						focus_resource["focus"] = False
 					self.focus_resource = resource
 				if resource["is_dir"]:
 					if resource["focus"] and resource["expand"]:
@@ -1015,10 +1044,12 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						else:
 							self.clean_resource(resource)
 				else:
-					self.open_resource_file(resource)
+					new_view = self.open_resource_file(resource)
+					if new_view:
+						new_view.settings().set("ssh_panel_resourceID",id)
 				self.update_view_port()
 			except Exception as e:
-				self.focus_resource["status"] = ["denied"]
+				resource["status"] = ["denied"]
 				self.update_view_port()
 				LOG.E("file access failed",{
 					"error": str(e.args)
@@ -1104,32 +1135,31 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		LOG.D("path_hash_map",path_hash_map)
 		file_reload = sublime.load_settings(settings_name).get("file_reload","auto")
 		NF = sublime.TRANSIENT if int(sublime.version()) >= 4096 else (sublime.NewFileFlags.NONE if int(sublime.version()) >= 4132 else 0)
+		new_view = None
+		def set_new_view(view):
+			view.settings().set("ssh_panel_clientID",self.client_id)
+			view.settings().set("ssh_panel_resourceID",None)
 		if os.path.exists(local_path) and file_reload == "auto":
-			self.window.open_file(local_path,NF)
-			return
-		if int(sublime.version()) >= 4081:
-			fv = [v for v in self.window.views(include_transient=True) if v.file_name() == local_path]
-		else:
-			fv = [v for v in self.window.views() if v.file_name() == local_path]
-		fv = fv[0] if fv else None
-		# load_f 是否载入
-		load_f = (file_reload != "never" and (((fv == None or fv.is_dirty() == False) or file_reload == "auto") or file_reload == "always")) or force_load
-		if load_f:
-			if fv:
-				fv.close()
+			new_view = self.window.open_file(local_path,NF)
+			set_new_view(new_view)
+			return new_view
+		if (file_reload in ["always","auto"]) or force_load:
 			os.makedirs(os.path.split(local_path)[0], exist_ok=True)
 			try:
 				self.BUS_LOCK = True
 				resource["status"] = ["bus"]
-				self.update_view_port()
 				def on_transfer_over():
 					self.BUS_LOCK = False
 					resource["status"] = ["ok"]
+					self.window.open_file(local_path)
 					self.update_view_port()
-					self.window.open_file(local_path,NF)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 				if self.client.sftp_client.stat(remote_path).st_size == 0: # sftp_client.py -> _transfer_with_callback : if len(data) == 0: break
 					on_transfer_over()
+				self.update_view_port()
+				new_view = self.window.open_file(local_path,NF)
+				set_new_view(new_view)
+				return new_view
 			except Exception as e:
 				self.BUS_LOCK = False
 				resource["status"] = ["error"]
@@ -1169,6 +1199,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			)
 
 	def update_view_port(self):
+		client_activied = self.client != None and self.client.transport != None
 		html_ele = '''
 		<p class="title_bar">
 			<a class='info' href="menu_visible_toggle:' '">{hostname}<span class='symbol'>@{username}</span></a>
@@ -1182,23 +1213,28 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				[<a class='keyword' href="show:help">?</a>]
 			</p>
 		</p>
+		{tip_msg}
+		{file_list}
 		{dirtory_tree}
 		<p style="padding-bottom: 100px;"></p>
 		'''.format(
-				hostname=self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
-				username=self.user_settings.config["username"],
-				btn_display="none" if self.hidden_menu else "block",
-				dirtory_tree=self.render_resource_list()
+				hostname = self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
+				username = self.user_settings.config["username"],
+				btn_display = "none" if self.hidden_menu else "block",
+				tip_msg = "" if client_activied else "<a class='debug' href='reload:connect'>no connect</a>",
+				file_list = self.render_file_list() if client_activied else "",
+				dirtory_tree = self.render_path_list() if client_activied else ""
 			)
 		phantom = sublime.Phantom(
 			sublime.Region(0),
 			html_tmp(content=html_ele),
 			sublime.LAYOUT_INLINE,
 			on_navigate=self.navcation_href_click)
+		focus_resource = self.focus_resource
 		nv = self.navication_view
 		nv.set_name("%s|%s"%(
 				self.user_settings.server_name,
-				self.rpath_by_resource(self.focus_resource) if self.focus_resource else self.user_settings.server_name if self.client else "connect lost"
+				self.rpath_by_resource(focus_resource) if focus_resource else self.user_settings.server_name if self.client else "connect lost"
 			))
 		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
 			src_style = nv.style()
@@ -1255,9 +1291,30 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			local_path = local_path + os.path.sep
 		return local_path
 
-	def render_resource_list(self):
-		if self.client == None or self.client.transport == None:
-			return "<a class='debug' href='reload:connect'>no connect</a>"
+	def render_file_list(self):
+		open_views = self.window.views()
+		open_views.sort(key = lambda v:str(v.file_name()))
+		ele_list = []
+		for view in open_views:
+			resource_id = view.settings().get("ssh_panel_resourceID",None)
+			file_name = view.file_name()
+			if not resource_id \
+			or resource_id not in self.resource_data.keys():
+				continue
+			ele = "<p><a class='res_file {style_class}' href='resource_click:{resource_id}'>{file}</a></p>".format(
+				style_class = "open_file_focus" if self.resource_data[resource_id]["focus"] else "",
+				resource_id = resource_id,
+				file = os.path.split(file_name)[1]
+			)
+			ele_list.append(ele)
+		return """
+			<p class='title_bar'><span class='info'>Open Files</span></p>
+			%s
+			<p class='title_bar'></p>
+		"""%("\n".join(ele_list))
+
+
+	def render_path_list(self):
 		ele_list = []
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
 		for resource_id,resource in self.resource_data.items():
@@ -1289,12 +1346,31 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			else:
 				return resource["root_path"] + self.client.remote_os_sep + resource_path
 		ele_list.sort(key = get_resource_path)
-		return "\n".join(ele_list)
+		return "<p class='title_bar'><span class='info'>Remote Path</span></p>" + "\n".join(ele_list)
 
 class SshPanelEventCommand(sublime_plugin.ViewEventListener):
+	def __init__(self, view):
+		super().__init__(view)
+		self.modified_view = None
+
 	@classmethod
 	def is_applicable(self,settings):
 		return client_map != {}
+
+	def on_modified_async(self):
+		if self.view != self.modified_view:
+			self.on_activated_async()
+			self.modified_view = self.view
+
+	def on_activated_async(self):
+		view = self.view
+		client_id = view.settings().get("ssh_panel_clientID",None)
+		if client_id in client_map.keys():
+			cmd_ref = client_map[client_id].command_ref()
+			resource_id = view.settings().get("ssh_panel_resourceID",None)
+			resource = cmd_ref.resource_data.get(resource_id,None)
+			cmd_ref.focus_resource = resource
+			cmd_ref.update_view_port()
 
 	def on_post_save_async(self):
 		global path_hash_map
@@ -1330,8 +1406,9 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 				)
 
 	def on_close(self):
-		client_id = self.view.settings().get("ssh_panel_clientID",None)
-		if client_id:
+		view = self.view
+		client_id = view.settings().get("ssh_panel_clientID",None)
+		if client_id and view.settings().get("ssh_panel_serverName",None): # is navication_view
 			global client_map
 			global path_hash_map
 			client = client_map[client_id]
@@ -1339,6 +1416,9 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 			for remote_path in client.user_settings_config["remote_path"]:
 				del path_hash_map[remote_path]
 			del client_map[client_id]
+		elif client_id and view.settings().get("ssh_panel_resourceID",None): # is ssh_panel view
+			cmd_ref = client_map[client_id].command_ref()
+			cmd_ref.update_view_port()
 
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def run(self,source="github"):

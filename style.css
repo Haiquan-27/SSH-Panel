@@ -48,6 +48,10 @@ a{
 	border-radius: 3px;
 }
 
+.open_file_focus{
+	color: var(--bluish);
+}
+
 .no_accessible{
 	color: color(var(--foreground) alpha(0.5));
 }
