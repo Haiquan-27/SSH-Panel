@@ -6,7 +6,8 @@
 		"network_timeout": 20,
 		"port":22,
 		"known_hosts_file":"",	// if fill in,will getting houst from known_hosts_file
-		"always_fingerprint_confirm": false
+		"always_fingerprint_confirm": false,
+		"aws_id": null
 	},
 	"server_settings":{
 		// use password and username connect
@@ -46,5 +47,6 @@
 	"reconnect_on_start":true,
 	"nav_bar_color_change": "-0x101010",
 	"quiet_log":false,
+	"log_level_info":true,
 	"debug_mode":false
 }

@@ -1,28 +1,40 @@
-import os
-import sys
-import sublime
+try:
+    import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
+except (ImportError,ModuleNotFoundError) as e:
+    import sys
+    import os
+    import sublime
+    import shutil
+    def copytree(src, dst, symlinks=False, ignore=None):
+        for item in os.listdir(src):
+            s = os.path.join(src, item)
+            d = os.path.join(dst, item)
+            try:
+                if os.path.isdir(s):
+                    if os.path.exists(d):
+                        shutil.rmtree(d)
+                    shutil.copytree(s, d, symlinks, ignore)
+                else:
+                    if os.path.exists(d):
+                        os.remove(d)
+                    shutil.copy2(s, d)
+            except (PermissionError, FileExistsError):
+                pass
+    sublime_lib_p38 = os.path.join(sublime.packages_path(),'..','Lib','python38')
+    copytree(os.path.join(os.path.dirname(__file__),'dependancies'), sublime_lib_p38)
+    sublime_install_path = os.path.join(os.path.dirname(sys.executable),'python3.dll')
+    try:
+        shutil.copy2(os.path.join(os.path.dirname(__file__),'python3.dll'), sublime_install_path)
+    except (PermissionError, FileExistsError):
+        pass
+    try:
+        import six,cffi,bcrypt,cryptography,pycparser,nacl,paramiko
+    except (ModuleNotFoundError,ImportError):
+        sublime.error_message(f"ssh-panel: dependancy incompatability!\n{e}")
 
-sys.path.append(os.path.dirname(__file__))
-# add dependencies on package initialization
-sys.path.append(os.path.join(os.path.dirname(__file__), 'dependencies'))
-
-
-def plugin_loaded():
-	try:
-		import bcrypt,cffi,cryptography,nacl,six
-	except ModuleNotFoundError as e:
-		sublime.error_message("ssh-panel: missing dependencies:\n"+str(e.args))
-	except ImportError:
-		if sublime.platform() == "windows":
-			sublime.error_message("ssh-panel: missing python3.dll (python3.8)\n")
-	# reload connect
-	if sublime.load_settings("ssh-panel.sublime-settings").get("reconnect_on_start",False):
-		for w in sublime.windows():
-			for v in w.views():
-				server_name = v.settings().get("ssh_panel_serverName",None)
-				if server_name:
-					v.run_command("ssh_panel_creat_connect",args={
-						"server_name": server_name,
-						"connect_now": False,
-						"reload_from_view": True
-					})
+try:
+    from .ssh_panel import *
+except ImportError:
+    import logging
+    logging.exception("Error during importing .ssh_panel package")
+    raise
