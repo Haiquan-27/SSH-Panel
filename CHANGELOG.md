@@ -1,8 +1,13 @@
 SSH-Panel Changelog
 ===================
 
-v1.3.2 Latest
+v1.3.3 Latest
 -------------
+Fix Input panel did not unhide input after entering password
+Fix The temporarily added remote path does not support environment variables
+
+v1.3.2 (2024-9-8)
+-----------------
 Fix path error in `Clone Folder`
 Fix `Copy Path` function of the main path nodes
 Fix `Put Folder` cannot overwrite directory
