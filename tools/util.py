@@ -114,11 +114,19 @@ def html_str(s):
 	replace(" ","&nbsp;").\
 	replace("\n","<br>")
 
-def password_input(callback,on_clean=None):
+def password_input(done_callback,clean_callback=None):
 	input_panel = None
 	def hidden(_):
 		input_panel.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme')
-	input_panel = sublime.active_window().show_input_panel("Password(invisible):","",callback,hidden,on_clean)
+	def clean_hidden():
+		input_panel.settings().erase("color_scheme")
+	def on_done(pwd):
+		clean_hidden()
+		done_callback(pwd)
+	def on_clean(_):
+		clean_hidden()
+		clean_callback()
+	input_panel = sublime.active_window().show_input_panel("Password(invisible):","",on_done,hidden,on_clean)
 
 class SSHPanelException(Exception):
 	pass

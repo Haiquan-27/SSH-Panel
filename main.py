@@ -533,6 +533,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
 		def add_root_path(_):
 			def on_done(path):
+				path = self.client.remote_expandvars(path)
 				try:
 					if self.client and path not in self.client.user_settings_config["remote_path"]:
 						self.add_root_path(path=path,focus=True)
