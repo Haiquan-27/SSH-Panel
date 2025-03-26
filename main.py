@@ -1146,8 +1146,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
 	def add_root_path(self,path,focus=False):
 		id = self._new_resource_id()
-		print("add_root_path",path)
-		path = path if path[-1] != self.client.remote_os_sep else path[:-1]
+		if path[-1] == self.client.remote_os_sep and len(path) != 1:
+			path = path[:-1]
 		global path_hash_map
 		fs = self.client.sftp_client.lstat(path)
 		resource = {
@@ -1248,14 +1248,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		global path_hash_map
 		remote_path = self.rpath_by_resource(resource)
 		remote_os_sep = self.client.remote_os_sep
-		print("name",resource["name"])
-		LOG.I(
-			json.dumps(
-				path_hash_map,
-				indent=5,
-				ensure_ascii=False
-			)
-		)
 		path_hash,local_path_root,_ = path_hash_map.get(resource["root_path"]) if resource["root_path"] != "" else path_hash_map.get(resource["name"])
 		save_hash_root = os.path.sep.join([local_path_root,path_hash]) # local_path_root/path_hash
 		if resource["root_path"] == "":
@@ -1318,6 +1310,8 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 			if local_file.startswith(local_hash_root):
 				client = client_map[client_id]
 				remote_file = remote_root + client.remote_os_sep.join(local_file.replace(local_hash_root,"",1).split(os.path.sep))
+				if remote_root == client.remote_os_sep: # fix *nix file on '/' will be show '//'
+					remote_file = remote_file[1:]
 				def upload(remote_file):
 					try:
 						try:
