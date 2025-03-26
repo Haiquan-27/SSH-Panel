@@ -1,5 +1,8 @@
 import sublime
 import sublime_plugin
+import importlib # debug
+from . import util # debug
+importlib.reload(util) # debug
 from .util import *
 import os
 import stat
@@ -401,8 +404,7 @@ class ClientObj():
 		channel = self.get_new_channel()
 		channel.invoke_subsystem('sftp')
 		self.sftp_client =  paramiko.SFTPClient(sock=channel)
-		test_platform = self.get_platform()
-		self.remote_platform = test_platform if test_platform else "unknown"
+		self.remote_platform = self.get_platform()
 		self.env = self.get_env()
 		self.umask = int(self.user_settings_config["umask"],8)
 		self.user_settings.save_config()
@@ -454,25 +456,31 @@ class ClientObj():
 		cmd = "env"
 		if self.remote_platform == "windows":
 			cmd = "set"
-		cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
-		cmd_res = cmd_res.replace("\r\n","\n")
 		env = {}
-		for l in cmd_res.split("\n"):
-			if l != "":
-				name = l[:l.index("=")]
-				value = l[l.index("=")+1:]
-				env[name] = value
-		return env
+		try:
+			cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+			cmd_res = cmd_res.replace("\r\n","\n")
+			for l in cmd_res.split("\n"):
+				if l != "":
+					name = l[:l.index("=")]
+					value = l[l.index("=")+1:]
+					env[name] = value
+			return env
+		except:
+			return {}
 
 	def get_platform(self):
-		test_cmd = "echo ~"
-		cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
-		remote_platform = None
-		if cmd_res[0] == "/":
-			remote_platform = "*nix"
-		elif cmd_res[0] == "~":
-			remote_platform = "windows"
-		return remote_platform
+		try:
+			test_cmd = "echo ~"
+			cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
+			remote_platform = None
+			if cmd_res[0] == "/":
+				remote_platform = "*nix"
+			elif cmd_res[0] == "~":
+				remote_platform = "windows"
+			return remote_platform
+		except:
+			return "unknow"
 
 	def remote_expandvars(self,path):
 		re_rule = None
