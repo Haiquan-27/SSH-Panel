@@ -1316,7 +1316,7 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 			if local_file.startswith(local_hash_root):
 				client = client_map[client_id]
 				remote_file = remote_root + client.remote_os_sep.join(local_file.replace(local_hash_root,"",1).split(os.path.sep))
-				if remote_root == client.remote_os_sep: # fix *nix file on '/' will be show '//'
+				if remote_file[:2] == "//": # fix *nix file on '/' will be show '//'
 					remote_file = remote_file[1:]
 				def upload(remote_file):
 					try:
