@@ -411,10 +411,7 @@ class ClientObj():
 		self.umask = int(self.user_settings_config["umask"],8)
 		self.user_settings.save_config()
 		self.user_settings_config["remote_path"] = [self.remote_expandvars(rp[:-1] if rp[-1] == self.remote_os_sep and rp != "/" else rp) for rp in self.user_settings_config["remote_path"]]
-		try:
-			self.userid = self.get_userid()
-		except:
-			self.userid = (0,(0))
+		self.userid = self.get_userid()
 		if callback:
 			callback()
 
@@ -443,20 +440,23 @@ class ClientObj():
 		return (stdin,stdout,stderr)
 
 	def get_userid(self):
-		if self.user_settings_config["sftp_shell"] and self.remote_platform == "*nix":
-			cmd = "id -u && id -G"
-			cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
-			cmd_res = cmd_res.replace("\r\n","\n")
-			uid,gids,_ = cmd_res.split("\n")
-			gids = (gids.split(" "))
-			uid = int(uid)
-			gids = tuple(int(i) for i in gids)
-			LOG.D("userid",{
-				"uid": uid,
-				"gids":gids
-			})
-			return (uid,gids)
-		else:
+		try:
+			if self.user_settings_config["sftp_shell"] and self.remote_platform == "*nix":
+				cmd = "id -u && id -G"
+				cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+				cmd_res = cmd_res.replace("\r\n","\n")
+				uid,gids,_ = cmd_res.split("\n")
+				gids = (gids.split(" "))
+				uid = int(uid)
+				gids = tuple(int(i) for i in gids)
+				LOG.D("userid",{
+					"uid": uid,
+					"gids":gids
+				})
+				return (uid,gids)
+			else:
+				return (0,(0))
+		except:
 			return (0,(0))
 
 	def get_env(self):
