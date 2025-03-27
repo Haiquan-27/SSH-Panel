@@ -443,7 +443,7 @@ class ClientObj():
 		return (stdin,stdout,stderr)
 
 	def get_userid(self):
-		if self.user_settings_config["sftp_shell"]:
+		if self.user_settings_config["sftp_shell"] and self.remote_platform == "*nix":
 			cmd = "id -u && id -G"
 			cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
 			cmd_res = cmd_res.replace("\r\n","\n")
@@ -458,7 +458,6 @@ class ClientObj():
 			return (uid,gids)
 		else:
 			return (0,(0))
-
 
 	def get_env(self):
 		try:
