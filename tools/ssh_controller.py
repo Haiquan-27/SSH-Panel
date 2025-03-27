@@ -461,26 +461,29 @@ class ClientObj():
 
 
 	def get_env(self):
-		cmd = "env"
-		if self.remote_platform == "windows":
-			cmd = "set"
-		env = {}
 		try:
-			cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
-			cmd_res = cmd_res.replace("\r\n","\n")
-			for l in cmd_res.split("\n"):
-				if l != "":
-					name = l[:l.index("=")]
-					value = l[l.index("=")+1:]
-					env[name] = value
-			return env
+			if self.user_settings_config["sftp_shell"]:
+				cmd = "env"
+				env = {}
+				if self.remote_platform == "windows":
+					cmd = "set"
+					cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+					cmd_res = cmd_res.replace("\r\n","\n")
+					for l in cmd_res.split("\n"):
+						if l != "":
+							name = l[:l.index("=")]
+							value = l[l.index("=")+1:]
+							env[name] = value
+					return env
+			else:
+				return {}
 		except:
 			return {}
 
 	def get_platform(self):
 		try:
 			if self.user_settings_config["sftp_shell"]:
-				test_cmd = "echo ~"
+				test_cmd = "pwd"
 				cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
 				remote_platform = None
 				if cmd_res[0] == "/":
