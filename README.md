@@ -76,7 +76,7 @@ After the first connection, this path will be save to the user configuration and
 * `network_timeout` The number of timeout seconds used to authenticate and connect to the remote host
 * `port` SSH service port of remote host,default is 22
 * `sftp_shell` Configure whether the session supports shell
-> When the connection is complete, we will try to execute "pwd" to the sftp shell. The return result will determine the OS platform of the target server to ensure the correct path delimiter is set, and the values of the environment variables will also be obtained through the "env" command
+> When the connection is complete, we will try to execute "echo ~" to the sftp shell. The return result will determine the OS platform of the target server to ensure the correct path delimiter is set, and the values of the environment variables will also be obtained through the "env" command
 > When shell permissions are disabled in an SFTP session, if 'sftp_sthell' is true, it will consume a timeout of shell failures when connecting and obtain user ID
 > Set 'sftp_sthell' to false to avoid this situation, and the path delimiter setting will no longer depend on the shell and the environment variables used in 'remote_path' will be unavailable
 * `known_hosts_file` know_hosts file path at local,if filled it will:

@@ -482,7 +482,7 @@ class ClientObj():
 	def get_platform(self):
 		try:
 			if self.user_settings_config["sftp_shell"]:
-				test_cmd = "pwd"
+				test_cmd = "echo ~"
 				cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
 				remote_platform = None
 				if cmd_res[0] == "/":

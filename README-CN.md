@@ -71,7 +71,7 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 * `network_timeout` 用于认证和连接到远程主机的超时秒数
 * `port` 服务器上的SSH服务端口，默认22
 * `sftp_shell` 配置会话是否支持shell
-> 当连接完成时，插件会向sftp shell执行"pwd"命令，通过命令返回结果确定目标服务器的OS，以确保设置正确的路径分隔符，环境变量的值也将通过"env"命令获取
+> 当连接完成时，插件会向sftp shell执行"echo ~"命令，通过命令返回结果确定目标服务器的OS，以确保设置正确的路径分隔符，环境变量的值也将通过"env"命令获取
 >当SFTP会话禁止shell权限时，如果'sftp_sthell'的值为true，在连接时和获取用户id时的操作将导致产生shell命令失败的超时时间，
 >将`sftp_shell`设为false以避免上述情况的发生，路径分割符的设置将通过其他方式获得，同时在"remote_path"中使用的环境变量将不再可用
 * `known_hosts_file` 本地know_hosts文件路径，如果设置此项则
