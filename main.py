@@ -373,13 +373,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 
 	@async_run
 	def connect_post(self,callback=None):
-		# 这个函数必须是异步的，否则self.run()会卡主进程
-		# client.connect() 如果需要输入密码，在输入密码后client才可用
 		user_settings = self.user_settings if self.user_settings else UserSettings()
 		self._max_resource_id = -1
 		self.resource_data = {}
 		window = sublime.active_window()
 		self.window = window
+		loading_bar = SSHPanelLoadingBar("Connecting")
+		loading_bar.loading_run()
 		with async_Lock:
 			client = ClientObj(user_settings)
 			if self.client_id:
@@ -387,7 +387,13 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			else:
 				self.client_id = register_client(client)
 			self.client = client
-			client.connect(callback)
+			# client.connect() 如果需要输入密码，在输入密码后client才可用
+			try:
+				client.connect(callback)
+			except Exception as e:
+				raise e
+			finally:
+				loading_bar.loading_stop()
 
 	def reload_list(self):
 		self._max_resource_id = -1
@@ -1374,30 +1380,13 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		zip_pack = os.path.join(libs_path,'sshpaneldep-temp.zip')
 		self.libs_path = libs_path
 		self.zip_pack = zip_pack
-		self.loading = 0
-		# self.loading_char = '⣾⣽⣻⢿⡿⣟⣯⣷'
-		# self.loading_char = '○◔◑◕●'
-		self.loading_char = '◢◣◤◥'
-		# self.loading_char = '◰◳◲◱'
-		self.loading_lock = threading.Lock()
+		self.loading_bar = SSHPanelLoadingBar("Downloading")
 		self.request_dependencies()
-
-	@async_run
-	def loading_run(self):
-		with self.loading_lock:
-			if self.loading >= 0:
-				self.loading = (self.loading + 1) % len(self.loading_char)
-				c = self.loading_char[self.loading]
-				sublime.status_message("SSH-Panel: Wating Connect %s"%c)
-				# sublime.set_timeout(self.loading_run, 100)
-				event = threading.Event()
-				event.wait(0.1)
-				self.loading_run()
 
 	@async_run
 	def request_dependencies(self):
 		zip_pack = self.zip_pack
-		self.loading_run()
+		self.loading_bar.loading_run()
 		def on_transfer_over():
 			if sublime.yes_no_cancel_dialog("Package download done,unpack and install now?") == sublime.DIALOG_YES:
 				self.unpack_install()
@@ -1428,12 +1417,10 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			except Exception as e:
 				LOG.E("Error %s"%(str(e.args)))
 			finally:
-				with self.loading_lock:
-					self.loading = -1
+				self.loading_bar.loading_stop()
 
 	def progress_bar(self,p):
-		with self.loading_lock:
-			self.loading = -1
+		self.loading_bar.loading_stop()
 		SshPanelOutputCommand(self.window.active_view()).run(
 			sublime.Edit,
 			content=html_tmp("""

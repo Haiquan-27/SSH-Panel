@@ -5,6 +5,7 @@ from . import util # debug
 importlib.reload(util) # debug
 from .util import *
 import os
+import io
 import stat
 import time
 import re
@@ -119,6 +120,7 @@ class UserSettings():
 		if not isinstance(config["remote_path"],list) or isinstance(config["remote_path"],str):error_list.append("remote_path")
 		if not isinstance(config["local_path"],str):error_list.append("local_path")
 		if not isinstance(config["always_fingerprint_confirm"],bool):error_list.append("always_fingerprint_confirm")
+		if not isinstance(config["sftp_shell"],bool):error_list.append("sftp_shell")
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
 		if not (isinstance(config["port"],int)):error_list.append("port")
 		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
@@ -427,29 +429,35 @@ class ClientObj():
 		return chan
 
 	def exec_command(self,command):
-		chan = self.get_new_channel()
-		chan.exec_command(command)
-		try:
-			stdin = chan.makefile_stdin("wb", -1)
-		except:
-			stdin = None
-		stdout = chan.makefile("r", -1)
-		stderr = chan.makefile_stderr("r", -1)
+		if self.user_settings_config["sftp_shell"]:
+			chan = self.get_new_channel()
+			chan.exec_command(command)
+			try:
+				stdin = chan.makefile_stdin("wb", -1)
+			except:
+				stdin = None
+			stdout = chan.makefile("r", -1)
+			stderr = chan.makefile_stderr("r", -1)
+		else:
+			stdin = stdout = stderr = io.BytesIO(b"Shell is unavailable for current Session")
 		return (stdin,stdout,stderr)
 
 	def get_userid(self):
-		cmd = "id -u && id -G"
-		cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
-		cmd_res = cmd_res.replace("\r\n","\n")
-		uid,gids,_ = cmd_res.split("\n")
-		gids = (gids.split(" "))
-		uid = int(uid)
-		gids = tuple(int(i) for i in gids)
-		LOG.D("userid",{
-			"uid": uid,
-			"gids":gids
-		})
-		return (uid,gids)
+		if self.user_settings_config["sftp_shell"]:
+			cmd = "id -u && id -G"
+			cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+			cmd_res = cmd_res.replace("\r\n","\n")
+			uid,gids,_ = cmd_res.split("\n")
+			gids = (gids.split(" "))
+			uid = int(uid)
+			gids = tuple(int(i) for i in gids)
+			LOG.D("userid",{
+				"uid": uid,
+				"gids":gids
+			})
+			return (uid,gids)
+		else:
+			return (0,(0))
 
 
 	def get_env(self):
@@ -471,14 +479,21 @@ class ClientObj():
 
 	def get_platform(self):
 		try:
-			test_cmd = "echo ~"
-			cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
-			remote_platform = None
-			if cmd_res[0] == "/":
-				remote_platform = "*nix"
-			elif cmd_res[0] == "~":
-				remote_platform = "windows"
-			return remote_platform
+			if self.user_settings_config["sftp_shell"]:
+				test_cmd = "echo ~"
+				cmd_res = self.exec_command(test_cmd)[1].read().decode("utf8")
+				remote_platform = None
+				if cmd_res[0] == "/":
+					remote_platform = "*nix"
+				elif cmd_res[0] == "~":
+					remote_platform = "windows"
+				return remote_platform
+			else:
+				if self.sftp_client.normalize('.')[0] == "/":
+					remote_platform = "*nix"
+				else:
+					remote_platform = "unknow"
+				return remote_platform
 		except:
 			return "unknow"
 

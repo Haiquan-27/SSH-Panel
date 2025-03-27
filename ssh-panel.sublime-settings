@@ -3,9 +3,10 @@
 	"default_connect_settings":{
 		"local_path":"~/SFTP-Local/{auto_generate}",
 		"network_timeout": 20,
-		"port":22,
+		"port":22,				// port for ssh or sftp
 		"known_hosts_file":"",		// if fill in,will getting houst from known_hosts_file
 		"umask":"022",				// *nix file umask for "Add File" and "Add Folder"
+		"sftp_shell":true,			// sftp shell permission
 		"terminus_encoding":"utf-8", 	// Choose your terminal code
 		"always_fingerprint_confirm": false
 	},

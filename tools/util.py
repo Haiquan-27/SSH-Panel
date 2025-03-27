@@ -5,11 +5,11 @@ import os
 import sys
 import hashlib
 import base64
+import random
 import stat
 import urllib.request
 import ssl
 
-# DEBUG = None
 settings_name = "ssh-panel.sublime-settings"
 async_Lock = threading.Lock()
 output_panel_phantomSet = None
@@ -131,6 +131,63 @@ def password_input(done_callback,clean_callback=None):
 class SSHPanelException(Exception):
 	pass
 
+class SSHPanelLoadingBar():
+	def __init__(self,msg):
+		self.msg = msg
+		self.loading = 0
+		self.loading_char = [
+			'⣾⣽⣻⢿⡿⣟⣯⣷',
+			'○◔◑◕●◕◑◔',
+			'◢◣◤◥',
+			'◰◳◲◱',
+			'▁▂▃▅▇█▋▍▎▏',
+			[
+				"█▄　　　　　▝▜▋",
+				"█▄　　　▝▜▋",
+				"█▄　▝▜▋",
+				"█▄▝▜▋",
+				"███",
+				"███　　　　　▄",
+				"███　　　　▄",
+				"███　　　▄",
+				"███　　▄",
+				"███▄",
+				"███▄　　▝▚▖",
+				"███▄　▝▚▖　",
+				"███▄▀▄",
+				"█████▄",
+				"█████▄　　▀",
+				"█████▄　▀▀",
+				"█████▄▀▀▀",
+				"██████▀▀",
+				"██████▀▀　▄",
+				"██████▀▀▄▄",
+				"██████▀█▄█▄",
+				"█████████▄",
+				"█████████▄",
+				"███████▄",
+				"█████▄",
+				"███▄",
+				"█▄",
+			]
+		][random.randint(0, 5)]
+		self.loading_lock = threading.Lock()
+
+	@async_run
+	def loading_run(self):
+		with self.loading_lock:
+			if self.loading >= 0:
+				self.loading = (self.loading + 1) % len(self.loading_char)
+				c = self.loading_char[self.loading]
+				sublime.status_message("SSH-Panel: %s %s"%(self.msg,c))
+				event = threading.Event()
+				event.wait(0.1)
+				self.loading_run()
+
+	def loading_stop(self):
+		with self.loading_lock:
+			self.loading = -1
+
 class SSHPanelLog():
 	def _msg_format(self,msg_type,msg_title,msg_content):
 		console_content = "\n" + "SSH-Panel[%s]:%s "%(msg_type,msg_title) + "\n"
@@ -178,8 +235,6 @@ class SSHPanelLog():
 		self._log(msg_tuple)
 
 	def D(self,msg_title,msg_content=""):
-		# global DEBUG
-		# if DEBUG:
 		if sublime.load_settings(settings_name).get("debug_mode"):
 			msg_tuple = self._msg_format("debug",msg_title,msg_content)
 			self._log(msg_tuple)
