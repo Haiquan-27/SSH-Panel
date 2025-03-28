@@ -1,8 +1,5 @@
 import sublime
 import sublime_plugin
-import importlib # debug
-from . import util # debug
-importlib.reload(util) # debug
 from .util import *
 import os
 import io

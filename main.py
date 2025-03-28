@@ -6,9 +6,6 @@ import re
 import time
 import zipfile
 import sys
-import importlib # debug
-from .tools import util # debug
-importlib.reload(util) # debug
 from .tools.util import *
 
 version = "1.3.3"
