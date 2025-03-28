@@ -154,7 +154,7 @@ After the first connection, this path will be save to the user configuration and
 		"hostname":"TestServer", // NetBIOS / DNS Name
 		"port":2244,
 		"private_key":["RSAKey","~/.ssh/id_rsa"],
-		"need_passphrase":false，
+		"need_passphrase":false,
 		"remote_path":[
 			"/etc/apache2"
 		],
