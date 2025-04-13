@@ -463,14 +463,14 @@ class ClientObj():
 				env = {}
 				if self.remote_platform == "windows":
 					cmd = "set"
-					cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
-					cmd_res = cmd_res.replace("\r\n","\n")
-					for l in cmd_res.split("\n"):
-						if l != "":
-							name = l[:l.index("=")]
-							value = l[l.index("=")+1:]
-							env[name] = value
-					return env
+				cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+				cmd_res = cmd_res.replace("\r\n","\n")
+				for l in cmd_res.split("\n"):
+					if l != "":
+						name = l[:l.index("=")]
+						value = l[l.index("=")+1:]
+						env[name] = value
+				return env
 			else:
 				return {}
 		except:

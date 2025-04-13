@@ -28,7 +28,7 @@ Windows and Linux servers that support any openssh available
 ### if Linux,need **libffi**
 ```bash
 # if Debian / Ubuntu
-apt-get install libffi-dev
+sudo apt-get install libffi-dev
 # if Fedora / CentOS / RHEL
 sudo yum install libffi-devel
 # if Arch / Manjaro `untest`

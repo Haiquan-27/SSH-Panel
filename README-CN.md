@@ -25,7 +25,7 @@ SSH-Panel
 ### 如果你使用Linux,需要安装 **libffi**
 ```bash
 # if Debian / Ubuntu
-apt-get install libffi-dev
+sudo apt-get install libffi-dev
 # if Fedora / CentOS / RHEL
 sudo yum install libffi-devel
 # if Arch / Manjaro `untest`
