@@ -1,8 +1,15 @@
 SSH-Panel Changelog
 ===================
 
-v1.3.3 Latest
+v1.3.4 Latest
 -------------
+Fix Unable to use remote `/` path
+Fix Connecting prematurely before entering the password resulted in failure
+Add config `sftp_shell` to support SFTP mode
+Add random loading animation
+
+v1.3.3 (2025-3-13)
+------------------
 Fix Input panel did not unhide input after entering password
 Fix The temporarily added remote path does not support environment variables
 
