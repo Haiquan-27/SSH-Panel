@@ -878,7 +878,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				offset = int(bl/10) - sc
 				offset = 0 if offset == -1 else offset
 				h_s = str(size >> (offset * 10))
-				h_u = ["Bytes","KB","MB","GB","TB","PB"][offset]
+				h_u = ["Bytes","KIB","MIB","GIB","TIB","PIB"][offset]
 				return "%s-%s"%(h_s,h_u)
 			html_ele = """
 					<p><span class='keyword'>path:</span>{path}</p>
@@ -1077,7 +1077,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			load_size = load_size >> 10
 			full_size_s = "{:,}".format(full_size)
 			load_size_s = "{:0>{w},}".format(load_size,w=len(full_size_s))
-			sublime.status_message("SSH-Panel loading [%s] %s/%skb | %skb/s"%(
+			sublime.status_message("SSH-Panel loading [%s] %s/%sKib | %sKib/s"%(
 				(" "*int(100*p)+str(int(p*100))+"%|").ljust(100," "),
 				load_size_s,
 				full_size_s,
@@ -1088,6 +1088,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					on_done()
 		return transfer
 
+	@async_run
 	def file_sync(self,local_path,remote_path,dir,on_done=None):
 		try:
 			self.client.file_sync(
