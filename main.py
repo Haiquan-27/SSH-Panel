@@ -1252,6 +1252,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			)
 
 	def update_view_port(self):
+		client_activied = self.client != None and self.client.transport != None
+		render_resource_list = self.render_resource_list()
 		html_ele = '''
 		<p class="title_bar">
 			<a class='info' href="menu_visible_toggle:' '">{hostname}<span class='symbol'>@{username}</span></a>
@@ -1266,13 +1268,15 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				[<a class='keyword' href="show:help">?</a>]
 			</p>
 		</p>
-		{dirtory_tree}
+		{tip_msg}
+		{render_resource_list}
 		<p style="padding-bottom: 100px;"></p>
 		'''.format(
-				hostname=self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
-				username=self.user_settings.config["username"],
-				btn_display="none" if self.hidden_menu else "block",
-				dirtory_tree=self.render_resource_list()
+				hostname = self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
+				username = self.user_settings.config["username"],
+				btn_display = "none" if self.hidden_menu else "block",
+				tip_msg = ("" if len(render_resource_list) != 0 else "<a class='debug' href='add_root_path:'>no path</a>") if client_activied else "<a class='debug' href='reload:connect'>no connect</a>",
+				render_resource_list = "\n".join(render_resource_list)
 			)
 		phantom = sublime.Phantom(
 			sublime.Region(0),
@@ -1340,8 +1344,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		return local_path
 
 	def render_resource_list(self):
-		if self.client == None or self.client.transport == None:
-			return "<a class='debug' href='reload:connect'>no connect</a>"
 		ele_list = []
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
 		focus_ele = None
@@ -1376,8 +1378,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			else:
 				return resource["root_path"] + self.client.remote_os_sep + resource_path
 		ele_list.sort(key = get_resource_path)
-		self.focus_position = (ele_list.index(focus_ele) + 1) / len(ele_list)
-		return "\n".join(ele_list)
+		if focus_ele:
+			self.focus_position = (ele_list.index(focus_ele) + 1) / len(ele_list)
+		else:
+			self.focus_position = 0.0
+		return ele_list
 
 class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 	@classmethod
