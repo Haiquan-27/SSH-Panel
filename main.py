@@ -6,6 +6,7 @@ import re
 import time
 import zipfile
 import sys
+import weakref
 import socket
 from .tools.util import *
 
@@ -302,7 +303,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.window = None
 		self.PhantomSet = None
 		self.phantom_items = []
-		self.client = None
+		self._client = None
 		self.client_id = None
 		self.BUS_LOCK = False
 		self.resource_data = None
@@ -312,6 +313,25 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.focus_position = 0.0
 		self.navication_view = None
 		self.hidden_menu = True
+
+	@property
+	def user_settings(self):
+		return self._user_settings
+
+	@user_settings.setter
+	def user_settings(self,value):
+		if self.client != None:
+			self.client.user_settings = value
+		self._user_settings = value
+
+	@property
+	def client(self):
+		return self._client
+
+	@client.setter
+	def client(self,value):
+		self._client = value
+		self._client.command_ref = weakref.ref(self)
 
 	def run(self,edit,
 		server_name: str,
@@ -351,16 +371,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.navication_view = navication_view
 		if connect_now:
 			self.connect_post(self.reload_list)
-
-	@property
-	def user_settings(self):
-		return self._user_settings
-
-	@user_settings.setter
-	def user_settings(self,value):
-		if self.client != None:
-			self.client.user_settings = value
-		self._user_settings = value
 
 	def init_navcation_view(self,nv):
 		nv.set_read_only(True)

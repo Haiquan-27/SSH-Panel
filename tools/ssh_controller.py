@@ -199,6 +199,7 @@ class ClientObj():
 		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
+		self.command_ref = None
 	@property
 	def user_settings(self):
 		return self._user_settings
