@@ -1285,10 +1285,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			sublime.LAYOUT_INLINE,
 			on_navigate=self.navcation_href_click)
 		nv = self.navication_view
-		nv.set_name("%s|%s"%(
-				self.user_settings.server_name,
-				self.rpath_by_resource(self.focus_resource) if self.focus_resource else self.user_settings.server_name if self.client else "connect lost"
-			))
+		nv.set_name(self.user_settings.server_name)
 		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
 			src_style = nv.style()
 			new_style_global = {}
