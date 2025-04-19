@@ -6,6 +6,7 @@ import re
 import time
 import zipfile
 import sys
+import socket
 from .tools.util import *
 
 version = "1.3.4"
@@ -34,6 +35,7 @@ icon_style_data = {
 		"menu":b'\xe2\x98\xb0'.decode("utf-8"),
 		"drop":b'\xe2\x9c\x96\xef\xb8\x8f'.decode("utf-8"),
 		"error":b'\xe2\x9d\x8c'.decode("utf-8"),
+		"timeout":b'\xf0\x9f\x95\x96'.decode("utf-8"),
 		"ok":b'\xe2\x9c\x94\xef\xb8\x8f'.decode("utf-8"),
 		"bus":b'\xe2\x8f\xb3'.decode("utf-8"),
 		"warning":b'\xe2\x9a\xa0\xef\xb8\x8f'.decode("utf-8"),
@@ -47,6 +49,7 @@ icon_style_data = {
 		"menu":"[...]",
 		"drop":"[x]",
 		"error":"<span class='error'> error</span>",
+		"timeout":"<span class='warning'> timeout</span>",
 		"ok":"<span class='keyword'> OK</span>",
 		"bus":"<span class='warning'>[###  ]</span>",
 		"warning":"<span class='warning'> !</span>",
@@ -60,6 +63,7 @@ icon_style_data = {
 		"menu":b'\xe2\x98\xb0'.decode("utf-8"),
 		"drop":"[x]",
 		"error":" <span class='error'>error</span>",
+		"timeout":" <span class='warning'>timeout</span>",
 		"ok":" <span class='keyword'>%s</span>"%b'\xe2\x80\xa2'.decode("utf-8"),
 		"bus":" <span style='color:color(var(--greenish) alpha(0.8))'>*</span><span style='color:color(var(--greenish) alpha(1))'>*</span><span style='color:color(var(--greenish) alpha(0.8))'>*</span>",
 		"warning":" <span class='warning'>!</span>",
@@ -296,7 +300,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 	def __init__(self,view):
 		super().__init__(view)
 		self.window = None
-		self.PhantomSet = None # phantom 管理器
+		self.PhantomSet = None
 		self.phantom_items = []
 		self.client = None
 		self.client_id = None
@@ -305,6 +309,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self._max_resource_id = 0
 		self._user_settings = None
 		self.focus_resource = None
+		self.focus_position = 0.0
 		self.navication_view = None
 		self.hidden_menu = True
 
@@ -402,6 +407,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		self.update_view_port()
 
 	def add_path(self,remote_path,root_path):
+		# 添加目录下的子项
 		resource_data = self.resource_data
 		res = []
 		try:
@@ -598,6 +604,78 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				settings_file = "settings"
 			)
 
+		def navigation(resource_id):
+			if resource_id:
+				resource = self.resource_data[resource_id]
+				remote_os_sep = self.client.remote_os_sep
+				resource_path = self.rpath_by_resource(resource)
+				resource_root_path = resource["root_path"]
+				def nav_map_tags(pnl):
+					# pnl : ["...","a","b","c"]
+					# => [("...",id_0),(".../a",id_1),(".../a/b",id_2),(".../a/b/c",id_3)]
+					# => ["<a path_0/>","<a path_1/>","<a path_2/>","<a path_3/>"]
+					path_id_map = {
+						self.rpath_by_resource(_rs):_id
+						for _id,_rs in self.resource_data.items()
+					}
+					return [
+						"<a class='res_file {style_class}' href={href}>{name}</a>".format(
+							name = pn,
+							href = path_id_map[remote_os_sep.join(pnl[:i+1])],
+							style_class = "res_focus" if len(pnl)-1 == i else ""
+						)
+						for i,pn in enumerate(pnl)
+					]
+
+				SshPanelOutputCommand(self.window.active_view()).run(
+					edit = sublime.Edit,
+					content = html_tmp(content="<p class='resource_line' style='border: 2px'><span class='keyword'>Navigate to:</span>%s</p>"%(
+							"<span class='symbol'>%s</span>"%self.client.remote_os_sep.join(
+								nav_map_tags(
+									[
+										resource_root_path,
+										*[p for p in resource_path[len(resource_root_path):].split(remote_os_sep) if p != ""]
+									] if resource_root_path else [resource_path]
+								)
+							)
+						)
+					),
+					is_html = True,
+					href_navcation = navigation,
+					new_line = False,
+					clean = True,
+				)
+				if resource["is_dir"]:
+					resource["focus"] = False
+					resource_click(resource_id)
+					_show_focus_resource()
+					sel_items = [(resource_id,resource["name"] + (remote_os_sep if resource["is_dir"] else "")) for resource_id,resource in self.resource_data.items() if resource["where"] == resource_path]
+					self.window.run_command("hide_overlay")
+					self.window.show_quick_panel(
+						[i[1] for i in sel_items],
+						lambda i : navigation(sel_items[i][0]) if i>=0 else None,
+						sublime.KEEP_OPEN_ON_FOCUS_LOST,
+						placeholder=resource_path
+					)
+				else:
+					resource["focus"] = False
+					resource_click(resource_id)
+					_show_focus_resource()
+
+			else: # 从主路径开始选择
+				sel_items = [(resource_id,resource["name"]) for resource_id,resource in self.resource_data.items() if resource["root_path"] == ""]
+				self.window.run_command("hide_overlay")
+				self.window.show_quick_panel(
+					[i[1] for i in sel_items],
+					lambda i : navigation(sel_items[i][0]) if i>=0 else None,
+					sublime.KEEP_OPEN_ON_FOCUS_LOST,
+					placeholder="Navigate to"
+				)
+
+		def _show_focus_resource():
+			nv = self.navication_view
+			nv.set_viewport_position((0,nv.layout_extent()[1]*self.focus_position - (nv.viewport_extent()[1] / 2)))
+
 		def show_panel(_):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
 
@@ -791,7 +869,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			show_list = [r_path,l_path]
 			self.window.show_quick_panel(
 				show_list,
-				lambda i : sublime.set_clipboard(show_list[i]),
+				lambda i : sublime.set_clipboard(show_list[i]) if i>=0 else None,
 				sublime.KEEP_OPEN_ON_FOCUS_LOST
 			)
 
@@ -1000,40 +1078,34 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				self.window.run_command("open_dir",args= {"dir": os.path.split(l_path)[0],"file":os.path.split(l_path)[1]})
 
 		def resource_click(id):
-			try:
-				resource_data = self.resource_data
-				resource = resource_data[id]
-				resource["focus"] = not resource["focus"]
-				resource_path = self.rpath_by_resource(resource)
-				if resource["focus"]:
-					if self.focus_resource and self.focus_resource != resource: # 是否取消上一次的焦点
-						self.focus_resource["focus"] = False
-					self.focus_resource = resource
-				if resource["is_dir"]:
-					if resource["focus"] and resource["expand"]:
-						resource["focus"] = True
-					else:
-						resource["expand"] = not resource["expand"] # 另外点击一个展开的无焦点目录，给予焦点且保持展开
-						if resource["expand"]:
-							if resource["root_path"] != "": # 始终继承父级的root_path
-								self.add_path(resource_path,root_path=resource["root_path"])
-							else:
-								self.add_path(resource_path,root_path=self.rpath_by_resource(resource))
-						else:
-							self.clean_resource(resource)
+			resource_data = self.resource_data
+			resource = resource_data[id]
+			resource["focus"] = not resource["focus"]
+			resource_path = self.rpath_by_resource(resource)
+			if resource["focus"]:
+				if self.focus_resource and self.focus_resource != resource: # 是否取消上一次的焦点
+					self.focus_resource["focus"] = False
+				self.focus_resource = resource
+			if resource["is_dir"]:
+				if resource["focus"] and resource["expand"]:
+					resource["focus"] = True
 				else:
-					self.open_resource_file(resource)
-				self.update_view_port()
-			except Exception as e:
-				self.focus_resource["status"] = ["denied"]
-				self.update_view_port()
-				LOG.E("file access failed",{
-					"error": str(e.args)
-				})
+					resource["expand"] = not resource["expand"] # 另外点击一个展开的无焦点目录，给予焦点且保持展开
+					if resource["expand"]:
+						if resource["root_path"] != "": # 始终继承父级的root_path
+							self.add_path(resource_path,root_path=resource["root_path"])
+						else:
+							self.add_path(resource_path,root_path=resource_path)
+					else:
+						self.clean_resource(resource)
+			else:
+				self.open_resource_file(resource)
+			self.update_view_port()
 
 		def resource_menu(id):
 			operation_menu = [
 				("Show Info",resource_info),
+				("Navigate",navigation),
 				("Delete",resource_delete),
 				("Copy Path",resource_copy_path),
 				("Focus load",resource_force_load),
@@ -1091,19 +1163,27 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 	@async_run
 	def file_sync(self,local_path,remote_path,dir,on_done=None):
 		try:
-			self.client.file_sync(
-				local_path = local_path,
-				remote_path = remote_path,
-				dir = dir,
-				transfer_callback = self.sync_transfer_callback(on_done),
-				sync_stat = True
-			)
+			with async_Lock:
+				self.client.file_sync(
+					local_path = local_path,
+					remote_path = remote_path,
+					dir = dir,
+					transfer_callback = self.sync_transfer_callback(on_done),
+					sync_stat = True
+				)
 		except Exception as e:
-			self.BUS_LOCK = False
+			# 调用处无法捕获异步函数中抛出的错误信息
+			err_msg = e.args
+			focus_resource = self.focus_resource
+			focus_resource["status"] = ["error"]
+			if isinstance(e,socket.timeout):
+				focus_resource["status"] = ["timeout"]
+				err_msg = "socket.timeout"
+			self.update_view_port()
 			LOG.E("file sync failed",{
 				"remote_path":remote_path,
 				"local_path": local_path,
-				"error": str(e.args)
+				"error": err_msg
 			})
 
 	def open_resource_file(self,resource,force_load=False):
@@ -1138,15 +1218,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 				if self.client.sftp_client.stat(remote_path).st_size == 0: # sftp_client.py -> _transfer_with_callback : if len(data) == 0: break
 					on_transfer_over()
-			except Exception as e:
+			except:
 				self.BUS_LOCK = False
-				resource["status"] = ["error"]
 				self.update_view_port()
-				LOG.E("file sync failed",{
-					"remote_path":remote_path,
-					"local_path": local_path,
-					"error": str(e.args)
-				})
 
 	def add_root_path(self,path,focus=False):
 		id = self._new_resource_id()
@@ -1184,10 +1258,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			<p style="display:{btn_display}">
 				[<a class='keyword' href="show:info">i</a>]
 				[<a class='keyword' href="reload:list">R</a>]
-				[<a class='keyword' href="edit_settings:' '">E</a>]
-				[<a class='keyword' href="run_command:' '">T</a>]
-				[<a class='keyword' href="show_panel:' '">P</a>]
-				[<a class='keyword' href="add_root_path:' '">+</a>]
+				[<a class='keyword' href="navigation:">N</a>]
+				[<a class='keyword' href="edit_settings:">E</a>]
+				[<a class='keyword' href="run_command:">T</a>]
+				[<a class='keyword' href="show_panel:">P</a>]
+				[<a class='keyword' href="add_root_path:">+</a>]
 				[<a class='keyword' href="show:help">?</a>]
 			</p>
 		</p>
@@ -1269,6 +1344,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			return "<a class='debug' href='reload:connect'>no connect</a>"
 		ele_list = []
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
+		focus_ele = None
 		for resource_id,resource in self.resource_data.items():
 			resource_path = self.rpath_by_resource(resource)
 			ext = os.path.splitext(resource["name"])[1][1:]
@@ -1288,6 +1364,8 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					status = "".join([icon_style[i] for i in resource["status"]])
 				)
 			ele_list.append(ele)
+			if resource == self.focus_resource:
+				focus_ele = ele
 		id_re_rule = re.compile(r"(?<=resource_click:)\d+")
 		def get_resource_path(ele):
 			id = id_re_rule.search(ele).group()
@@ -1298,6 +1376,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			else:
 				return resource["root_path"] + self.client.remote_os_sep + resource_path
 		ele_list.sort(key = get_resource_path)
+		self.focus_position = (ele_list.index(focus_ele) + 1) / len(ele_list)
 		return "\n".join(ele_list)
 
 class SshPanelEventCommand(sublime_plugin.ViewEventListener):
@@ -1318,22 +1397,15 @@ class SshPanelEventCommand(sublime_plugin.ViewEventListener):
 					remote_file = remote_file[1:]
 				def upload(remote_file):
 					try:
-						try:
-							client.file_sync(local_file,remote_file,"put",sync_stat=True)
-						except:
-							client.file_sync(local_file,remote_file,"put")
-							LOG.W("file upload success,but stat is not sync")
-						sublime.status_message("file upload: "+remote_file)
-						LOG.D("save remote",{
-							"local_path" : local_file,
-							"remote_path": remote_file
-						})
-					except Exception as e:
-						LOG.E("file sync failed",{
-							"local_path" : local_file,
-							"remote_path": remote_file,
-							"error": str(e.args)
-						})
+						client.file_sync(local_file,remote_file,"put",sync_stat=True)
+					except:
+						client.file_sync(local_file,remote_file,"put")
+						LOG.W("file upload success,but stat is not sync")
+					sublime.status_message("file upload: "+remote_file)
+					LOG.D("save remote",{
+						"local_path" : local_file,
+						"remote_path": remote_file
+					})
 				self.view.window().show_input_panel(
 					"save to remote:",
 					remote_file,

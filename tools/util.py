@@ -250,6 +250,7 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 		content,
 		display=True,
 		is_html=False,
+		href_navcation=None,
 		new_line=True,
 		clean=False):
 		window = sublime.active_window()
@@ -290,7 +291,8 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 				sublime.Phantom(
 					sublime.Region(panel_view.size()),
 					content,
-					sublime.LAYOUT_INLINE
+					sublime.LAYOUT_INLINE,
+					href_navcation
 				)
 			)
 			output_panel_phantomSet.update(output_panel_phantom_list)
