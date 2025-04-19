@@ -1100,6 +1100,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 						self.clean_resource(resource)
 			else:
 				self.open_resource_file(resource)
+				resource["focus"] = True
 			self.update_view_port()
 
 		def resource_menu(id):
