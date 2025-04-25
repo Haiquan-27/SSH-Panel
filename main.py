@@ -482,7 +482,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		return sublime.find_resources("SSH-Panel.hidden-color-scheme")[0]
 
 	@async_run
-	def navcation_href_click(self,href):
+	def navcation_link_click(self,href):
 		# available_operation = [
 		# 	"show",
 		#	"add_root_path",
@@ -1255,7 +1255,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		if focus:
 			resource["focus"] = not resource["focus"]
 			self.focus_resource = resource
-			self.navcation_href_click("resource_click:%s"%id)
+			self.navcation_link_click("resource_click:%s"%id)
 		path_hash_map[path] = (
 				abstract_hex("md5",path.encode("utf8")),
 				self.client.user_settings_config["local_path"],
@@ -1293,7 +1293,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			sublime.Region(0),
 			html_tmp(content=html_ele),
 			sublime.LAYOUT_INLINE,
-			on_navigate=self.navcation_href_click)
+			on_navigate=self.navcation_link_click)
 		nv = self.navication_view
 		nv.set_name(self.user_settings.server_name)
 		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
