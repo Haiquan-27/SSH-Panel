@@ -8,12 +8,17 @@ import zipfile
 import sys
 import weakref
 import socket
+import importlib # debug
+from .tools import util # debug
+importlib.reload(util) # debug
 from .tools.util import *
 
 version = "1.3.4"
 
 Dependencies_LOST = False
 try:
+	from .tools import ssh_controller
+	importlib.reload(ssh_controller) # debug
 	from .tools.ssh_controller import *
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
@@ -393,7 +398,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		loading_bar = SSHPanelLoadingBar("Connecting")
 		loading_bar.loading_run()
 		with async_Lock:
-			client = ClientObj(user_settings)
+			client = SSHClient(user_settings)
 			if self.client_id:
 				update_client(self.client_id,client)
 			else:

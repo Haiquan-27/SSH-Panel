@@ -185,7 +185,7 @@ class UserSettings():
 		subilme.save_settings(settings_name)
 
 
-class ClientObj():
+class SSHClient():
 	def __init__(
 		self,
 		user_settings, # UserSettings
