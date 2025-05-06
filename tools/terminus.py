@@ -23,6 +23,7 @@ class SSHPtyProcess(object):
 		self.client = client
 		self.shell_channel = channel
 		self.pty_encoding = "utf-8"
+		self.exitstatus = None
 
 	@classmethod
 	def spawn(cls, client:SSHClient ,dimensions=(24, 80), term="vt100"):
@@ -38,26 +39,32 @@ class SSHPtyProcess(object):
 		return inst
 
 	def read(self, size=1024):
-		return self.shell_channel.recv(size).decode(self.pty_encoding,'backslashreplace')
+		if not self.isalive():
+			self.terminate()
+			raise EOFError() # stop thread: terminal.Terminal.reader()
+		res_b = self.shell_channel.recv(size)
+		res = res_b.decode(self.pty_encoding,'backslashreplace')
+		print(res_b)
+		# "SSH\x08H-Pa\x08an\x08nel\u2002\u2007uuu"
+		# b'\r\n\x1b[?2004l\rSSH\x08H-Pa\x08an\x08nel\xe2\x80\x82\xe2\x80\x87uuu\r\n'
+		return res
 
 	def write(self, s, flush=True):
+		if not self.isalive():
+			self.terminate()
+			raise EOFError() # stop thread: terminal.Terminal.reader()
 		return self.shell_channel.send(s)
 
 	def terminate(self, force=False):
 		self.shell_channel.close()
+		self.exitstatus = 0
 
 	def isalive(self):
 		return not self.shell_channel.closed
 
-	@property
-	def exitstatus(self):
-		if self.isalive():
-			return None
-		else:
-			return 0
-
 	def kill(self, sig):
-		pass
+		self.shell_channel.close()
+		self.exitstatus = -1
 
 	def setwinsize(self, rows, cols):
 		if self.isalive():
@@ -127,7 +134,7 @@ class SshTerminusActivateCommand(TerminusActivateCommand):
 			panel_name="Terminus",
 			tag=None,
 			auto_close=True,
-			cancellable=False,
+			cancellable=True,
 			timeit=False
 		)
 		recency_manager = RecencyManager.from_view(view)
