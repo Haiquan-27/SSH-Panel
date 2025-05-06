@@ -119,7 +119,8 @@ class UserSettings():
 		if not isinstance(config["always_fingerprint_confirm"],bool):error_list.append("always_fingerprint_confirm")
 		if not isinstance(config["sftp_shell"],bool):error_list.append("sftp_shell")
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
-		if not (isinstance(config["port"],int)):error_list.append("port")
+		if not isinstance(config["port"],int):error_list.append("port")
+		if not isinstance(config["terminus_encoding"],str):error_list.append("terminus_encoding")
 		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
 			error_list.append("known_hosts_file")
 		#  os.path.exists(os.path.expandvars(user_parameter.get("private_key")[1]))
@@ -464,7 +465,7 @@ class SSHClient():
 				env = {}
 				if self.remote_platform == "windows":
 					cmd = "set"
-				cmd_res = self.exec_command(cmd)[1].read().decode("utf8")
+				cmd_res = self.exec_command(cmd)[1].read().decode(self.user_settings_config.get("terminus_encoding"))
 				cmd_res = cmd_res.replace("\r\n","\n")
 				for l in cmd_res.split("\n"):
 					if l != "":

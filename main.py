@@ -23,7 +23,19 @@ try:
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
 		Dependencies_LOST = True
+
 client_map = {} # client_id -> client
+
+Terminus_Enable = False
+try:
+	from .tools import terminus
+	importlib.reload(terminus) # debug
+	from .tools.terminus import SshTerminusActivateCommand
+	Terminus_Enable = True
+except Exception as e:
+	# pass
+	raise e # debug
+
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
 icon_data = {} # ext -> "<img class='icon_size' src='res://{icon_path}'>"
@@ -544,7 +556,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					<p><span class='keyword'>[i] </span>Show server infomation</p>
 					<p><span class='keyword'>[R] </span>Refresh ans sync file list</p>
 					<p><span class='keyword'>[E] </span>Edit settings</p>
+					<p><span class='keyword'>[N] </span>Path Navigator</p>
 					<p><span class='keyword'>[T] </span>Simple terminal</p>
+					<p><span class='keyword'>[$] </span>Open an interactive SSH session using <a style='text-decoration: underline' href='https://packagecontrol.io/packages/Terminus'>Terminaus</a></p>
 					<p><span class='keyword'>[P] </span>Show panel</p>
 					<p><span class='keyword'>[+] </span>Add new root path</p>
 					<p><span class='keyword'>[-] </span>Remove root path from view</p>
@@ -609,6 +623,22 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				on_done,
 				None,
 				None)
+
+		def open_shell(_):
+			def tab_view():
+				return self.window.new_file()
+			def panel_view():
+				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
+				return self.window.find_output_panel(output_panel_name)
+			sel_items = [
+				("Open in Tab",tab_view),
+				("Open in Panel",panel_view)
+			]
+			self.window.show_quick_panel(
+				[i[0] for i in sel_items],
+				lambda i : SshTerminusActivateCommand(sel_items[i][1]()).run(0,self.client_id) if i>=0 else None,
+				sublime.KEEP_OPEN_ON_FOCUS_LOST
+			)
 
 		def menu_visible_toggle(_):
 			self.hidden_menu = not self.hidden_menu
@@ -1270,18 +1300,30 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 	def update_view_port(self):
 		client_activied = self.client != None and self.client.transport != None
 		render_resource_list = self.render_resource_list()
+		btn_items = {
+			"i":"show:info",
+			"R":"reload:list",
+			"N":"navigation:",
+			"E":"edit_settings:",
+			"T":"run_command:",
+			"$":"open_shell:",
+			"P":"show_panel:",
+			"+":"add_root_path:",
+			"?":"show:help"
+		}
+		if not client_activied:
+			keep_btn = ["i","E","P","?"]
+			btn_items = {b:btn_items[b] for b in keep_btn}
+		else:
+			if Terminus_Enable:
+				del btn_items["T"]
+			else:
+				del btn_items["$"]
 		html_ele = '''
 		<p class="title_bar">
 			<a class='info' href="menu_visible_toggle:' '">{hostname}<span class='symbol'>@{username}</span></a>
 			<p style="display:{btn_display}">
-				[<a class='keyword' href="show:info">i</a>]
-				[<a class='keyword' href="reload:list">R</a>]
-				[<a class='keyword' href="navigation:">N</a>]
-				[<a class='keyword' href="edit_settings:">E</a>]
-				[<a class='keyword' href="run_command:">T</a>]
-				[<a class='keyword' href="show_panel:">P</a>]
-				[<a class='keyword' href="add_root_path:">+</a>]
-				[<a class='keyword' href="show:help">?</a>]
+				{btn_list}
 			</p>
 		</p>
 		{tip_msg}
@@ -1291,6 +1333,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				hostname = self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
 				username = self.user_settings.config["username"],
 				btn_display = "none" if self.hidden_menu else "block",
+				btn_list = "\n".join(['<span>[<a class="keyword" href="%s">%s</a>]</span>'%(href,btn) for btn,href in btn_items.items()]),
 				tip_msg = ("" if len(render_resource_list) != 0 else "<a class='debug' href='add_root_path:'>no path</a>") if client_activied else "<a class='debug' href='reload:connect'>no connect</a>",
 				render_resource_list = "\n".join(render_resource_list)
 			)
