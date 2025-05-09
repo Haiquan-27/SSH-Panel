@@ -878,6 +878,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			remote_os_sep = self.client.remote_os_sep
 			put_path = self.rpath_by_resource(select_resource)
 			put_path = put_path[:-1] if put_path[-1] == remote_os_sep else put_path
+			@async_run
 			def callback(file_list):
 				if isinstance(file_list,str):
 					file_list = [file_list]
@@ -1033,6 +1034,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 			resource = self.resource_data[id]
 			resource_path = self.rpath_by_resource(resource)
 			remote_os_sep = self.client.remote_os_sep
+			@async_run
 			def confirm():
 				if resource["is_dir"]:
 					dir_list = [resource_path]
@@ -1190,7 +1192,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		# 在完成时调用on_done
 		start_t = time.time() - 0.001
 		def transfer(load_size,full_size):
-			p = load_size/full_size
+			p = load_size/full_size if full_size-load_size else 1
 			full_size = full_size >> 10
 			load_size = load_size >> 10
 			full_size_s = "{:,}".format(full_size)
@@ -1201,22 +1203,20 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				full_size_s,
 				"{:,.2f}".format(load_size / (time.time() - start_t))
 			))
-			if load_size == full_size:
+			if load_size >= full_size:
 				if on_done:
 					on_done()
 		return transfer
 
-	@async_run
 	def file_sync(self,local_path,remote_path,dir,on_done=None):
 		try:
-			with async_Lock:
-				self.client.file_sync(
-					local_path = local_path,
-					remote_path = remote_path,
-					dir = dir,
-					transfer_callback = self.sync_transfer_callback(on_done),
-					sync_stat = True
-				)
+			self.client.file_sync(
+				local_path = local_path,
+				remote_path = remote_path,
+				dir = dir,
+				transfer_callback = self.sync_transfer_callback(on_done),
+				sync_stat = True
+			)
 		except Exception as e:
 			# 调用处无法捕获异步函数中抛出的错误信息
 			err_msg = e.args
@@ -1237,7 +1237,9 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 		local_path  = self.lpath_by_resource(resource)
 		LOG.D("path_hash_map",path_hash_map)
 		file_reload = sublime.load_settings(settings_name).get("file_reload","auto")
-		NF = sublime.TRANSIENT if int(sublime.version()) >= 4096 else (sublime.NewFileFlags.NONE if int(sublime.version()) >= 4132 else 0)
+		NF = 0
+		if int(sublime.version()) >= 4096:
+			NF = sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
 		if os.path.exists(local_path) and file_reload == "auto":
 			self.window.open_file(local_path,NF)
 			return
@@ -1262,8 +1264,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					self.update_view_port()
 					self.window.open_file(local_path,NF)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
-				if self.client.sftp_client.stat(remote_path).st_size == 0: # sftp_client.py -> _transfer_with_callback : if len(data) == 0: break
-					on_transfer_over()
 			except:
 				self.BUS_LOCK = False
 				self.update_view_port()
@@ -1572,7 +1572,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 		start_t = time.time() - 0.001
 		def transfer(load_pack,pack_size,full_size):
 			load_size = load_pack * pack_size
-			p = load_size/full_size
+			p = load_size/full_size if full_size-load_size else 1
 			full_size = full_size >> 10
 			load_size = load_size >> 10
 			full_size_s = "{:,}".format(full_size)

@@ -200,6 +200,7 @@ class SSHClient():
 		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
+		self._file_sync_Lock = threading.Lock()
 		self.command_ref = None
 	@property
 	def user_settings(self):
@@ -539,22 +540,52 @@ class SSHClient():
 		return res
 
 	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True): # 写入并保持远程文件原始权限
-		if dir == "put":
-			self.sftp_client.put(local_path, remote_path,transfer_callback)
-			if sync_stat:
-				local_stat = os.stat(local_path)
-				local_atime = local_stat.st_atime
-				local_mtime = local_stat.st_mtime
-				self.sftp_client.utime(remote_path,(local_atime,local_mtime))
-				self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
-			LOG.D("remote:%s sync"%remote_path)
-		elif dir == "get":
-			os.makedirs(os.path.split(local_path)[0],exist_ok=True)
-			self.sftp_client.get(remote_path,local_path,transfer_callback)
-			if sync_stat:
-				remote_stat = self.sftp_client.stat(remote_path)
-				remote_atime = remote_stat.st_atime
-				remote_mtime = remote_stat.st_mtime
-				os.utime(local_path,(remote_atime,remote_mtime))
-				os.chmod(local_path,stat.S_IMODE(remote_stat.st_mode))
-			LOG.D("local:%s sync"%local_path)
+		with self._file_sync_Lock:
+			if dir == "put":
+				# self.sftp_client.put(local_path, remote_path,transfer_callback)
+				with self.sftp_client.open(remote_path,"w",bufsize=1024) as rf:
+					with open(local_path,"rb") as lf:
+						# rf.write(lf.read())
+						full_size = os.stat(local_path).st_size
+						load_size = 0
+						while True:
+							lf_data = lf.read(1024)
+							load_size += len(lf_data)
+							print("load_size",load_size)
+							transfer_callback(load_size,full_size)
+							if not lf_data:
+								break
+							rf.write(lf_data)
+
+
+				if sync_stat:
+					local_stat = os.stat(local_path)
+					local_atime = local_stat.st_atime
+					local_mtime = local_stat.st_mtime
+					self.sftp_client.utime(remote_path,(local_atime,local_mtime))
+					self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
+				LOG.D("remote:%s sync"%remote_path)
+			elif dir == "get":
+				os.makedirs(os.path.split(local_path)[0],exist_ok=True)
+				# self.sftp_client.get(remote_path,local_path,transfer_callback)
+				with open(local_path,"wb",buffering=1024) as lf:
+					with self.sftp_client.open(remote_path,"rb") as rf:
+						# lf.write(rf.read())
+						full_size = self.sftp_client.stat(remote_path).st_size
+						load_size = 0
+						while True:
+							rf_data = rf.read(1024)
+							load_size += len(rf_data)
+							print("load_size",load_size)
+							transfer_callback(load_size,full_size)
+							if not rf_data:
+								break
+							lf.write(rf_data)
+
+				if sync_stat:
+					remote_stat = self.sftp_client.stat(remote_path)
+					remote_atime = remote_stat.st_atime
+					remote_mtime = remote_stat.st_mtime
+					os.utime(local_path,(remote_atime,remote_mtime))
+					os.chmod(local_path,stat.S_IMODE(remote_stat.st_mode))
+				LOG.D("local:%s sync"%local_path)
