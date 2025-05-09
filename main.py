@@ -186,7 +186,7 @@ def plugin_loaded():
 			for v in w.views():
 				server_name = v.settings().get("ssh_panel_serverName",None)
 				if server_name:
-					SshPanelCreateConnectCommand(v).run(
+					SshPanelConnectCommand(v).run(
 						edit = sublime.Edit,
 						server_name = server_name,
 						connect_now = False,
@@ -252,7 +252,7 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 			if index == -1: return
 			if error_parameter_list != []: return
 			window.destroy_output_panel(output_panel_name)
-			SshPanelCreateConnectCommand(window.active_view()).run(
+			SshPanelConnectCommand(window.active_view()).run(
 				edit = sublime.Edit,
 				server_name = server_name,
 				connect_now = True,
@@ -314,7 +314,7 @@ class SshPanelEditSettingsCommand(sublime_plugin.WindowCommand):
 				  			"/*details https://github.com/Haiquan-27/SSH-Panel#style-coustom*/"
 				})
 
-class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
+class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def __init__(self,view):
 		super().__init__(view)
 		self.window = None
