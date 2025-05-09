@@ -448,7 +448,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				resource_item["access"] = accessable(fs,*(self.client.userid))
 				resource_item["status"] = []
 				if resource_item["is_dir"] == True:
-					# resource_item["count"] =
 					resource_item["expand"] = False # 目录是否展开
 				resource_item["focus"] = False # 是否选中
 				resource_item["where"] = remote_path
@@ -483,6 +482,11 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				dl.append(id)
 		for id in dl:
 			del resource_data[id]
+
+	def show_focus_resource(self):
+		# 滚动定位到focus_resource对象
+		nv = self.navication_view
+		nv.set_viewport_position((0,nv.layout_extent()[1]*self.focus_position - (nv.viewport_extent()[1] / 2)))
 
 	def save_theme(self,data_dict):
 		theme_path = os.path.join(
@@ -693,7 +697,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				if resource["is_dir"]:
 					resource["focus"] = False
 					resource_click(resource_id)
-					_show_focus_resource()
+					self.show_focus_resource()
 					sel_items = [(resource_id,resource["name"] + (remote_os_sep if resource["is_dir"] else "")) for resource_id,resource in self.resource_data.items() if resource["where"] == resource_path]
 					self.window.run_command("hide_overlay")
 					self.window.show_quick_panel(
@@ -705,7 +709,7 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 				else:
 					resource["focus"] = False
 					resource_click(resource_id)
-					_show_focus_resource()
+					self.show_focus_resource()
 
 			else: # 从主路径开始选择
 				sel_items = [(resource_id,resource["name"]) for resource_id,resource in self.resource_data.items() if resource["root_path"] == ""]
@@ -716,10 +720,6 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					sublime.KEEP_OPEN_ON_FOCUS_LOST,
 					placeholder="Navigate to"
 				)
-
-		def _show_focus_resource():
-			nv = self.navication_view
-			nv.set_viewport_position((0,nv.layout_extent()[1]*self.focus_position - (nv.viewport_extent()[1] / 2)))
 
 		def show_panel(_):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
@@ -756,7 +756,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					self.client.sftp_client.lstat(path),
 					resource
 				)
+				new["focus"] = True
+				self.focus_resource = new
 				self.update_view_port()
+				self.show_focus_resource()
 				sublime.status_message("create %s"%self.rpath_by_resource(new))
 			self.window.show_input_panel(
 				"new file:",
@@ -798,7 +801,10 @@ class SshPanelCreateConnectCommand(sublime_plugin.TextCommand):
 					self.client.sftp_client.lstat(path),
 					resource
 				)
+				new["focus"] = True
+				self.focus_resource = new
 				self.update_view_port()
+				self.show_focus_resource()
 				sublime.status_message("create %s"%self.rpath_by_resource(new))
 			self.window.show_input_panel(
 				"new dir:",
