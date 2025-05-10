@@ -249,8 +249,16 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 
 		def on_done(index):
 			server_name,user_config,error_parameter_list = self.select
-			if index == -1: return
-			if error_parameter_list != []: return
+			if index == -1:
+				window.destroy_output_panel(output_panel_name)
+				return
+			if error_parameter_list != []:
+				return
+			# ensure a unique client with server_name
+			for _,client in client_map.items():
+				if client.user_settings.server_name == server_name:
+					client.command_ref().window.bring_to_front()
+					return
 			window.destroy_output_panel(output_panel_name)
 			SshPanelConnectCommand(window.active_view()).run(
 				edit = sublime.Edit,
@@ -330,6 +338,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.focus_position = 0.0
 		self.navication_view = None
 		self.hidden_menu = True
+		self.views = []
 
 	@property
 	def user_settings(self):
@@ -373,21 +382,23 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		else:
 			self.window.set_layout({
 				'cells': [
-						[0, 0, 1, 1],
-						[1, 0, 2, 1]
-					],
+					[0, 0, 1, 1],
+					[1, 0, 2, 1]
+				],
 				'cols': [0.0, 0.2, 1.0],
 				'rows': [0.0, 1.0]
 			})
 			navication_view = self.window.new_file()
 			self.window.set_view_index(navication_view,0,0)
 			self.window.focus_group(1)
-		navication_view.settings().set("ssh_panel_clientID",self.client_id)
-		navication_view.settings().set("ssh_panel_serverName",server_name)
+		def after_connect():
+			navication_view.settings().set("ssh_panel_clientID",self.client_id)
+			navication_view.settings().set("ssh_panel_serverName",server_name)
+			self.reload_list()
 		self.init_navcation_view(navication_view)
 		self.navication_view = navication_view
 		if connect_now:
-			self.connect_post(self.reload_list)
+			self.connect_post(after_connect)
 
 	def init_navcation_view(self,nv):
 		nv.set_read_only(True)
@@ -416,7 +427,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			else:
 				self.client_id = register_client(client)
 			self.client = client
-			# client.connect() 如果需要输入密码，在输入密码后client才可用
 			try:
 				client.connect(callback)
 			except Exception as e:
@@ -1193,7 +1203,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				# if operation in available_operation:
 				eval("{operation}('{args}')".format(operation=operation,args=args))
 
-	def sync_transfer_callback(self,on_done):
+	def sync_transfer_callback(self,on_done=None):
 		# 负责获取接受sftp put/get进度的callback方法
 		# 在完成时调用on_done
 		start_t = time.time() - 0.001
@@ -1247,7 +1257,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		if int(sublime.version()) >= 4096:
 			NF = sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
 		if os.path.exists(local_path) and file_reload == "auto":
-			self.window.open_file(local_path,NF)
+			v = self.window.open_file(local_path,NF)
+			if v not in self.views:
+				self.views.append(v)
 			return
 		if int(sublime.version()) >= 4081:
 			fv = [v for v in self.window.views(include_transient=True) if v.file_name() == local_path]
@@ -1268,7 +1280,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.BUS_LOCK = False
 					resource["status"] = ["ok"]
 					self.update_view_port()
-					self.window.open_file(local_path,NF)
+					v = self.window.open_file(local_path,NF)
+					self.views.append(v)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 			except:
 				self.BUS_LOCK = False
@@ -1446,49 +1459,91 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			self.focus_position = 0.0
 		return ele_list
 
-class SshPanelEventCommand(sublime_plugin.ViewEventListener):
+class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 	@classmethod
-	def is_applicable(self,settings):
-		return client_map != {}
+	def is_applicable(cls,settings):
+		return settings.has("ssh_panel_clientID")
 
-	def on_post_save_async(self):
+	def on_pre_close(self):
+		global client_map
+		global path_hash_map
+		client_id = self.view.settings().get("ssh_panel_clientID")
+		client = client_map.get(client_id,None)
+		print("D",client_id,client_map)
+		if not client:
+			return
+		client.disconnect()
+		for remote_path in client.user_settings_config["remote_path"]:
+			del path_hash_map[remote_path]
+		del client_map[client_id]
+
+class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
+	def __init__(self, view):
+		self.view = view
+		self.local_file = None
+		self.remote_file = None
+		self.client = None
+
+	@classmethod
+	def is_applicable(cls,settings):
+		return len([c for _,c in client_map.items() if c.transport and c.transport.active]) > 0
+
+	def take_over(self):
 		global path_hash_map
 		global client_map
 		local_file = self.view.file_name()
+		if not local_file:
+			return False
 		for remote_root,(remote_path_hash,local_root,client_id) in path_hash_map.items():
 			local_hash_root = os.path.sep.join([local_root,remote_path_hash])
 			if local_file.startswith(local_hash_root):
 				client = client_map[client_id]
 				remote_file = remote_root + client.remote_os_sep.join(local_file.replace(local_hash_root,"",1).split(os.path.sep))
-				if remote_file[:2] == "//": # fix *nix file on '/' will be show '//'
-					remote_file = remote_file[1:]
-				def upload(remote_file):
-					try:
-						client.file_sync(local_file,remote_file,"put",sync_stat=True)
-					except:
-						client.file_sync(local_file,remote_file,"put")
-						LOG.W("file upload success,but stat is not sync")
-					sublime.status_message("file upload: "+remote_file)
-					LOG.D("save remote",{
-						"local_path" : local_file,
-						"remote_path": remote_file
-					})
-				self.view.window().show_input_panel(
-					"save to remote:",
-					remote_file,
-					upload,None,None
-				)
+				self.client = client
+				self.remote_file = remote_file
+				self.local_file = local_file
+				return True
 
-	def on_close(self):
-		client_id = self.view.settings().get("ssh_panel_clientID",None)
-		if client_id:
-			global client_map
-			global path_hash_map
-			client = client_map[client_id]
-			client.disconnect()
-			for remote_path in client.user_settings_config["remote_path"]:
-				del path_hash_map[remote_path]
-			del client_map[client_id]
+	def on_post_save_async(self):
+		if not self.take_over():
+			return
+		client = self.client
+		local_file = self.local_file
+		remote_file = self.remote_file
+		cmd_ref = client.command_ref()
+		if remote_file[:2] == "//": # fix *nix file on '/' will be show '//'
+			remote_file = remote_file[1:]
+		def upload(remote_file):
+			try:
+				cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=True)
+			except:
+				cmd_ref.file_sync(local_file,remote_file,"put")
+				LOG.W("file upload success,but stat is not sync")
+			sublime.status_message("file upload: "+remote_file)
+			LOG.D("save remote",{
+				"local_path" : local_file,
+				"remote_path": remote_file
+			})
+		self.view.window().show_input_panel(
+			"save to remote:",
+			remote_file,
+			upload,None,None
+		)
+
+	def on_activated_async(self):
+		if not self.take_over():
+			return
+		client = self.client
+		cmd_ref = client.command_ref()
+		if self.view in cmd_ref.views:
+			print("sshpanel view",self.view.id())
+			# cmd_ref.show_focus_resource
+
+	def on_pre_close(self):
+		if not self.take_over():
+			return
+		self.client.command_ref().views.remove(self.view)
+
 
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def run(self,source="github"):

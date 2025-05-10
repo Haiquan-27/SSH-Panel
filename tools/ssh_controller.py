@@ -202,6 +202,7 @@ class SSHClient():
 		self.env = None
 		self._file_sync_Lock = threading.Lock()
 		self.command_ref = None
+		
 	@property
 	def user_settings(self):
 		return self._user_settings
@@ -552,7 +553,8 @@ class SSHClient():
 							lf_data = lf.read(1024)
 							load_size += len(lf_data)
 							print("load_size",load_size)
-							transfer_callback(load_size,full_size)
+							if transfer_callback:
+								transfer_callback(load_size,full_size)
 							if not lf_data:
 								break
 							rf.write(lf_data)
@@ -577,7 +579,8 @@ class SSHClient():
 							rf_data = rf.read(1024)
 							load_size += len(rf_data)
 							print("load_size",load_size)
-							transfer_callback(load_size,full_size)
+							if transfer_callback:
+								transfer_callback(load_size,full_size)
 							if not rf_data:
 								break
 							lf.write(rf_data)
