@@ -334,11 +334,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.resource_data = None
 		self._max_resource_id = 0
 		self._user_settings = None
-		self.focus_resource = None
+		self._focus_resource = None
 		self.focus_position = 0.0
 		self.navication_view = None
 		self.hidden_menu = True
-		self.views = []
+		self.lpath_resource_map = {}
 
 	@property
 	def user_settings(self):
@@ -349,6 +349,18 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		if self.client != None:
 			self.client.user_settings = value
 		self._user_settings = value
+
+	@property
+	def focus_resource(self):
+		return self._focus_resource
+
+	@focus_resource.setter
+	def focus_resource(self,resource):
+		if self._focus_resource:
+			self._focus_resource["focus"] = False
+		if resource:
+			resource["focus"] = True
+		self._focus_resource = resource
 
 	@property
 	def client(self):
@@ -366,7 +378,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		):
 		self.resource_data = {}
 		self._max_resource_id = -1
-		self.focus_resource = None
 		update_icon()
 		settings = sublime.load_settings(settings_name)
 		self.user_settings = UserSettings()
@@ -438,9 +449,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self._max_resource_id = -1
 		self.resource_data = {}
 		if self.client:
-			for remote_path in self.client.user_settings_config["remote_path"]:
-				self.add_root_path(path=remote_path,focus=True)
-		self.navication_view.settings().erase("color_scheme")
+			remote_path_list = self.client.user_settings_config["remote_path"]
+			for remote_path in remote_path_list:
+				self.add_root_path(path=remote_path, focus=len(remote_path_list)==1)
 		self.update_view_port()
 
 	def add_path(self,remote_path,root_path):
@@ -496,6 +507,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def show_focus_resource(self):
 		# 滚动定位到focus_resource对象
 		nv = self.navication_view
+		# ensure center show
 		nv.set_viewport_position((0,nv.layout_extent()[1]*self.focus_position - (nv.viewport_extent()[1] / 2)))
 
 	def save_theme(self,data_dict):
@@ -514,26 +526,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 
 	@async_run
 	def navcation_link_click(self,href):
-		# available_operation = [
-		# 	"show",
-		#	"add_root_path",
-		# 	"resource_click",
-		# 	"reload",
-		# 	"resource_create_file",
-		# 	"resource_create_dir",
-		# 	"resource_info",
-		# 	"resource_delete",
-		#	"resource_clone_dir",
-		# 	"resource_put_dir",
-		# 	"resource_put_file",
-		#	"resource_copy_path",
-		#	"resource_open_local",
-		#	"resource_force_load"
-		# ]
 		operation,args = href.split(":")
+
 		def reload(what):
 			if what == "list":
-				self.focus_resource = None
 				self.reload_list()
 			elif what == "connect":
 				self.connect_post(self.reload_list)
@@ -766,7 +762,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.client.sftp_client.lstat(path),
 					resource
 				)
-				new["focus"] = True
 				self.focus_resource = new
 				self.update_view_port()
 				self.show_focus_resource()
@@ -811,7 +806,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.client.sftp_client.lstat(path),
 					resource
 				)
-				new["focus"] = True
 				self.focus_resource = new
 				self.update_view_port()
 				self.show_focus_resource()
@@ -845,10 +839,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						os.stat(local_root),
 						select_resource
 					)
-					new["focus"] = True
 					new["expand"] = True
 					new["status"] = ["bus"]
+					self.focus_resource = new
 					self.update_view_port()
+					self.show_focus_resource()
 					for path,_,sub_files in os.walk(local_root):
 						rel_path = path[len(root_path):]
 						rel_path = rel_path[1:] if rel_path[0] == os.path.sep else rel_path
@@ -912,9 +907,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						self.client.sftp_client.stat(r_path),
 						select_resource
 					) # 创建文件资源
-					new["focus"] = True
+					self.focus_resource = new
 				self.BUS_LOCK = False
 				self.update_view_port()
+				self.show_focus_resource()
 			if int(sublime.version()) >= 4075:
 				sublime.open_dialog(callback,multi_select=True)
 			else:
@@ -1145,9 +1141,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			resource = resource_data[id]
 			resource["focus"] = not resource["focus"]
 			resource_path = self.rpath_by_resource(resource)
+			focus_resource = self.focus_resource
 			if resource["focus"]:
-				if self.focus_resource and self.focus_resource != resource: # 是否取消上一次的焦点
-					self.focus_resource["focus"] = False
+				if focus_resource and focus_resource != resource: # 是否取消上一次的焦点
+					focus_resource["focus"] = False
 				self.focus_resource = resource
 			if resource["is_dir"]:
 				if resource["focus"] and resource["expand"]:
@@ -1196,6 +1193,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					lambda i: operation_menu[i][1](id) if i!=-1 else None,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT
 				)
+
 		if self.BUS_LOCK:
 			sublime.message_dialog("SSH-Panel operation busy")
 		else:
@@ -1258,9 +1256,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			NF = sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
 		if os.path.exists(local_path) and file_reload == "auto":
 			v = self.window.open_file(local_path,NF)
-			if v not in self.views:
-				self.views.append(v)
-			return
 		if int(sublime.version()) >= 4081:
 			fv = [v for v in self.window.views(include_transient=True) if v.file_name() == local_path]
 		else:
@@ -1280,8 +1275,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.BUS_LOCK = False
 					resource["status"] = ["ok"]
 					self.update_view_port()
-					v = self.window.open_file(local_path,NF)
-					self.views.append(v)
+					self.window.open_file(local_path,NF)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 			except:
 				self.BUS_LOCK = False
@@ -1299,7 +1293,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"access": accessable(fs,*(self.client.userid)),
 			"is_dir": True,
 			"expand": False,
-			"focus": focus,
+			"focus": False,
 			"status" : [],
 			"root_path": "",
 			"where": "",
@@ -1307,14 +1301,13 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		}
 		self.resource_data[id] = resource
 		if focus:
-			resource["focus"] = not resource["focus"]
-			self.focus_resource = resource
-			self.navcation_link_click("resource_click:%s"%id)
+			self.focus_resource = resource # set depth
+			self.add_path(path,root_path=path)
 		path_hash_map[path] = (
-				abstract_hex("md5",path.encode("utf8")),
-				self.client.user_settings_config["local_path"],
-				self.client_id
-			)
+			abstract_hex("md5",path.encode("utf8")),
+			self.client.user_settings_config["local_path"],
+			self.client_id
+		)
 
 	def update_view_port(self):
 		client_activied = self.client != None and self.client.transport != None
@@ -1423,7 +1416,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
 		focus_ele = None
 		for resource_id,resource in self.resource_data.items():
-			resource_path = self.rpath_by_resource(resource)
 			ext = os.path.splitext(resource["name"])[1][1:]
 			ele = "<p class='resource_line' style='padding-left:{depth}px'>{file_icon}<a class='{style_class} res' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
 					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])),
@@ -1443,6 +1435,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			ele_list.append(ele)
 			if resource == self.focus_resource:
 				focus_ele = ele
+			local_path = self.lpath_by_resource(resource)
+			if self.lpath_resource_map.get(local_path,None) != resource:
+				self.lpath_resource_map[local_path] = resource
 		id_re_rule = re.compile(r"(?<=resource_click:)\d+")
 		def get_resource_path(ele):
 			id = id_re_rule.search(ele).group()
@@ -1453,10 +1448,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			else:
 				return resource["root_path"] + self.client.remote_os_sep + resource_path
 		ele_list.sort(key = get_resource_path)
+		# Reuse traversal function
+		# Update focus_position
 		if focus_ele:
 			self.focus_position = (ele_list.index(focus_ele) + 1) / len(ele_list)
-		else:
-			self.focus_position = 0.0
 		return ele_list
 
 class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
@@ -1469,7 +1464,6 @@ class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 		global path_hash_map
 		client_id = self.view.settings().get("ssh_panel_clientID")
 		client = client_map.get(client_id,None)
-		print("D",client_id,client_map)
 		if not client:
 			return
 		client.disconnect()
@@ -1535,14 +1529,11 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 			return
 		client = self.client
 		cmd_ref = client.command_ref()
-		if self.view in cmd_ref.views:
-			print("sshpanel view",self.view.id())
-			# cmd_ref.show_focus_resource
-
-	def on_pre_close(self):
-		if not self.take_over():
-			return
-		self.client.command_ref().views.remove(self.view)
+		resource =  cmd_ref.lpath_resource_map.get(self.view.file_name(),None)
+		if resource and resource != cmd_ref.focus_resource:
+			cmd_ref.focus_resource = resource
+			cmd_ref.update_view_port()
+			cmd_ref.show_focus_resource()
 
 
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):

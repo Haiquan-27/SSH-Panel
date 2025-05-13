@@ -552,7 +552,6 @@ class SSHClient():
 						while True:
 							lf_data = lf.read(1024)
 							load_size += len(lf_data)
-							print("load_size",load_size)
 							if transfer_callback:
 								transfer_callback(load_size,full_size)
 							if not lf_data:
@@ -578,7 +577,6 @@ class SSHClient():
 						while True:
 							rf_data = rf.read(1024)
 							load_size += len(rf_data)
-							print("load_size",load_size)
 							if transfer_callback:
 								transfer_callback(load_size,full_size)
 							if not rf_data:
