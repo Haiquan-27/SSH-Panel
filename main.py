@@ -448,6 +448,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def reload_list(self):
 		self._max_resource_id = -1
 		self.resource_data = {}
+		self.focus_resource = None
 		if self.client:
 			remote_path_list = self.client.user_settings_config["remote_path"]
 			for remote_path in remote_path_list:
