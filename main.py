@@ -220,11 +220,14 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
 		window = self.window
 		for server_name,(user_config,auth_method) in server_config_data_items:
-			if int(sublime.version()) >= 4081:
-				show_content = [server_name]
-				show_content.extend(user_config["remote_path"])
-			else:
-				show_content = [server_name,str(user_config["remote_path"])]
+			try:
+				if int(sublime.version()) >= 4081:
+					show_content = [server_name]
+					show_content.extend(user_config["remote_path"])
+				else:
+					show_content = [server_name,str(user_config["remote_path"])]
+			except Exception:
+				show_content = [server_name,"???"]
 			show_item_list.append(show_content)
 
 		def on_highlight(index):
@@ -239,13 +242,16 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 								'keyword' if p_value != default_settings.get(p_name,None) else
 								'info',
 					line = "%s : %s"%(p_name,p_value))
-			SshPanelOutputCommand(window.active_view()).run(
+			_cmd = SshPanelOutputCommand(window.active_view())
+			_cmd.run(
 				edit = sublime.Edit,
 				content = html_tmp(content=html_ele),
 				is_html = True,
 				new_line = False,
 				clean = True,
 			)
+			panel_view = _cmd.panel_view
+			panel_view.set_viewport_position((0,0))
 
 		def on_done(index):
 			server_name,user_config,error_parameter_list = self.select
@@ -1535,7 +1541,6 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 			cmd_ref.focus_resource = resource
 			cmd_ref.update_view_port()
 			cmd_ref.show_focus_resource()
-
 
 class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 	def run(self,source="github"):
