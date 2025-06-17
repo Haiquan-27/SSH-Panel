@@ -1,9 +1,9 @@
 SSH-Panel
 =========
 
-This Sublime Text plugin allow you to browse and edit files on remote servers
+This Sublime Text plugin allow you to browse and edit files on SSH servers
 
-Windows and Linux servers that support any openssh available
+servers that support any openssh available
 
 [此处](https://github.com/Haiquan-27/SSH-Panel/blob/main/README-CN.md)中文文档
 
@@ -14,6 +14,10 @@ Windows and Linux servers that support any openssh available
 | File Operation | Icon adaptation |
 |--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
+
+| File Navigation | SSH interactive terminal |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w7.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w8.png)         |
 
 # Installation
 
@@ -185,15 +189,18 @@ after select you server name to connect
 you can edit and view server information on the pop-up directory panel
 
 ## quick button:
-* `[?]` :help
-* `[I]` :show server infomation
-* `[R]` :refresh and sync file list
-* `[E]` :edit settings
-* `[P]` :show status panel
-* `[T]` :pseudo terminal
+> Click the `ip@username` at the top of the navigation view to show quick button
+* `[?]` :Help
+* `[I]` :show server Infomation
+* `[R]` :Refresh and sync file list
+* `[E]` :Edit settings
+* `[N]` :path Navigator
+* `[P]` :show status Panel
+* `[T]` :pseudo Terminal
+* `[$]` :SSH interactive terminal(need installed [Terminus](https://packagecontrol.io/packages/Terminus))
 * `[+]` :add new root path
 * `[-]` :remove root path from view
-you can click the `[...]` button on the right side of the directory or file to view attribute, delete or create a new one
+you can click the `[...]` or `☰` button on the right side of the directory or file to view attribute, delete or create a new one
 
 # Style coustom
 

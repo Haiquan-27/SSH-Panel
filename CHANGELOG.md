@@ -1,8 +1,16 @@
 SSH-Panel Changelog
 ===================
 
-v1.3.4 Latest
+v1.4.0 Latest
 -------------
+Add file navigation panel
+Add interactive ssh terminal with [Terminus](https://packagecontrol.io/packages/Terminus) hacking
+Add file scrolling to focus
+Fix `terminus_encoding` bug
+Fix UI crashes
+
+v1.3.4 (2025-4-14)
+------------------
 Fix Unable to use remote `/` path
 Fix Connecting prematurely before entering the password resulted in failure
 Add config `sftp_shell` to support SFTP mode

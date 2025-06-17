@@ -44,7 +44,6 @@ class SSHPtyProcess(object):
 			raise EOFError() # stop thread: terminal.Terminal.reader()
 		res_b = self.shell_channel.recv(size)
 		res = res_b.decode(self.pty_encoding,'backslashreplace')
-		print(res_b)
 		# "SSH\x08H-Pa\x08an\x08nel\u2002\u2007uuu"
 		# b'\r\n\x1b[?2004l\rSSH\x08H-Pa\x08an\x08nel\xe2\x80\x82\xe2\x80\x87uuu\r\n'
 		return res

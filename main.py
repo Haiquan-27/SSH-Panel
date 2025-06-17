@@ -8,12 +8,12 @@ import zipfile
 import sys
 import weakref
 import socket
-import importlib # debug
-from .tools import util # debug
-importlib.reload(util) # debug
+# import importlib # debug
+# from .tools import util # debug
+# importlib.reload(util) # debug
 from .tools.util import *
 
-version = "1.3.4"
+version = "1.4.0"
 
 Dependencies_LOST = False
 try:
@@ -33,8 +33,8 @@ try:
 	from .tools.terminus import SshTerminusActivateCommand
 	Terminus_Enable = True
 except Exception as e:
-	# pass
-	raise e # debug
+	pass
+	# raise e # debug
 
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)

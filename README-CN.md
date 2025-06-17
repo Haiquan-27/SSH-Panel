@@ -1,8 +1,8 @@
 SSH-Panel
 =========
-这个Sublime Text插件可用于浏览和编辑远程服务器上的文件
+此插件可用于在Sublime Text中浏览和编辑SSH服务器上的文件
 
-支持任何可用openssh的Windows和Linux服务器
+支持连接任何启用openssh的服务器
 
 | 多连接 | 状态信息 |
 |--------------|---------------|
@@ -11,6 +11,10 @@ SSH-Panel
 | 文件操作 | 图标适配 |
 |--------------|---------------|
 | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w5.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w6.png)         |
+
+| 文件导航 | SSH 交互式终端 |
+|--------------|---------------|
+| ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w7.png)          | ![Screenshot](https://raw.githubusercontent.com/Haiquan-27/SSH-Panel-doc-annex/main/w8.png)         |
 
 # Installation
 
@@ -179,15 +183,18 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 你可以在弹出的目录面板上查看和编辑服务器信息
 
 ## 快速命令按钮:
+> 点击导航视图顶部`ip@username`以显示快速命令按钮
 * `[?]` :帮助
 * `[I]` :显示服务器信息
 * `[R]` :刷新与同步文件列表
 * `[E]` :编辑设置
+* `[N]` :路径导航器
 * `[P]` :调出状态面板
 * `[T]` :伪终端
+* `[$]` :SSH 交互式终端(安装[Terminus](https://packagecontrol.io/packages/Terminus)后可用)
 * `[+]` :添加路径
 * `[-]` :从目录视图中删除路径
-你可以点击文件或目录右侧的`[...]`按钮查看其属性或在下方创建新的对象
+你可以点击文件或目录右侧的`[...]`或`☰`按钮查看其属性或在下方创建新的对象
 
 # 自定义样式
 
