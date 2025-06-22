@@ -28,8 +28,8 @@ client_map = {} # client_id -> client
 
 Terminus_Enable = False
 try:
-	from .tools import terminus
-	importlib.reload(terminus) # debug
+	# from .tools import terminus
+	# importlib.reload(terminus) # debug
 	from .tools.terminus import SshTerminusActivateCommand
 	Terminus_Enable = True
 except Exception as e:
