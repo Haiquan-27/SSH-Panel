@@ -129,7 +129,7 @@ After the first connection, this path will be save to the user configuration and
 	- `"Packages/zzz A File Icon zzz/patches/general/single/"`  if `A File Icon` already installed,single-color icons can be used
 * `icon_quality` if `"icon_style":"image"`,This value is used to specify the resolution prefix used by the displayed icon, which is generally defined before the icon file name in most theme packs,chiose from `""` | `"@2x"` | `"@3x"`
 * `icon_color` if `"icon_style":"image"`,this value is used to specify the color of icons for general files and directories,but it will not affect the icons in the theme pack,chiose from `"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
-* `nav_bar_color_change` change color of the directory panel,value range is -16777215~+16777215(-0xffffff~+0xffffff) type is string,this value will be added with the RGB color of the current view background to get a new RGB color，used to distinguish the display of navigation panel views
+* `nav_bar_color_offset` change color of the directory panel,value range is -16777215~+16777215(-0xffffff~+0xffffff) type is string,this value will be added with the RGB color of the current view background to get a new RGB color，used to distinguish the display of navigation panel views
 	> if you not want to change the background color value can be set to "0"
 * `quiet_log` the pop-up message panel is not displayed immediately when a message is obtained
 * `debug_mode` Debug enable switch

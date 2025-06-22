@@ -50,7 +50,7 @@
 	"new_window":true, // open new window when connect
 	"reconnect_on_start":true,
 	"file_reload":"auto", // Synchronize remote files where click file,chiose from "auto" | "always" | "never"
-	"nav_bar_color_change": "-0x101010",
+	"nav_bar_color_offset": "-0x101010",
 	"icon_style":"image", // emjio | none | image
 	"icon_theme":"Packages/Theme - Default/", // Match within a specific Theme path
 	"icon_quality":"@3x", // image icon quality,chiose from "" | "@2x" | "@3x"

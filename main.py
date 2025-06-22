@@ -17,8 +17,8 @@ version = "1.4.0"
 
 Dependencies_LOST = False
 try:
-	from .tools import ssh_controller
-	importlib.reload(ssh_controller) # debug
+	# from .tools import ssh_controller
+	# importlib.reload(ssh_controller) # debug
 	from .tools.ssh_controller import *
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
@@ -1368,7 +1368,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			new_style_global = {}
 			src_background_color = ""
 			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_change"),16)
+			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_offset"),16)
 			theme_dark_color &= 0xffffff
 			theme_dark_color = "#{:06x}".format(theme_dark_color)
 			new_style_global["background"] = theme_dark_color
