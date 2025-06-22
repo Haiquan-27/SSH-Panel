@@ -13,7 +13,7 @@ import socket
 # importlib.reload(util) # debug
 from .tools.util import *
 
-version = "1.4.0"
+version = "1.4.1"
 
 Dependencies_LOST = False
 try:

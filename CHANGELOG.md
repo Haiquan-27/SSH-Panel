@@ -1,8 +1,13 @@
 SSH-Panel Changelog
 ===================
 
-v1.4.0 Latest
+v1.4.1 Latest
 -------------
+Fix debug code error
+Rename config `nav_bar_color_change` to `nav_bar_color_offset`
+
+v1.4.0 (2025-6-17)
+------------------
 Add file navigation panel
 Add interactive ssh terminal with [Terminus](https://packagecontrol.io/packages/Terminus) hacking
 Add file scrolling to focus
