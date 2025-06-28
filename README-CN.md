@@ -37,6 +37,12 @@ sudo pacman -S libffi
 # if Opensuse `untest`
 sudo zypper install libffi-devel
 ```
+### 如果你使用MAC/Apple Silicon,需要安装 **libffi**
+```bash
+# you can install from Homebrew
+brew install libffi
+sudo ln -s $(brew --prefix libffi)/lib/libffi.dylib /usr/lib/libffi.dylib
+```
 ### 安装python依赖库
 * 使用`ssh_panel_install_dependencies`自动安装(推荐)
 打开console执行`window.run_command('ssh_panel_install_dependencies')`命令,进行自动安装
