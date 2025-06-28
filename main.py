@@ -456,9 +456,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.resource_data = {}
 		self.focus_resource = None
 		if self.client:
-			remote_path_list = self.client.user_settings_config["remote_path"]
+			remote_path_list = [p for p,d in path_hash_map.items() if d[2] == self.client_id]
+			if not remote_path_list:
+				remote_path_list = self.client.user_settings_config["remote_path"]
 			for remote_path in remote_path_list:
-				self.add_root_path(path=remote_path, focus=len(remote_path_list)==1)
+				self.add_root_path(path=remote_path, expand=len(remote_path_list)==1)
 		self.update_view_port()
 
 	def add_path(self,remote_path,root_path):
@@ -593,9 +595,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			def on_done(path):
 				path = self.client.remote_expandvars(path)
 				try:
-					if self.client and path not in self.client.user_settings_config["remote_path"]:
-						self.add_root_path(path=path,focus=True)
+					if self.client != None and path_hash_map.get(path,(None,None,None))[2] != self.client_id:
+						self.add_root_path(path=path,expand=True)
 						self.update_view_port()
+						self.show_focus_resource()
 				except Exception as e:
 					LOG.E("Add '%s' Falied %s"%(path,e))
 			self.window.show_input_panel(
@@ -606,6 +609,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				None)
 
 		def del_root_path(id):
+			global path_hash_map
 			dl = [id]
 			resource_data = self.resource_data
 			root_path = self.rpath_by_resource(resource_data[id])
@@ -614,6 +618,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					dl.append(id)
 			for id in dl:
 				del resource_data[id]
+			for remote_path in [p for p,d in path_hash_map.items() if d[2] == self.client_id]:
+				del path_hash_map[remote_path]
 			self.update_view_port()
 
 		def run_command(_):
@@ -1288,7 +1294,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				self.BUS_LOCK = False
 				self.update_view_port()
 
-	def add_root_path(self,path,focus=False):
+	def add_root_path(self,path,expand=False):
 		id = self._new_resource_id()
 		if path[-1] == self.client.remote_os_sep and len(path) != 1:
 			path = path[:-1]
@@ -1299,7 +1305,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 			"access": accessable(fs,*(self.client.userid)),
 			"is_dir": True,
-			"expand": False,
+			"expand": expand,
 			"focus": False,
 			"status" : [],
 			"root_path": "",
@@ -1307,7 +1313,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"depth": 0
 		}
 		self.resource_data[id] = resource
-		if focus:
+		if expand:
 			self.focus_resource = resource # set depth
 			self.add_path(path,root_path=path)
 		path_hash_map[path] = (
@@ -1366,7 +1372,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
 			src_style = nv.style()
 			new_style_global = {}
-			src_background_color = ""
 			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
 			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_offset"),16)
 			theme_dark_color &= 0xffffff
@@ -1446,15 +1451,17 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			if self.lpath_resource_map.get(local_path,None) != resource:
 				self.lpath_resource_map[local_path] = resource
 		id_re_rule = re.compile(r"(?<=resource_click:)\d+")
-		def get_resource_path(ele):
+		def get_resource_sort_key(ele):
 			id = id_re_rule.search(ele).group()
 			resource = self.resource_data[id]
-			resource_path = self.rpath_by_resource(resource,dir_sep=True)
+			resource_path = self.rpath_by_resource(resource)
 			if resource["root_path"] == "":
-				return resource_path
+				path_hash = path_hash_map[resource_path][0]
+				return path_hash
 			else:
-				return resource["root_path"] + self.client.remote_os_sep + resource_path
-		ele_list.sort(key = get_resource_path)
+				path_hash = path_hash_map[resource["root_path"]][0]
+				return path_hash + self.client.remote_os_sep + resource_path
+		ele_list.sort(key = get_resource_sort_key)
 		# Reuse traversal function
 		# Update focus_position
 		if focus_ele:
@@ -1474,7 +1481,7 @@ class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 		if not client:
 			return
 		client.disconnect()
-		for remote_path in client.user_settings_config["remote_path"]:
+		for remote_path in [p for p,d in path_hash_map.items() if d[2] == client_id]:
 			del path_hash_map[remote_path]
 		del client_map[client_id]
 
