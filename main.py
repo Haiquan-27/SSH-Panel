@@ -1460,7 +1460,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				return path_hash
 			else:
 				path_hash = path_hash_map[resource["root_path"]][0]
-				return path_hash + self.client.remote_os_sep + resource_path
+				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
 		ele_list.sort(key = get_resource_sort_key)
 		# Reuse traversal function
 		# Update focus_position
