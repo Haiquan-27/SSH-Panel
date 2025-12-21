@@ -272,6 +272,7 @@ class SSHClient():
 				need_fingerprint_confirm = True # 当完成连接并获取到指纹后需要对指纹进行确认
 		event = threading.Event() # 监听协商结束
 		self.transport.start_client(event=event,timeout=user_settings_config["network_timeout"])
+		self.transport.set_keepalive(30)
 
 		start_time = time.time()
 		while True: # 等待start_client返回
@@ -540,7 +541,8 @@ class SSHClient():
 			res.append(fs_item)
 		return res
 
-	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True): # 写入并保持远程文件原始权限
+	# def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True,reset_stat=None): # 写入并保持远程文件原始权限
 		with self._file_sync_Lock:
 			if dir == "put":
 				# self.sftp_client.put(local_path, remote_path,transfer_callback)
@@ -557,8 +559,9 @@ class SSHClient():
 							if not lf_data:
 								break
 							rf.write(lf_data)
-
-
+				if reset_stat:
+					self.sftp_client.utime(remote_path,(reset_stat.st_atime,reset_stat.st_mtime))
+					self.sftp_client.chmod(remote_path,stat.S_IMODE(reset_stat.st_mode))
 				if sync_stat:
 					local_stat = os.stat(local_path)
 					local_atime = local_stat.st_atime
@@ -582,7 +585,9 @@ class SSHClient():
 							if not rf_data:
 								break
 							lf.write(rf_data)
-
+				if reset_stat:
+					os.utime(local_path,(reset_stat.st_atime,reset_stat.st_mtime))
+					os.chmod(local_path,stat.S_IMODE(reset_stat.st_mode))
 				if sync_stat:
 					remote_stat = self.sftp_client.stat(remote_path)
 					remote_atime = remote_stat.st_atime

@@ -5,14 +5,23 @@ import sys
 import threading
 from .ssh_controller import SSHClient
 from paramiko.channel import Channel as SSHChannel
-# Terminus by randy3k (https://packagecontrol.io/packages/Terminus)
-from Terminus.terminus.commands import TerminusActivateCommand
-from Terminus.terminus.terminal import Terminal
-from Terminus.terminus.recency import RecencyManager
-from Terminus.terminus.ptty import TerminalPtyProcess, TerminalScreen, TerminalStream
-from Terminus.terminus.view import *
 
-client_map = sys.modules["SSH-Panel.main"].client_map
+Terminal_is_hook = False
+# Hook modules
+if "Terminus.terminus.terminal" in sys.modules:
+	client_map = sys.modules["SSH-Panel.main"].client_map
+	# Terminus by randy3k (https://packagecontrol.io/packages/Terminus)
+	TerminusActivateCommand = sys.modules["Terminus.terminus.commands"].TerminusActivateCommand
+	Terminal = sys.modules["Terminus.terminus.terminal"].Terminal
+	RecencyManager = sys.modules["Terminus.terminus.recency"].RecencyManager
+	TerminalPtyProcess = sys.modules["Terminus.terminus.ptty"].TerminalPtyProcess
+	TerminalScreen = sys.modules["Terminus.terminus.ptty"].TerminalScreen
+	TerminalStream = sys.modules["Terminus.terminus.ptty"].TerminalStream
+	view_size = sys.modules["Terminus.terminus.view"].view_size
+	Terminal_is_hook = True
+else:
+	Terminal = TerminusActivateCommand = object
+
 
 class SSHPtyProcess(object):
 	"""

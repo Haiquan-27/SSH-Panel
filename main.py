@@ -8,6 +8,7 @@ import zipfile
 import sys
 import weakref
 import socket
+import errno
 # import importlib # debug
 # from .tools import util # debug
 # importlib.reload(util) # debug
@@ -25,16 +26,6 @@ except Exception as e:
 		Dependencies_LOST = True
 
 client_map = {} # client_id -> client
-
-Terminus_Enable = False
-try:
-	# from .tools import terminus
-	# importlib.reload(terminus) # debug
-	from .tools.terminus import SshTerminusActivateCommand
-	Terminus_Enable = True
-except Exception as e:
-	pass
-	# raise e # debug
 
 _max_client_id = -1
 path_hash_map = {} # remote_path -> (remote_path_hash,local_path,client_id)
@@ -142,19 +133,20 @@ def update_color_scheme():
 		"SSH-Panel",
 		"SSH-Panel.hidden-color-scheme"
 	)
-	os.makedirs(os.path.split(theme_path)[0],exist_ok=True)
-	with open(theme_path,"w") as f:
-		f.write(
-			json.dumps(
-				{
-					"globals":new_style_global,
-					"variables":{},
-					"name":"SSH-Panel"
-				},
-				indent=5,
-				ensure_ascii=False
+	if not os.path.exists(theme_path):
+		os.makedirs(os.path.split(theme_path)[0],exist_ok=True)
+		with open(theme_path,"w") as f:
+			f.write(
+				json.dumps(
+					{
+						"globals":new_style_global,
+						"variables":{},
+						"name":"SSH-Panel"
+					},
+					indent=5,
+					ensure_ascii=False
+				)
 			)
-		)
 
 def plugin_loaded():
 	if Dependencies_LOST:
@@ -489,6 +481,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				res.append(id)
 				resource_data[id] = resource_item
 			return res
+		except socket.timeout:
+			if sublime.yes_no_cancel_dialog("SSH connect has been close(timeout),reconnect now?") == (sublime.DialogResult.YES if int(sublime.version()) >= 4132 else 1):
+				self.connect_post(self.reload_list)
 		except Exception as e:
 			self.update_view_port()
 			LOG.E("'%s' is not accessible"%remote_path,str(e.args))
@@ -651,8 +646,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			def tab_view():
 				return self.window.new_file()
 			def panel_view():
-				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
+				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=True,clean=True)
 				return self.window.find_output_panel(output_panel_name)
+			from .tools.terminus import SshTerminusActivateCommand
 			sel_items = [
 				("Open in Tab",tab_view),
 				("Open in Panel",panel_view)
@@ -1235,14 +1231,16 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					on_done()
 		return transfer
 
-	def file_sync(self,local_path,remote_path,dir,on_done=None):
+	def file_sync(self,local_path,remote_path,dir,on_done=None,sync_stat=True,reset_stat=None):
+	# def file_sync(self,local_path,remote_path,dir,sync_stat=True,reset_stat=None,on_done=None):
 		try:
 			self.client.file_sync(
 				local_path = local_path,
 				remote_path = remote_path,
 				dir = dir,
 				transfer_callback = self.sync_transfer_callback(on_done),
-				sync_stat = True
+				sync_stat = sync_stat,
+				reset_stat = reset_stat
 			)
 		except Exception as e:
 			# 调用处无法捕获异步函数中抛出的错误信息
@@ -1327,7 +1325,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		render_resource_list = self.render_resource_list()
 		btn_items = {
 			"i":"show:info",
-			"R":"reload:list",
+			"R":"reload:connect",
 			"N":"navigation:",
 			"E":"edit_settings:",
 			"T":"run_command:",
@@ -1340,7 +1338,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			keep_btn = ["i","E","P","?"]
 			btn_items = {b:btn_items[b] for b in keep_btn}
 		else:
-			if Terminus_Enable:
+			from .tools.terminus import Terminal_is_hook
+			if Terminal_is_hook:
 				del btn_items["T"]
 			else:
 				del btn_items["$"]
@@ -1369,8 +1368,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			on_navigate=self.navcation_link_click)
 		nv = self.navication_view
 		nv.set_name(self.user_settings.server_name)
+		print(nv.settings().get("color_scheme",""))
 		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
 			src_style = nv.style()
+			print(src_style)
 			new_style_global = {}
 			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
 			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_offset"),16)
@@ -1523,10 +1524,19 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 			remote_file = remote_file[1:]
 		def upload(remote_file):
 			try:
-				cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=True)
-			except:
-				cmd_ref.file_sync(local_file,remote_file,"put")
-				LOG.W("file upload success,but stat is not sync")
+				# 上传文件保持文件在远程主机上的权限
+				cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=False,reset_stat=client.sftp_client.lstat(remote_file))
+			except OSError as e:
+				# 文件被删除，重新创建
+				if e.errno == errno.ENOENT:
+					cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=False)
+					LOG.W("file is not exists,create new file '%s'"%remote_file)
+				# 权限拒绝
+				elif e.errno == errno.EACCES:
+					LOG.E("Permission denied")
+				else:
+					LOG.E("Upload Failed")
+
 			sublime.status_message("file upload: "+remote_file)
 			LOG.D("save remote",{
 				"local_path" : local_file,
