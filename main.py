@@ -505,8 +505,15 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				dl.append(id)
 			if root_path == resource_path: # 当在root_path下
 				dl.append(id)
+		nv = self.navication_view
+		temp_lines = min(len(dl)+nv.settings().get("SSH-Panel:temp_lines",0),50) # 需累加上次的空行数量，最多不超过50行
 		for id in dl:
 			del resource_data[id]
+		# 填补删除的空缺，让视图在目录收起时不会因文本行数变化而漂移
+		# 当当前视图可见底部留白区域，则进行行填补，否则清空已存在的留白
+		# 由update_view_port进行渲染
+		content_lines = nv.settings().get("SSH-Panel:resource_count",0) + 3
+		nv.settings().set("SSH-Panel:temp_lines",temp_lines)
 
 	def show_focus_resource(self):
 		# 滚动定位到focus_resource对象
@@ -1323,6 +1330,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def update_view_port(self):
 		client_activied = self.client != None and self.client.transport != None
 		render_resource_list = self.render_resource_list()
+		nv = self.navication_view
+		nv_settings = nv.settings()
 		btn_items = {
 			"i":"show:info",
 			"R":"reload:connect",
@@ -1343,6 +1352,21 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				del btn_items["T"]
 			else:
 				del btn_items["$"]
+		temp_lines = nv_settings.get("SSH-Panel:temp_lines",10)
+		resource_count = len(render_resource_list)
+		content_lines = resource_count + 3
+		nv_settings.set("SSH-Panel:resource_count",resource_count)
+		# 当当前视图不可见底部留白区域，则删除所有空行
+		resource_ids = nv_settings.get("SSH-Panel:resource_ids")
+		current_resource_id = nv_settings.get("SSH-Panel:current_resource_id")
+		after_current_lines = len(resource_ids) - ((resource_ids.index(current_resource_id) + 1) if resource_ids else 0)
+		if (( nv.viewport_position()[1] + nv.viewport_extent()[1]) / nv.layout_extent()[1]) \
+			< \
+			(content_lines / (content_lines + temp_lines)) \
+			and \
+			temp_lines < after_current_lines:
+			temp_lines = 0
+			nv_settings.set("SSH-Panel:temp_lines",temp_lines)
 		html_ele = '''
 		<p class="title_bar">
 			<a class='info' href="menu_visible_toggle:' '">{hostname}<span class='symbol'>@{username}</span></a>
@@ -1352,24 +1376,23 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		</p>
 		{tip_msg}
 		{render_resource_list}
-		<p style="padding-bottom: 100px;"></p>
+		{temp_lines}
 		'''.format(
 				hostname = self.client.user_settings_config["hostname"] if self.client else self.user_settings.config["hostname"],
 				username = self.user_settings.config["username"],
 				btn_display = "none" if self.hidden_menu else "block",
 				btn_list = "\n".join(['<span>[<a class="keyword" href="%s">%s</a>]</span>'%(href,btn) for btn,href in btn_items.items()]),
 				tip_msg = ("" if len(render_resource_list) != 0 else "<a class='debug' href='add_root_path:'>no path</a>") if client_activied else "<a class='debug' href='reload:connect'>no connect</a>",
-				render_resource_list = "\n".join(render_resource_list)
+				render_resource_list = "\n".join(render_resource_list),
+				temp_lines = "\n".join(["<p class='resource_line' style='color:#00000000'>+%d</p>"%i for i in range(temp_lines)])
 			)
 		phantom = sublime.Phantom(
 			sublime.Region(0),
 			html_tmp(content=html_ele),
 			sublime.LAYOUT_INLINE,
 			on_navigate=self.navcation_link_click)
-		nv = self.navication_view
 		nv.set_name(self.user_settings.server_name)
-		print(nv.settings().get("color_scheme",""))
-		if "SSH-Panel.hidden-color-scheme" not in nv.settings().get("color_scheme",""):
+		if "SSH-Panel.hidden-color-scheme" not in nv_settings.get("color_scheme",""):
 			src_style = nv.style()
 			print(src_style)
 			new_style_global = {}
@@ -1387,7 +1410,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					"name":"SSH-Panel"
 				}
 			)
-			nv.settings().set("color_scheme",theme_resource)
+			nv_settings.set("color_scheme",theme_resource)
 		self.phantom_items = [phantom]
 		self.update_phantom()
 		# LOG.D("resource_data",self.resource_data)
@@ -1428,7 +1451,20 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		ele_list = []
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
 		focus_ele = None
-		for resource_id,resource in self.resource_data.items():
+		current_resource_id = "0"
+		def get_resource_sort_key(id):
+			resource = self.resource_data[id]
+			resource_path = self.rpath_by_resource(resource)
+			if resource["root_path"] == "":
+				path_hash = path_hash_map[resource_path][0]
+				return path_hash
+			else:
+				path_hash = path_hash_map[resource["root_path"]][0]
+				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
+		resource_ids = list(self.resource_data.keys())
+		resource_ids.sort(key = get_resource_sort_key)
+		for resource_id in resource_ids:
+			resource = self.resource_data[resource_id]
 			ext = os.path.splitext(resource["name"])[1][1:]
 			ele = "<p class='resource_line' style='padding-left:{depth}px'>{file_icon}<a class='{style_class} res' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
 					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])),
@@ -1448,25 +1484,20 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			ele_list.append(ele)
 			if resource == self.focus_resource:
 				focus_ele = ele
+				current_resource_id = resource_id
 			local_path = self.lpath_by_resource(resource)
 			if self.lpath_resource_map.get(local_path,None) != resource:
 				self.lpath_resource_map[local_path] = resource
-		id_re_rule = re.compile(r"(?<=resource_click:)\d+")
-		def get_resource_sort_key(ele):
-			id = id_re_rule.search(ele).group()
-			resource = self.resource_data[id]
-			resource_path = self.rpath_by_resource(resource)
-			if resource["root_path"] == "":
-				path_hash = path_hash_map[resource_path][0]
-				return path_hash
-			else:
-				path_hash = path_hash_map[resource["root_path"]][0]
-				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
-		ele_list.sort(key = get_resource_sort_key)
+
+		self.navication_view.settings().set("SSH-Panel:resource_ids",resource_ids)
+		self.navication_view.settings().set("SSH-Panel:current_resource_id",current_resource_id)
+
 		# Reuse traversal function
 		# Update focus_position
 		if focus_ele:
-			self.focus_position = (ele_list.index(focus_ele) + 1) / len(ele_list)
+			head_offset = 3
+			temp_lines_count = self.navication_view.settings().get("SSH-Panel:temp_lines",0)
+			self.focus_position = (ele_list.index(focus_ele) + head_offset ) / (len(ele_list) + temp_lines_count)
 		return ele_list
 
 class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
