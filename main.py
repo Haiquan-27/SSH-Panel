@@ -1334,7 +1334,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		nv_settings = nv.settings()
 		btn_items = {
 			"i":"show:info",
-			"R":"reload:connect",
+			"R":"reload:list",
 			"N":"navigation:",
 			"E":"edit_settings:",
 			"T":"run_command:",
