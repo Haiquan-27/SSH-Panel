@@ -1,8 +1,19 @@
 SSH-Panel Changelog
 ===================
 
-v1.4.1 Latest
+v1.5.0 Latest
 -------------
+Fix `/` symbols not being deleted
+Fix duplicate file expansion and display twice
+Fix path delete failed
+Fix render list sort bug
+Fix file stat lost when windows upload
+Fix disconnect at PC wakes up
+Fix navgation view color theme lost when sublime restart
+Lazy load Terminus
+
+v1.4.1 (2025-6-22)
+------------------
 Fix debug code error
 Rename config `nav_bar_color_change` to `nav_bar_color_offset`
 
