@@ -8,6 +8,10 @@
 		"umask":"022",				// *nix file umask for "Add File" and "Add Folder"
 		"sftp_shell":true,			// sftp shell permission
 		"terminus_encoding":"utf-8", 	// Choose your terminal code
+		"keepalive": 30,			// Server Alive Interval
+		"jump_host": "",			// [ssh -J] 	Connect to jump host and then establishing a TCP forwarding
+								// 			to the ultimate destination from there
+								// If used, the value must be a key in server_settings; otherwise, set ""
 		"always_fingerprint_confirm": false
 	},
 	"server_settings":{

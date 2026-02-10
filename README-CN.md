@@ -91,6 +91,11 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 * `username` 远程主机上的用户名
 * `hostname` 远程主机IP或域名
 * `always_fingerprint_confirm` 每次连接要求确认主机指纹，如果设置了`known_hosts_file`则直接通过known_hosts_file验证主机指纹
+* `jump_host` 使用跳板机进行连接，就像 `[ssh -J]`，如果要使用，则值须为`server_settings`中的键值，否则设为""
+```
+连接到跳转主机，然后从那里建立到最终目的地的TCP转发
+```
+* `keepalive` 发送心跳数据的间隔(秒)
 
 #### 如果服务器使用账户密码进行认证，应使用如下选项:
 * `password` 密码明文
@@ -175,6 +180,17 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 		"save_password":true,
 		"terminus_encoding":"GB2312" // 设置终端编码
 		"remote_path":"D:\\Project" // 字符串路径
+		"local_path":"~/SFTP-Local/{auto_generate}"
+	}
+	// 使用跳板机进行连接
+	"Windows Server 2016 [with jump_host]":{
+		"username":"Administrator",
+		"hostname":"192.168.1.120",
+		"password":"pasSSssswd@#120120",
+		"save_password":true,
+		"jump_host": "Debian" // 使用server_settings中已定义的名称
+		"terminus_encoding":"GB2312"
+		"remote_path":"D:\\Project"
 		"local_path":"~/SFTP-Local/{auto_generate}"
 	}
 	// ...

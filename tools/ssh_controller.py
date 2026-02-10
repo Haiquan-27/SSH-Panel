@@ -121,6 +121,8 @@ class UserSettings():
 		if not isinstance(config["network_timeout"],int):error_list.append("network_timeout")
 		if not isinstance(config["port"],int):error_list.append("port")
 		if not isinstance(config["terminus_encoding"],str):error_list.append("terminus_encoding")
+		if not isinstance(config["keepalive"],int):error_list.append("keepalive")
+		if not isinstance(config["jump_host"],str):error_list.append("keepalive")
 		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
 			error_list.append("known_hosts_file")
 		#  os.path.exists(os.path.expandvars(user_parameter.get("private_key")[1]))
@@ -190,12 +192,13 @@ class SSHClient():
 	def __init__(
 		self,
 		user_settings, # UserSettings
-		):
+	):
 		self._user_settings = user_settings
 		self.user_settings_config = user_settings.config
 		self.user_settings = self._user_settings
 		self.transport = None
 		self.sftp_client = None
+		self.jump_client = None
 		self.remote_platform = "unknown"
 		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
@@ -254,10 +257,28 @@ class SSHClient():
 				)
 		else:
 			hostname = user_settings_config["hostname"]
-		try:
-			self.transport = paramiko.Transport(sock=(hostname,port))
-		except Exception as e:
-			LOG.E("Connect Failed",str(e.args))
+		if self.transport == None:
+			try:
+				if user_settings_config["jump_host"]:
+					jump_host_settings = UserSettings()
+					jump_host_settings.init_from_settings_file(user_settings_config["jump_host"])
+					jump_client = SSHClient(jump_host_settings)
+					def jump_callback():
+						jump_client_transport = jump_client.transport
+						channel = jump_client_transport.open_channel(
+							kind = "direct-tcpip",
+							dest_addr = (hostname,port),
+							src_addr = ('', 0),
+							timeout = user_settings_config["network_timeout"]
+						)
+						self.jump_client = jump_client
+						self.transport = paramiko.Transport(sock=channel)
+						return self.connect(callback)
+					return jump_client.connect(jump_callback)
+				else:
+					self.transport = paramiko.Transport(sock=(hostname,port))
+			except Exception as e:
+				LOG.E("Connect Failed",str(e.args))
 		hostkeys = paramiko.HostKeys()
 		need_fingerprint_confirm = user_settings_config.get("always_fingerprint_confirm",False)
 		known_hosts_file = user_settings_config["known_hosts_file"]
@@ -272,7 +293,7 @@ class SSHClient():
 				need_fingerprint_confirm = True # 当完成连接并获取到指纹后需要对指纹进行确认
 		event = threading.Event() # 监听协商结束
 		self.transport.start_client(event=event,timeout=user_settings_config["network_timeout"])
-		self.transport.set_keepalive(30)
+		self.transport.set_keepalive(int(user_settings_config["keepalive"]))
 
 		start_time = time.time()
 		while True: # 等待start_client返回
@@ -523,6 +544,8 @@ class SSHClient():
 		return remote_path
 
 	def disconnect(self):
+		if self.user_settings_config["jump_host"]:
+			self.jump_client.disconnect()
 		LOG.I(self.user_settings.server_name+" close")
 		self.sftp_client.close()
 		self.transport.close()

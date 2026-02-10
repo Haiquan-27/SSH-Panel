@@ -96,6 +96,11 @@ After the first connection, this path will be save to the user configuration and
 * `username` user name on remote host
 * `hostname` remote host IP address or domain name
 * `always_fingerprint_confirm` confirm server fingerprint every time,if `known_hosts_file` is set wile use AA to verify the host fingerprint
+* `jump_host` connect with jump host like `[ssh -J]` If used, the value must be a key in server_settings; otherwise, set ""
+```
+Connect to jump host and then establishing a TCP forwarding to the ultimate destination from there
+```
+* `keepalive` Server Alive Interval (second)
 
 #### if your server uses password authentication,option is:
 * `password` password plaintext
@@ -181,6 +186,17 @@ After the first connection, this path will be save to the user configuration and
 		"save_password":true,
 		"terminus_encoding":"GB2312" // terminal character encoding
 		"remote_path":"D:\\Project" // support string path
+		"local_path":"~/SFTP-Local/{auto_generate}"
+	}
+	// Connect with jump host
+	"Windows Server 2016 [with jump_host]":{
+		"username":"Administrator",
+		"hostname":"192.168.1.120",
+		"password":"pasSSssswd@#120120",
+		"save_password":true,
+		"jump_host": "Debian" // Use the name already defined in server_settings
+		"terminus_encoding":"GB2312"
+		"remote_path":"D:\\Project"
 		"local_path":"~/SFTP-Local/{auto_generate}"
 	}
 	// ...
