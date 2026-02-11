@@ -1293,7 +1293,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.BUS_LOCK = False
 					resource["status"] = ["ok"]
 					self.update_view_port()
-					self.window.open_file(local_path,NF)
+					v = self.window.open_file(local_path,NF)
+					v.settings().set("SSH-Panel:resource_file",resource)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 			except:
 				self.BUS_LOCK = False
@@ -1517,6 +1518,8 @@ class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 			del path_hash_map[remote_path]
 		del client_map[client_id]
 
+ssh_panel_file_view_before = None
+
 class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 	def __init__(self, view):
 		self.view = view
@@ -1526,7 +1529,7 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 
 	@classmethod
 	def is_applicable(cls,settings):
-		return len([c for _,c in client_map.items() if c.transport and c.transport.active]) > 0
+		return settings.has("SSH-Panel:resource_file")
 
 	def take_over(self):
 		global path_hash_map
@@ -1584,8 +1587,13 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 			return
 		client = self.client
 		cmd_ref = client.command_ref()
-		resource =  cmd_ref.lpath_resource_map.get(self.view.file_name(),None)
-		if resource and resource != cmd_ref.focus_resource:
+		resource = cmd_ref.lpath_resource_map.get(self.view.file_name(),None)
+		view_res = self.view.settings().get("SSH-Panel:resource_file")
+		global ssh_panel_file_view_before
+		if view_res and (self.view.file_name() not in cmd_ref.lpath_resource_map.keys()):
+			cmd_ref.lpath_resource_map[cmd_ref.lpath_by_resource(view_res)] = resource
+		if resource and resource != cmd_ref.focus_resource and self.view != ssh_panel_file_view_before:
+			ssh_panel_file_view_before = self.view
 			cmd_ref.focus_resource = resource
 			cmd_ref.update_view_port()
 			cmd_ref.show_focus_resource()
