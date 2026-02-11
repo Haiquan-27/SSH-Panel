@@ -487,7 +487,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 
 	def _new_resource_id(self,resource):
 		s = "%s:%s"%(resource["root_path"],self.rpath_by_resource(resource))
-		return base64.b64encode(s.encode("utf8")).decode()
+		return base64.b64encode(s.encode()).decode()
 
 
 	def clean_resource(self,resource):
