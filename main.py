@@ -9,6 +9,7 @@ import sys
 import weakref
 import socket
 import errno
+import base64
 # import importlib # debug
 # from .tools import util # debug
 # importlib.reload(util) # debug
@@ -330,7 +331,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.client_id = None
 		self.BUS_LOCK = False
 		self.resource_data = None
-		self._max_resource_id = 0
 		self._user_settings = None
 		self._focus_resource = None
 		self.focus_position = 0.0
@@ -375,7 +375,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		reload_from_view: bool
 		):
 		self.resource_data = {}
-		self._max_resource_id = -1
 		update_icon()
 		settings = sublime.load_settings(settings_name)
 		self.user_settings = UserSettings()
@@ -423,7 +422,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	@async_run
 	def connect_post(self,callback=None):
 		user_settings = self.user_settings if self.user_settings else UserSettings()
-		self._max_resource_id = -1
 		self.resource_data = {}
 		window = sublime.active_window()
 		self.window = window
@@ -444,7 +442,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				loading_bar.loading_stop()
 
 	def reload_list(self):
-		self._max_resource_id = -1
 		self.resource_data = {}
 		self.focus_resource = None
 		if self.client:
@@ -477,7 +474,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					resource_item["depth"] = self.focus_resource["depth"] + 1
 				else:
 					resource_item["depth"] = 0 # 所在目录深度
-				id = self._new_resource_id()
+				id = self._new_resource_id(resource_item)
 				res.append(id)
 				resource_data[id] = resource_item
 			return res
@@ -488,9 +485,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			self.update_view_port()
 			LOG.E("'%s' is not accessible"%remote_path,str(e.args))
 
-	def _new_resource_id(self):
-		self._max_resource_id += 1
-		return str(self._max_resource_id)
+	def _new_resource_id(self,resource):
+		s = "%s:%s"%(resource["root_path"],self.rpath_by_resource(resource))
+		return base64.b64encode(s.encode("utf8")).decode()
+
 
 	def clean_resource(self,resource):
 		# 在视图上删除目录资源下的所有资源
@@ -749,7 +747,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		def _resource_create_file(path,fs,parent_resource):
 			path = self.client.remote_expandvars(path)
 			remote_os_sep = self.client.remote_os_sep
-			id = self._new_resource_id()
 			# fs = self.client.sftp_client.lstat(path)
 			new_resource = {
 				"name": path.split(self.client.remote_os_sep)[-1],
@@ -762,6 +759,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"where": remote_os_sep.join(path.split(remote_os_sep)[:-1]),
 				"depth": parent_resource["depth"] + 1
 			}
+			id = self._new_resource_id(new_resource)
 			self.resource_data[id] = new_resource
 			return new_resource
 
@@ -793,7 +791,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		def _resource_create_dir(path,fs,parent_resource):
 			remote_os_sep = self.client.remote_os_sep
 			path = self.client.remote_expandvars(path)
-			id = self._new_resource_id()
 			new_resource = {
 				"name": path.split(self.client.remote_os_sep)[-1],
 				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
@@ -806,6 +803,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"where": remote_os_sep.join(path.split(remote_os_sep)[:-1]),
 				"depth": parent_resource["depth"] + 1
 			}
+			id = self._new_resource_id(new_resource)
 			self.resource_data[id] = new_resource
 			return new_resource
 
@@ -1301,7 +1299,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				self.update_view_port()
 
 	def add_root_path(self,path,expand=False):
-		id = self._new_resource_id()
 		if path[-1] == self.client.remote_os_sep and len(path) != 1:
 			path = path[:-1]
 		global path_hash_map
@@ -1318,6 +1315,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"where": "",
 			"depth": 0
 		}
+		id = self._new_resource_id(resource)
 		self.resource_data[id] = resource
 		if expand:
 			self.focus_resource = resource # set depth
