@@ -1466,17 +1466,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
 		focus_ele = None
 		current_resource_id = "0"
-		def get_resource_sort_key(id):
-			resource = self.resource_data[id]
-			resource_path = self.rpath_by_resource(resource)
-			if resource["root_path"] == "":
-				path_hash = path_hash_map[resource_path][0]
-				return path_hash
-			else:
-				path_hash = path_hash_map[resource["root_path"]][0]
-				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
 		resource_ids = list(self.resource_data.keys())
-		resource_ids.sort(key = get_resource_sort_key)
+		resource_ids.sort()
 		for resource_id in resource_ids:
 			resource = self.resource_data[resource_id]
 			ext = os.path.splitext(resource["name"])[1][1:]
