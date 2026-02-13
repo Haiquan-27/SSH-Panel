@@ -33,6 +33,9 @@ def accessable(file_stat,user_id,group_ids:()):
 	else:
 		return False
 
+def b64s(s):
+	return base64.b64encode(s.encode()).decode()
+
 def html_tmp(content):
 	font_size = sublime.load_settings(settings_name).get("font_size")
 	if font_size == "auto":

@@ -9,7 +9,6 @@ import sys
 import weakref
 import socket
 import errno
-import base64
 # import importlib # debug
 # from .tools import util # debug
 # importlib.reload(util) # debug
@@ -474,7 +473,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					resource_item["depth"] = self.focus_resource["depth"] + 1
 				else:
 					resource_item["depth"] = 0 # 所在目录深度
-				id = self._new_resource_id(resource_item)
+				id = self.create_id_by_resource(resource_item)
 				res.append(id)
 				resource_data[id] = resource_item
 			return res
@@ -485,10 +484,25 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			self.update_view_port()
 			LOG.E("'%s' is not accessible"%remote_path,str(e.args))
 
-	def _new_resource_id(self,resource):
-		s = "%s:%s"%(resource["root_path"],self.rpath_by_resource(resource))
-		return base64.b64encode(s.encode()).decode()
+	def create_id_by_resource(self,resource):
+		return "{server_name_b64}->{root_path_b64}->{path_b64}".format(
+			server_name_b64 = b64s(self.client.user_settings.server_name),
+			root_path_b64 = b64s(resource["root_path"]),
+			path_b64 = b64s(self.rpath_by_resource(resource))
+		)
 
+	def get_id_by_resource(self,resource):
+		return create_id_by_resource(resource)
+
+	def get_id_by_path(self,root_path,remote_path):
+		# 通过路径base64反向解析出上级资源id
+		# root_path = "" if root_path in self.user_settings["root_path"] else root_path
+		root_path = "" if root_path == remote_path else root_path
+		return "{server_name_b64}->{root_path_b64}->{path_b64}".format(
+			server_name_b64 = b64s(self.client.user_settings.server_name),
+			root_path_b64 = b64s(root_path),
+			path_b64 = b64s(remote_path)
+		)
 
 	def clean_resource(self,resource):
 		# 在视图上删除目录资源下的所有资源
@@ -673,73 +687,63 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				settings_file = "settings"
 			)
 
-		def navigation(resource_id):
-			if resource_id:
-				resource = self.resource_data[resource_id]
-				remote_os_sep = self.client.remote_os_sep
-				resource_path = self.rpath_by_resource(resource)
-				resource_root_path = resource["root_path"]
-				def nav_map_tags(pnl):
-					# pnl : ["...","a","b","c"]
-					# => [("...",id_0),(".../a",id_1),(".../a/b",id_2),(".../a/b/c",id_3)]
-					# => ["<a path_0/>","<a path_1/>","<a path_2/>","<a path_3/>"]
-					path_id_map = {
-						self.rpath_by_resource(_rs):_id
-						for _id,_rs in self.resource_data.items()
-					}
-					return [
-						"<a class='res_file {style_class}' href={href}>{name}</a>".format(
-							name = pn,
-							href = path_id_map[remote_os_sep.join(pnl[:i+1])],
-							style_class = "res_focus" if len(pnl)-1 == i else ""
-						)
-						for i,pn in enumerate(pnl)
-					]
-
-				SshPanelOutputCommand(self.window.active_view()).run(
-					edit = sublime.Edit,
-					content = html_tmp(content="<p class='resource_line' style='border: 2px'><span class='keyword'>Navigate to:</span>%s</p>"%(
-							"<span class='symbol'>%s</span>"%self.client.remote_os_sep.join(
-								nav_map_tags(
-									[
-										resource_root_path,
-										*[p for p in resource_path[len(resource_root_path):].split(remote_os_sep) if p != ""]
-									] if resource_root_path else [resource_path]
-								)
-							)
-						)
-					),
-					is_html = True,
-					href_navcation = navigation,
-					new_line = False,
-					clean = True,
+		@async_run
+		def _navigation(resource_path_chain_ids,focus_index):
+			focus_index = int(focus_index)
+			resource_ele_list = []
+			remote_os_sep = self.client.remote_os_sep
+			for index,resource_path_chain_id in enumerate(resource_path_chain_ids):
+				resource = self.resource_data[resource_path_chain_id]
+				resource_ele = "<a class='res_file {style_class}' href='{href}'>{name}</a>".format(
+					name = resource["name"],
+					href = index,
+					style_class = "res_focus" if focus_index == index else ""
 				)
-				if resource["is_dir"]:
-					resource["focus"] = False
-					resource_click(resource_id)
-					self.show_focus_resource()
-					sel_items = [(resource_id,resource["name"] + (remote_os_sep if resource["is_dir"] else "")) for resource_id,resource in self.resource_data.items() if resource["where"] == resource_path]
-					self.window.run_command("hide_overlay")
-					self.window.show_quick_panel(
-						[i[1] for i in sel_items],
-						lambda i : navigation(sel_items[i][0]) if i>=0 else None,
-						sublime.KEEP_OPEN_ON_FOCUS_LOST,
-						placeholder=resource_path
+				resource_ele_list.append(resource_ele)
+			SshPanelOutputCommand(self.window.active_view()).run(
+				edit = sublime.Edit,
+				content = html_tmp(content="<p class='resource_line' style='border: 2px'><span class='keyword'>Navigate to:</span>%s</p>"%(
+						"<span class='symbol'>%s</span>"%remote_os_sep.join(
+							resource_ele_list
+						)
 					)
-				else:
-					resource["focus"] = False
-					resource_click(resource_id)
-					self.show_focus_resource()
-
-			else: # 从主路径开始选择
-				sel_items = [(resource_id,resource["name"]) for resource_id,resource in self.resource_data.items() if resource["root_path"] == ""]
+				),
+				is_html = True,
+				href_navcation = lambda i:_navigation(resource_path_chain_ids,i),
+				new_line = False,
+				clean = True,
+			)
+			resource_id = resource_path_chain_ids[focus_index]
+			resource = self.resource_data[resource_id]
+			if resource["is_dir"]:
+				resource["focus"] = False
+				resource_click(resource_id)
+				self.show_focus_resource()
+				resource_path = self.rpath_by_resource(resource)
+				sel_items = [(resource_id,resource["name"] + (remote_os_sep if resource["is_dir"] else "")) for resource_id,resource in self.resource_data.items() if resource["where"] == resource_path]
 				self.window.run_command("hide_overlay")
 				self.window.show_quick_panel(
 					[i[1] for i in sel_items],
 					lambda i : navigation(sel_items[i][0]) if i>=0 else None,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST,
-					placeholder="Navigate to"
+					placeholder=resource_path
 				)
+			else:
+				self.window.run_command("hide_overlay")
+				resource["focus"] = False
+				resource_click(resource_id)
+				self.show_focus_resource()
+
+		def navigation(resource_id):
+			resource = self.resource_data[resource_id]
+			resource_path_chain_ids = [resource_id]
+			while True:
+				parent_resource_id = self.get_id_by_path(resource["root_path"],resource["where"])
+				resource_path_chain_ids.insert(0,parent_resource_id)
+				resource = self.resource_data[parent_resource_id]
+				if resource["root_path"] == "":
+					break
+			_navigation(resource_path_chain_ids,len(resource_path_chain_ids)-1)
 
 		def show_panel(_):
 			self.window.run_command("show_panel",args={"panel":"output."+output_panel_name})
@@ -759,7 +763,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"where": remote_os_sep.join(path.split(remote_os_sep)[:-1]),
 				"depth": parent_resource["depth"] + 1
 			}
-			id = self._new_resource_id(new_resource)
+			id = self.create_id_by_resource(new_resource)
 			self.resource_data[id] = new_resource
 			return new_resource
 
@@ -803,7 +807,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"where": remote_os_sep.join(path.split(remote_os_sep)[:-1]),
 				"depth": parent_resource["depth"] + 1
 			}
-			id = self._new_resource_id(new_resource)
+			id = self.create_id_by_resource(new_resource)
 			self.resource_data[id] = new_resource
 			return new_resource
 
@@ -1177,7 +1181,13 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				resource["focus"] = True
 			self.update_view_port()
 
+		def parent_resource_menu(id):
+			resource = self.resource_data[id]
+			parent_resource_id = self.get_id_by_path(resource["root_path"],resource["where"])
+			resource_menu(parent_resource_id)
+
 		def resource_menu(id):
+			resource = self.resource_data[id]
 			operation_menu = [
 				("Show Info",resource_info),
 				("Navigate",navigation),
@@ -1186,7 +1196,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				("Focus load",resource_force_load),
 				("Open Containing Folder…",resource_open_local)
 			]
-			if self.resource_data[id]["is_dir"]:
+			if resource["is_dir"]:
 				operation_menu.extend([
 					("Add File",resource_create_file),
 					("Add Folder",resource_create_dir),
@@ -1194,12 +1204,17 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					("Put Folder",resource_put_dir),
 					("Put File",resource_put_file)
 				])
+			if resource["root_path"] != "":
+				operation_menu.extend([
+					("Menu of .",parent_resource_menu),
+				])
 			if int(sublime.version()) >= 4081:
+				resource_path = self.rpath_by_resource(resource)
 				self.window.show_quick_panel(
 					[d[0] for d in operation_menu],
 					lambda i: operation_menu[i][1](id) if i!=-1 else None,
 					sublime.KEEP_OPEN_ON_FOCUS_LOST|sublime.MONOSPACE_FONT,
-					placeholder = " you can"
+					placeholder = resource_path
 				)
 			else:
 				self.window.show_quick_panel(
@@ -1315,7 +1330,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"where": "",
 			"depth": 0
 		}
-		id = self._new_resource_id(resource)
+		id = self.create_id_by_resource(resource)
 		self.resource_data[id] = resource
 		if expand:
 			self.focus_resource = resource # set depth
