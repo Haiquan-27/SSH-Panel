@@ -632,7 +632,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					dl.append(id)
 			for id in dl:
 				del resource_data[id]
-			for remote_path in [p for p,d in path_hash_map.items() if d[2] == self.client_id]:
+			for remote_path in [p for p,d in path_hash_map.items() if (d[2] == self.client_id and p == root_path) ]:
 				del path_hash_map[remote_path]
 			self.update_view_port()
 
@@ -1467,7 +1467,16 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		focus_ele = None
 		current_resource_id = "0"
 		resource_ids = list(self.resource_data.keys())
-		resource_ids.sort()
+		def get_resource_sort_key(id):
+			resource = self.resource_data[id]
+			resource_path = self.rpath_by_resource(resource)
+			if resource["root_path"] == "":
+				path_hash = path_hash_map[resource_path][0]
+				return path_hash
+			else:
+				path_hash = path_hash_map[resource["root_path"]][0]
+				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
+		resource_ids.sort(key = get_resource_sort_key)
 		for resource_id in resource_ids:
 			resource = self.resource_data[resource_id]
 			ext = os.path.splitext(resource["name"])[1][1:]

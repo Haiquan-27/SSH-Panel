@@ -523,7 +523,7 @@ class SSHClient():
 			return "unknow"
 
 	def remote_expandvars(self,path):
-		if path[-1] == self.remote_os_sep:
+		if path[-1] == self.remote_os_sep and path != "/":
 			path = path[:-1]
 		re_rule = None
 		env_symbol = ""
