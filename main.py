@@ -63,7 +63,7 @@ icon_style_data = {
 		"bus":"<span class='warning'>[###  ]</span>",
 		"warning":"<span class='warning'> !</span>",
 		"denied":"<span class='error'> denied</span>",
-		"dir_symbol": True
+		"dir_symbol": True,
 	},
 	"image":{
 		"folder":"<img class='icon_size' src='res://Packages/SSH-Panel/icon/{color}/folder_closed@3x.png'>",
@@ -1473,15 +1473,15 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		nv.set_name(self.user_settings.server_name)
 		if "SSH-Panel.hidden-color-scheme" not in nv_settings.get("color_scheme",""):
 			src_style = nv.style()
-			print(src_style)
 			new_style_global = {}
 			theme_dark_color = int(src_style.get("background").replace("#","0x"),16)
-			theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_offset"),16)
-			theme_dark_color &= 0xffffff
+			# theme_dark_color += int(sublime.load_settings(settings_name).get("nav_bar_color_offset"),16)
+			# theme_dark_color &= 0xffffff
 			theme_dark_color = "#{:06x}".format(theme_dark_color)
+			theme_dark_color = "color(%s blend(black 60%%))"%theme_dark_color
 			new_style_global["background"] = theme_dark_color
 			new_style_global["foreground"] = src_style["foreground"]
-			new_style_global["line_highlight"] = theme_dark_color
+
 			theme_resource = self.save_theme(
 				{
 					"globals":new_style_global,
@@ -1528,7 +1528,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 
 	def render_resource_list(self):
 		ele_list = []
-		os_sep_symbol = "<span class='symbol'>%s</span>"%self.client.remote_os_sep if icon_style.get("dir_symbol") else ""
+		os_sep_symbol = ("<span class='symbol'>%s</span>"%self.client.remote_os_sep if self.client else "<span class='symbol'>/</span>") if icon_style.get("dir_symbol") else ""
 		focus_ele = None
 		current_resource_id = "0"
 		resource_ids = list(self.resource_data.keys())
@@ -1542,11 +1542,12 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				path_hash = path_hash_map[resource["root_path"]][0]
 				return path_hash + self.client.remote_os_sep + self.rpath_by_resource(resource,dir_sep=True)
 		resource_ids.sort(key = get_resource_sort_key)
+		is_image_icon = sublime.load_settings(settings_name).get("icon_style") == "image"
 		for resource_id in resource_ids:
 			resource = self.resource_data[resource_id]
 			ext = os.path.splitext(resource["name"])[1][1:]
 			ele = "<p class='resource_line' style='padding-left:{depth}px'>{file_icon}<a class='{style_class} res' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
-					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])),
+					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else (icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])) if is_image_icon else icon_style["file"]),
 					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else ""),("no_accessible" if not resource["access"] else "")]),
 					resource_id = resource_id,
 					depth = resource["depth"] * 30,
@@ -1556,8 +1557,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 								replace(">","&gt;").
 								replace(" ","&nbsp;"),
 					symbol = os_sep_symbol if resource["is_dir"] else "",
-					operation_menu = ("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else "" +
-									  ("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "",
+					operation_menu = (("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "") +
+									("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else "",
 					status = "".join([icon_style[i] for i in resource["status"]])
 				)
 			ele_list.append(ele)
