@@ -41,7 +41,37 @@ sudo zypper install libffi-devel
 ```bash
 # you can install from Homebrew
 brew install libffi
-sudo ln -s $(brew --prefix libffi)/lib/libffi.dylib /usr/lib/libffi.dylib
+# Since brew does not add a default search path for downloaded files, a link is required
+# link libffi.dylib to /usr/local/lib/
+sudo ln -s $(brew --prefix libffi)/lib/libffi.dylib /usr/local/lib/libffi.dylib
+# or link to ~/lib
+# ln -s $(brew --prefix libffi)/lib/libffi.dylib ~/lib/libffi.dylib
+```
+> 由于受到`MacOS SIP`机制的影响，可能无法在诸如`/usr/lib`这样的路径创建连接，为了让libffi.dylib能够正确被sublime text加载，还可以使用`install_name_tool`对`@rapth`进行替换，如果上述方法无效，请使用如下方法:
+```bash
+# step 1
+# install libffi from Homebrew
+brew install libffi
+ls -al $(brew --prefix libffi)/lib/libffi.8.dylib # check install
+# install Xcode Command Line Tools
+xcode-select --install
+xcode-select -p # check install
+install_name_tool -help
+
+# step 2
+# running ssh_panel_install_dependencies command in sublime_text console
+
+# step 3
+# Locate the directory where _cffi_backend.cpython-38-darwin.so is located and enter it
+cd "~/Library/Application Support/Sublime Text"
+cd $(dirname $(find . -name "_cffi_backend.cpython-38-darwin.so" | head -1))
+
+# step 4
+cp $(brew --prefix libffi)/lib/libffi.8.dylib .
+install_name_tool -change @rpath/libffi.8.dylib @loader_path/libffi.8.dylib ./_cffi_backend.cpython-38-darwin.so
+
+# step 5
+# restart sublime text
 ```
 ### 安装python依赖库
 * 使用`ssh_panel_install_dependencies`自动安装(推荐)
