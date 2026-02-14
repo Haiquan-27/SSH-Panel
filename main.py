@@ -16,14 +16,14 @@ from .tools.util import *
 
 version = "1.5.0"
 
-Dependencies_LOST = False
+Dependencies_LOST_Exception = None
 try:
 	# from .tools import ssh_controller
 	# importlib.reload(ssh_controller) # debug
 	from .tools.ssh_controller import *
 except Exception as e:
 	if isinstance(e, (ImportError,ModuleNotFoundError) if sys.version_info[1] >= 8 else ImportError):
-		Dependencies_LOST = True
+		Dependencies_LOST_Exception = e
 
 client_map = {} # client_id -> client
 
@@ -149,10 +149,72 @@ def update_color_scheme():
 			)
 
 def plugin_loaded():
-	if Dependencies_LOST:
-		LOG.I("Dependencies lost , Please exec <span class='keyword'>window.run_command('ssh_panel_install_dependencies')</span> in Sublime Text console")
-		sys.stdout.write("Please exec: window.run_command('ssh_panel_install_dependencies')                          # install from github\n")
-		sys.stdout.write("         or: window.run_command('ssh_panel_install_dependencies',args={'source':'gitee'})  # install from gitee\n")
+	if Dependencies_LOST_Exception:
+		detail_html = "[<span class='keyword_error'>%s</span>]<br>%s<br>%s"%(type(Dependencies_LOST_Exception).__name__ , Dependencies_LOST_Exception, Dependencies_LOST_Exception.args)
+		detail_txt = "%s %s %s"%(type(Dependencies_LOST_Exception).__name__ , Dependencies_LOST_Exception, Dependencies_LOST_Exception.args)
+		def install_dep(s):
+			cmd,args = s.split(":")
+			if cmd == "copy":
+				txt = {
+					"github":"window.run_command('ssh_panel_install_dependencies')",
+					"gitee":"window.run_command('ssh_panel_install_dependencies',args={'source':'gitee'})",
+					"detail":detail_txt
+				}[args]
+				sublime.set_clipboard(txt)
+				sublime.status_message("copy: %s"%txt)
+			if cmd == "run":
+				if args == "github":
+					sublime.active_window().run_command('ssh_panel_install_dependencies')
+				if args == "gitee":
+					sublime.active_window().run_command('ssh_panel_install_dependencies',args={'source':'gitee'})
+			if cmd == "link":
+				import webbrowser
+				if args == "guide":
+					webbrowser.open("https://github.com/Haiquan-27/SSH-Panel?tab=readme-ov-file#ssh-panel")
+				if args == "feedback":
+					webbrowser.open("https://github.com/Haiquan-27/SSH-Panel/issues")
+				if args == "doc-annex":
+					webbrowser.open("https://github.com/Haiquan-27/SSH-Panel-doc-annex?tab=readme-ov-file#ssh-panel-doc-annex")
+
+		html = """
+		<div>
+		<div style="display: inline-block;">
+			<span style='font-size: 120px; line-height: 0;'>
+				!
+			</span>
+		</div>
+		<div style="display: inline-block;">
+			<div class='display:inline'>
+				<p>Dependencies lost , Please running <span class='keyword'>ssh_panel_install_dependencies</span> in console</p>
+				<p><span class='info'># install from github</span> <span>[<a class='keyword' href='copy:github'>copy</a>]</span>|<span>[<a class='keyword' href='run:github'>run</a>]</span></p>
+				<p>>>> window.run_command('ssh_panel_install_dependencies')</p>
+				<p><span class='info'># or install from gitee</span> <span>[<a class='keyword' href='copy:gitee'>copy</a>]</span>|<span>[<a class='keyword' href='run:gitee'>run</a>]</span></p>
+				<p>>>> window.run_command('ssh_panel_install_dependencies',args={'source':'gitee'})</p>
+			</div>
+		</div>
+		</div>
+		<br>
+		<p><span class='info'>Exception detail:</span></p>
+		<div style='border: 2px solid var(--foreground))'>
+			%s
+			<div style='text-align: right;'><span>[<a class='keyword' href='copy:detail'>copy</a>]</span></div>
+		</div>
+		<div style='text-align: right;'>
+			see also:
+			<span><a class='keyword' href='link:guide'>guide</a></span> /
+			<span><a class='keyword' href='link:feedback'>feedback</a></span> /
+			<span><a class='keyword' href='link:doc-annex'>doc-annex</a></span>
+		</div>
+		"""%detail_html
+
+		SshPanelOutputCommand(sublime.active_window().active_view()).run(
+			edit = sublime.Edit,
+			content = html_tmp(content=html),
+			is_html = True,
+			href_navcation = install_dep,
+			new_line = False,
+			clean = True,
+		)
 	settings = sublime.load_settings(settings_name)
 	window = sublime.active_window()
 	update_color_scheme()
@@ -184,6 +246,8 @@ def plugin_loaded():
 						connect_now = False,
 						reload_from_view = True
 					)
+	if Dependencies_LOST_Exception:
+		raise Dependencies_LOST_Exception
 
 def plugin_unloaded():
 	pass
@@ -410,6 +474,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def init_navcation_view(self,nv):
 		nv.set_read_only(True)
 		nv.settings().set("word_wrap",False)
+		# sublime.load_settings("Preferences.sublime-settings").set("inactive_sheet_dimming",False)
 		nv.settings().set("gutter",False)
 		nv.settings().set("margin",0)
 		nv.settings().set("line_numbers",False)
@@ -1732,3 +1797,4 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 					zf.extract(fi,self.libs_path)
 					unpack_list.append(fi.filename)
 			LOG.I("unpack file",unpack_list)
+			LOG.I("SSH-Panel","Please restart Sublime Text")
