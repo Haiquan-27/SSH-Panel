@@ -45,6 +45,7 @@ brew install libffi
 # link libffi.dylib to /usr/local/lib/
 sudo ln -s $(brew --prefix libffi)/lib/libffi.dylib /usr/local/lib/libffi.dylib
 # or link to ~/lib
+# mkdir -p ~/lib
 # ln -s $(brew --prefix libffi)/lib/libffi.dylib ~/lib/libffi.dylib
 ```
 > 由于受到`MacOS SIP`机制的影响，可能无法在诸如`/usr/lib`这样的路径创建连接，为了让libffi.dylib能够正确被sublime text加载，还可以使用`install_name_tool`对`@rapth`进行替换，如果上述方法无效，请使用如下方法:

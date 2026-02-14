@@ -48,6 +48,7 @@ brew install libffi
 # link libffi.dylib to /usr/local/lib/
 sudo ln -s $(brew --prefix libffi)/lib/libffi.dylib /usr/local/lib/libffi.dylib
 # or link to ~/lib
+# mkdir -p ~/lib
 # ln -s $(brew --prefix libffi)/lib/libffi.dylib ~/lib/libffi.dylib
 ```
 > Due to the influence of the `MacOS SIP` mechanism, it may not be possible to create a link in paths such as `/usr/lib`. In order to enable libffi.dylib to be loaded correctly by Sublime Text, you can also use `install_name_tool` to replace `@rapth`, if the above methods fail to work ,please try the following method:
