@@ -544,11 +544,11 @@ class SSHClient():
 		return remote_path
 
 	def disconnect(self):
-		if self.user_settings_config["jump_host"]:
-			self.jump_client.disconnect()
 		LOG.I(self.user_settings.server_name+" close")
 		self.sftp_client.close()
 		self.transport.close()
+		if self.user_settings_config["jump_host"]:
+			self.jump_client.disconnect()
 
 	def get_dir_list(self,remote_path="."):
 		res = []
