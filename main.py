@@ -505,6 +505,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			finally:
 				loading_bar.loading_stop()
 
+	@async_run
 	def reload_list(self):
 		self.resource_data = {}
 		self.focus_resource = None
