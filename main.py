@@ -1438,7 +1438,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		# 当当前视图不可见底部留白区域，则删除所有空行
 		resource_ids = nv_settings.get("SSH-Panel:resource_ids")
 		current_resource_id = nv_settings.get("SSH-Panel:current_resource_id")
-		after_current_lines = len(resource_ids) - ((resource_ids.index(current_resource_id) + 1) if resource_ids else 0)
+		if current_resource_id:
+			after_current_lines = len(resource_ids) - ((resource_ids.index(current_resource_id) + 1) if resource_ids else 0)
+		else:
+			after_current_lines = len(resource_ids)
 		if (( nv.viewport_position()[1] + nv.viewport_extent()[1]) / nv.layout_extent()[1]) \
 			< \
 			(content_lines / (content_lines + temp_lines)) \
@@ -1530,7 +1533,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		ele_list = []
 		os_sep_symbol = ("<span class='symbol'>%s</span>"%self.client.remote_os_sep if self.client else "<span class='symbol'>/</span>") if icon_style.get("dir_symbol") else ""
 		focus_ele = None
-		current_resource_id = "0"
+		current_resource_id = None
 		resource_ids = list(self.resource_data.keys())
 		def get_resource_sort_key(id):
 			resource = self.resource_data[id]
