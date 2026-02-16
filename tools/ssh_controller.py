@@ -363,6 +363,11 @@ class SSHClient():
 				callback()
 			return
 
+		def on_auth_failed():
+			self.transport.close()
+			if self.user_settings_config["jump_host"]:
+				self.jump_client.disconnect()
+
 		# 身份认证
 		if user_settings.auth_method == AUTH_METHOD_PASSWORD:
 			def auth_password(password):
@@ -379,6 +384,7 @@ class SSHClient():
 						user_settings.auth_parameter = ua
 					self.load_client(auth_done)
 				except Exception as e:
+					on_auth_failed()
 					LOG.E("Password Authentication Failed",str(e.args))
 			if user_settings_config["password"] == "":
 				password_input(auth_password)
@@ -397,6 +403,7 @@ class SSHClient():
 			try:
 				pkey = eval("paramiko.%s"%pkey_kex)
 			except Exception as e:
+				on_auth_failed()
 				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
 			if user_settings_config["need_passphrase"]:
 				password_input(lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)))
@@ -404,6 +411,7 @@ class SSHClient():
 				try:
 					auth_private_key(pkey.from_private_key_file(pkey_file))
 				except Exception as e:
+					on_auth_failed()
 					LOG.E("Key Authentication Failed",str(e.args))
 			self.load_client(auth_done)
 

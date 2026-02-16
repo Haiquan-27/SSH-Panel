@@ -462,14 +462,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			navication_view = self.window.new_file()
 			self.window.set_view_index(navication_view,0,0)
 			self.window.focus_group(1)
-		def after_connect():
-			navication_view.settings().set("ssh_panel_clientID",self.client_id)
-			navication_view.settings().set("ssh_panel_serverName",server_name)
-			self.reload_list()
+		navication_view.settings().set("ssh_panel_serverName",server_name)
 		self.init_navcation_view(navication_view)
 		self.navication_view = navication_view
 		if connect_now:
-			self.connect_post(after_connect)
+			self.connect_post(self.reload_list)
 
 	def init_navcation_view(self,nv):
 		nv.set_read_only(True)
@@ -491,12 +488,14 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.window = window
 		loading_bar = SSHPanelLoadingBar("Connecting")
 		loading_bar.loading_run()
+
 		with async_Lock:
 			client = SSHClient(user_settings)
 			if self.client_id:
 				update_client(self.client_id,client)
 			else:
 				self.client_id = register_client(client)
+			self.navication_view.settings().set("ssh_panel_clientID",self.client_id)
 			self.client = client
 			try:
 				client.connect(callback)
@@ -1593,13 +1592,13 @@ class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 		global client_map
 		global path_hash_map
 		client_id = self.view.settings().get("ssh_panel_clientID")
+		for remote_path in [p for p,d in path_hash_map.items() if d[2] == client_id]:
+			del path_hash_map[remote_path]
+		del client_map[client_id]
 		client = client_map.get(client_id,None)
 		if not client:
 			return
 		client.disconnect()
-		for remote_path in [p for p,d in path_hash_map.items() if d[2] == client_id]:
-			del path_hash_map[remote_path]
-		del client_map[client_id]
 
 ssh_panel_file_view_before = None
 
