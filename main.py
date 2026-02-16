@@ -659,9 +659,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					<p><span class='keyword'>[$] </span>Open an interactive SSH session using <a style='text-decoration: underline' href='https://packagecontrol.io/packages/Terminus'>Terminaus</a></p>
 					<p><span class='keyword'>[P] </span>Show panel</p>
 					<p><span class='keyword'>[+] </span>Add new root path</p>
-					<p><span class='keyword'>[-] </span>Remove root path from view</p>
-					<p><span class='keyword'>[...] </span>Object menu</p>
-				"""
+					<p><span class='keyword'>[x] </span>Remove root path from view</p>
+					<p><span class='keyword'>[%s] </span>Object menu</p>
+				"""%icon_style["menu"]
 				SshPanelOutputCommand(self.window.active_view()).run(
 					edit = sublime.Edit,
 					content = html_tmp(content=html_ele),
