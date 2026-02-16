@@ -120,9 +120,11 @@ def html_str(s):
 def password_input(done_callback,clean_callback=None):
 	input_panel = None
 	def hidden(_):
-		input_panel.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme')
+		if input_panel:
+			input_panel.settings().set("color_scheme",'Packages/SSH-Panel/password.hidden-color-scheme')
 	def clean_hidden():
-		input_panel.settings().erase("color_scheme")
+		if input_panel:
+			input_panel.settings().erase("color_scheme")
 	def on_done(pwd):
 		clean_hidden()
 		done_callback(pwd)
