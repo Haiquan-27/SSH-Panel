@@ -1242,7 +1242,13 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					else:
 						self.clean_resource(resource)
 			else:
-				self.open_resource_file(resource)
+				try:
+					self.open_resource_file(resource)
+				except Exception as e:
+					resource["status"] = ["error"]
+					resource["focus"] = True
+					self.update_view_port()
+					raise e
 				resource["focus"] = True
 			self.update_view_port()
 
@@ -1330,12 +1336,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		except Exception as e:
 			# 调用处无法捕获异步函数中抛出的错误信息
 			err_msg = e.args
-			focus_resource = self.focus_resource
-			focus_resource["status"] = ["error"]
-			if isinstance(e,socket.timeout):
-				focus_resource["status"] = ["timeout"]
-				err_msg = "socket.timeout"
-			self.update_view_port()
 			LOG.E("file sync failed",{
 				"remote_path":remote_path,
 				"local_path": local_path,
