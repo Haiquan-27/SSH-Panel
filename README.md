@@ -253,7 +253,7 @@ you can edit and view server information on the pop-up directory panel
 * `[$]` :SSH interactive terminal(need installed [Terminus](https://packagecontrol.io/packages/Terminus))
 * `[+]` :add new root path
 * `[x]` :remove root path from view
-you can click the `[...]` or `☰` button on the right side of the directory or file to view attribute, delete or create a new one
+* `[...]` or `☰` button on the right side of the directory or file to view attribute, delete or create a new one
 
 # Style coustom
 

@@ -247,7 +247,7 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 * `[$]` :SSH 交互式终端(安装[Terminus](https://packagecontrol.io/packages/Terminus)后可用)
 * `[+]` :添加路径
 * `[x]` :从目录视图中删除路径
-你可以点击文件或目录右侧的`[...]`或`☰`按钮查看其属性或在下方创建新的对象
+* `[...]`或`☰`显示在文件或目录右侧，用于查看其属性或在下方创建新的对象
 
 # 自定义样式
 
