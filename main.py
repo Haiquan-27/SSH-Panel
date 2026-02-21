@@ -396,6 +396,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		self.resource_data = None
 		self._user_settings = None
 		self._focus_resource = None
+		self._file_sync_stop = False
 		self.focus_position = 0.0
 		self.navication_view = None
 		self.hidden_menu = True
@@ -557,7 +558,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		)
 
 	def get_id_by_resource(self,resource):
-		return create_id_by_resource(resource)
+		return self.create_id_by_resource(resource)
 
 	def get_id_by_path(self,root_path,remote_path):
 		# 通过路径base64反向解析出上级资源id
@@ -914,6 +915,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				self.BUS_LOCK = True
 				SUM_D = []
 				SUM_F = []
+				stop_e = None
 				for local_root in dir_list:
 					root_path = os.path.split(local_root)[0]
 					LOG.D("put dir","<%s>"%local_root)
@@ -927,37 +929,47 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.focus_resource = new
 					self.update_view_port()
 					self.show_focus_resource()
-					for path,_,sub_files in os.walk(local_root):
-						rel_path = path[len(root_path):]
-						rel_path = rel_path[1:] if rel_path[0] == os.path.sep else rel_path
-						rel_remote_path = remote_os_sep.join(rel_path.split(os.path.sep))
-						local_dir_path = root_path + os.path.sep + rel_path
-						remote_dir_path = put_path + remote_os_sep + rel_remote_path
-						fs = os.stat(local_dir_path)
-						remote_dir_exists = False
-						try:
-							self.client.sftp_client.stat(remote_dir_path)
-							remote_dir_exists = True
-						except FileNotFoundError:
+					try:
+						for path,_,sub_files in os.walk(local_root):
+							rel_path = path[len(root_path):]
+							rel_path = rel_path[1:] if rel_path[0] == os.path.sep else rel_path
+							rel_remote_path = remote_os_sep.join(rel_path.split(os.path.sep))
+							local_dir_path = root_path + os.path.sep + rel_path
+							remote_dir_path = put_path + remote_os_sep + rel_remote_path
+							fs = os.stat(local_dir_path)
 							remote_dir_exists = False
-						if not remote_dir_exists:
-							self.client.sftp_client.mkdir(
-								path = remote_dir_path,
-								mode = stat.S_IMODE(fs.st_mode)
-							)
-						SUM_D.append(remote_dir_path)
-						for file in sub_files:
-							l_path = local_dir_path + os.path.sep + file
-							r_path = remote_dir_path + remote_os_sep + file
 							try:
+								self.client.sftp_client.stat(remote_dir_path)
+								remote_dir_exists = True
+							except FileNotFoundError:
+								remote_dir_exists = False
+							if not remote_dir_exists:
+								self.client.sftp_client.mkdir(
+									path = remote_dir_path,
+									mode = stat.S_IMODE(fs.st_mode)
+								)
+							SUM_D.append(remote_dir_path)
+							for file in sub_files:
+								l_path = local_dir_path + os.path.sep + file
+								r_path = remote_dir_path + remote_os_sep + file
 								self.file_sync(l_path, r_path, "put")
 								SUM_F.append(r_path)
-							except Exception:
-								continue
-					new["status"] = ["ok"]
+						new["status"] = ["ok"]
+					except Exception as e:
+						new["status"] = ["error"]
+						LOG.E("put folder failed",{
+							"remote_path":remote_dir_path,
+							"local_path": local_dir_path,
+							"error": e.args
+						},_raise=False)
+						if isinstance(e, (SSHPanelStopOptException)):
+							stop_e = e
+							break
 					self.update_view_port()
 				self.BUS_LOCK = False
 				LOG.I("Put %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
+				if stop_e:
+					raise stop_e
 			if int(sublime.version()) >= 4075:
 				sublime.select_folder_dialog(callback,multi_select=True)
 			else:
@@ -1027,12 +1039,20 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				if i != 0: return # YES
 				self.clean_resource(select_resource)
 				current_resource = select_resource
+				stop_e = None
+				SUM_D = []
+				SUM_F = []
 				def make_in_local(_remote_path):
 					nonlocal current_resource
+					nonlocal stop_e
+					nonlocal SUM_D
+					nonlocal SUM_F
 					new = None
 					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)):
 						r_path = _remote_path + remote_os_sep + fs.filename
 						l_path = save_hash_root + os.path.sep.join(r_path[len(root_path if root_path else select_resource["name"]):].split(remote_os_sep))
+						if stop_e:
+							break
 						if(stat.S_ISDIR(fs.st_mode)): # 目录
 							new = _resource_create_dir(
 								r_path,
@@ -1047,6 +1067,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							# 创建空目录，递归进入创建空目录
 							os.makedirs(l_path, exist_ok=True)
 							os.chmod(l_path,stat.S_IMODE(fs.st_mode))
+							SUM_D.append(l_path)
 							make_in_local(r_path) # 递归
 							new["status"] = ["ok"]
 							current_resource = parent_bak
@@ -1066,12 +1087,24 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 								self.update_view_port()
 							try:
 								self.file_sync(l_path,r_path,"get",on_transfer_over)
-							except Exception:
+								SUM_F.append(l_path)
+							except Exception as e:
 								new["status"] = ["error"]
+								LOG.E("clone folder failed",{
+									"remote_path":r_path,
+									"local_path": l_path,
+									"error": e.args
+								},_raise=False)
+								if isinstance(e, (SSHPanelStopOptException)):
+									stop_e = e
+									break
 				self.BUS_LOCK = True
 				make_in_local(remote_path)
 				self.BUS_LOCK = False
 				self.update_view_port()
+				LOG.I("Put %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
+				if stop_e:
+					raise stop_e
 			if int(sublime.version()) >= 4081:
 				self.window.show_quick_panel(
 					["YES","NO"],
@@ -1295,11 +1328,17 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				)
 
 		if self.BUS_LOCK:
-			sublime.message_dialog("SSH-Panel operation busy")
+			if sublime.yes_no_cancel_dialog("SSH-Panel operation busy !\nDo you want to cancel the current operation ?") == sublime.DIALOG_YES:
+				self._file_sync_stop = True
 		else:
-			with async_Lock:
-				# if operation in available_operation:
-				eval("{operation}('{args}')".format(operation=operation,args=args))
+			self._file_sync_stop = False
+			try:
+				with async_Lock:
+					# if operation in available_operation:
+					eval("{operation}('{args}')".format(operation=operation,args=args))
+			except Exception as e:
+				raise e
+
 
 	def sync_transfer_callback(self,on_done=None):
 		# 负责获取接受sftp put/get进度的callback方法
@@ -1323,7 +1362,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		return transfer
 
 	def file_sync(self,local_path,remote_path,dir,on_done=None,sync_stat=True,reset_stat=None):
-	# def file_sync(self,local_path,remote_path,dir,sync_stat=True,reset_stat=None,on_done=None):
 		try:
 			self.client.file_sync(
 				local_path = local_path,
@@ -1331,7 +1369,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				dir = dir,
 				transfer_callback = self.sync_transfer_callback(on_done),
 				sync_stat = sync_stat,
-				reset_stat = reset_stat
+				reset_stat = reset_stat,
+				stop_callback = lambda: self._file_sync_stop
 			)
 		except Exception as e:
 			# 调用处无法捕获异步函数中抛出的错误信息
@@ -1340,7 +1379,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"remote_path":remote_path,
 				"local_path": local_path,
 				"error": err_msg
-			})
+			},_raise=False)
+			raise SSHPanelStopOptException("Stop Operation [file_sync]")
 
 	def open_resource_file(self,resource,force_load=False):
 		remote_path = self.rpath_by_resource(resource)
@@ -1374,9 +1414,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					v = self.window.open_file(local_path,NF)
 					v.settings().set("SSH-Panel:resource_file",resource)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
-			except:
+			except Exception as e:
 				self.BUS_LOCK = False
 				self.update_view_port()
+				raise e
 
 	def add_root_path(self,path,expand=False):
 		if path[-1] == self.client.remote_os_sep and len(path) != 1:

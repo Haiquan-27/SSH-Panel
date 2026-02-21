@@ -553,8 +553,8 @@ class SSHClient():
 
 	def disconnect(self):
 		LOG.I(self.user_settings.server_name+" close")
-		self.sftp_client.close()
 		self.transport.close()
+		self.sftp_client.close()
 		if self.user_settings_config["jump_host"]:
 			self.jump_client.disconnect()
 
@@ -572,8 +572,9 @@ class SSHClient():
 			res.append(fs_item)
 		return res
 
-	# def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True): # 写入并保持远程文件原始权限
-	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True,reset_stat=None): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
+		if not stop_callback:
+			return lambda: False
 		with self._file_sync_Lock:
 			if dir == "put":
 				# self.sftp_client.put(local_path, remote_path,transfer_callback)
@@ -582,7 +583,8 @@ class SSHClient():
 						# rf.write(lf.read())
 						full_size = os.stat(local_path).st_size
 						load_size = 0
-						while True:
+						while not stop_callback():
+							# print(stop_callback())
 							lf_data = lf.read(1024)
 							load_size += len(lf_data)
 							if transfer_callback:
@@ -590,6 +592,8 @@ class SSHClient():
 							if not lf_data:
 								break
 							rf.write(lf_data)
+						if stop_callback():
+							raise SSHPanelStopOptException("File operation terminated")
 				if reset_stat:
 					self.sftp_client.utime(remote_path,(reset_stat.st_atime,reset_stat.st_mtime))
 					self.sftp_client.chmod(remote_path,stat.S_IMODE(reset_stat.st_mode))
@@ -608,7 +612,8 @@ class SSHClient():
 						# lf.write(rf.read())
 						full_size = self.sftp_client.stat(remote_path).st_size
 						load_size = 0
-						while True:
+						while not stop_callback():
+							# print(stop_callback())
 							rf_data = rf.read(1024)
 							load_size += len(rf_data)
 							if transfer_callback:
@@ -616,6 +621,8 @@ class SSHClient():
 							if not rf_data:
 								break
 							lf.write(rf_data)
+						if stop_callback():
+							raise SSHPanelStopOptException("File operation terminated")
 				if reset_stat:
 					os.utime(local_path,(reset_stat.st_atime,reset_stat.st_mtime))
 					os.chmod(local_path,stat.S_IMODE(reset_stat.st_mode))

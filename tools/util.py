@@ -19,7 +19,7 @@ LOG = None
 
 def async_run(func): # 异步运行装饰器
 	def wrapper(*args,**kwargs):
-		t = threading.Thread(target=func,args=args,kwargs=kwargs,daemon=True).start()
+		threading.Thread(target=func,args=args,kwargs=kwargs,daemon=True).start()
 	return wrapper
 
 def accessable(file_stat,user_id,group_ids:()):
@@ -136,6 +136,9 @@ def password_input(done_callback,clean_callback=None):
 class SSHPanelException(Exception):
 	pass
 
+class SSHPanelStopOptException(Exception):
+	pass
+
 class SSHPanelLoadingBar():
 	def __init__(self,msg):
 		self.msg = msg
@@ -215,34 +218,35 @@ class SSHPanelLog():
 			html_ele += "<p style='padding-left:10px'>%s</p>"%str(msg_content)
 		return (console_content,html_tmp(content=html_ele))
 
-	def _log(self,msg_tuple):
+	def _log(self,msg_tuple,display):
 		SshPanelOutputCommand(sublime.active_window().active_view()).run(
 			sublime.Edit,
 			content = msg_tuple[1] if int(sublime.version()) >= 4000 else msg_tuple[0],
 			is_html = int(sublime.version()) >= 4000,
 			new_line = True,
 			clean = False,
-			display = not sublime.load_settings(settings_name).get("quiet_log")
+			display = display
 		)
 		sys.stdout.write(msg_tuple[0] + "\n")
 
 	def W(self,msg_title,msg_content=""):
 		msg_tuple = self._msg_format("warning",msg_title,msg_content)
-		self._log(msg_tuple)
+		self._log(msg_tuple,display=not sublime.load_settings(settings_name).get("quiet_log"))
 
-	def E(self,msg_title,msg_content=""):
+	def E(self,msg_title,msg_content="",_raise=True):
 		msg_tuple = self._msg_format("error",msg_title,msg_content)
-		self._log(msg_tuple)
-		raise SSHPanelException("%s\n%s"%(msg_title,msg_tuple[0]))
+		self._log(msg_tuple,display=True)
+		if _raise:
+			raise SSHPanelException("%s\n%s"%(msg_title,msg_tuple[0]))
 
 	def I(self,msg_title,msg_content=""):
 		msg_tuple = self._msg_format("info",msg_title,msg_content)
-		self._log(msg_tuple)
+		self._log(msg_tuple,display=not sublime.load_settings(settings_name).get("quiet_log"))
 
 	def D(self,msg_title,msg_content=""):
 		if sublime.load_settings(settings_name).get("debug_mode"):
 			msg_tuple = self._msg_format("debug",msg_title,msg_content)
-			self._log(msg_tuple)
+			self._log(msg_tuple,display=not sublime.load_settings(settings_name).get("quiet_log"))
 
 LOG = SSHPanelLog()
 
