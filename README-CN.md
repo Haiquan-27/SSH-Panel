@@ -174,7 +174,7 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 "server_settings":{
 	// 连接到Debian Linux
 	// 使用口令登陆
-	"Debian":{
+	"Debian_test":{
 		"username":"root",
 		"hostname":"192.168.1.100",
 		"password":"",
@@ -219,7 +219,7 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 		"hostname":"192.168.1.120",
 		"password":"pasSSssswd@#120120",
 		"save_password":true,
-		"jump_host": "Debian" // 使用server_settings中已定义的名称
+		"jump_host": "Debian_test" // 使用server_settings中已定义的名称
 		"terminus_encoding":"GB2312"
 		"remote_path":"D:\\Project"
 		"local_path":"~/SFTP-Local/{auto_generate}"

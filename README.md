@@ -180,7 +180,7 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 ```js
 "server_settings":{
 	// Connect Debian Linux,use password
-	"Debian":{
+	"Debian_test":{
 		"username":"root",
 		"hostname":"192.168.1.100",
 		"password":"",
@@ -225,7 +225,7 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 		"hostname":"192.168.1.120",
 		"password":"pasSSssswd@#120120",
 		"save_password":true,
-		"jump_host": "Debian" // Use the name already defined in server_settings
+		"jump_host": "Debian_test" // Use the name already defined in server_settings
 		"terminus_encoding":"GB2312"
 		"remote_path":"D:\\Project"
 		"local_path":"~/SFTP-Local/{auto_generate}"

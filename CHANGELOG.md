@@ -1,8 +1,23 @@
 SSH-Panel Changelog
 ===================
 
-v1.5.0 Latest
+v1.6.0 Latest
 -------------
+Add config `jump_host`
+Add config `keepalive`
+Add menu option `Menu of .`
+Add task termination
+Fix after the connection is restart, the old view file is activated and selected from navigation_view as expected
+Fix error when adding and removing `/` path
+Fix when the focus is on root_path, the drop button is not visible
+Fix close the ssh-panel window after a failed connection, reconnecting will fail and nothing will happen
+Fix config "icon_style":"none" unavailable
+Modify `navigation`,memory of the original path
+Update the method for resolving dependencies on macOS in the document
+Enhance installation guidance
+
+v1.5.0 (2026-1-26)
+------------------
 Fix `/` symbols not being deleted
 Fix duplicate file expansion and display twice
 Fix path delete failed
