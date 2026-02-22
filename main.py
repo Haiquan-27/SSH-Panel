@@ -1102,7 +1102,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				make_in_local(remote_path)
 				self.BUS_LOCK = False
 				self.update_view_port()
-				LOG.I("Put %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
+				LOG.I("Give %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
 				if stop_e:
 					raise stop_e
 			if int(sublime.version()) >= 4081:
