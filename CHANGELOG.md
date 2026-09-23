@@ -105,5 +105,5 @@ v1.2.1 (2022-3-9)
 v1.0.0 (2022-2-26)
 ------------------
 
-* Pass the test on `Windows 10`, `Ubuntu 1.8`
+* Pass the test on `Windows 10`, `Ubuntu 18.04`
 * Pass the test on sublime text version `3211`，`4107`
