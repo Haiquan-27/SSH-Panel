@@ -48,6 +48,12 @@ a{
 	border-radius: 3px;
 }
 
+.res_link{
+	font-weight: bold;
+	font-style: italic;
+	color: var(--bluish);
+}
+
 .no_accessible{
 	color: color(var(--foreground) alpha(0.5));
 }
