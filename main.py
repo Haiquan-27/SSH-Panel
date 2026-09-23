@@ -262,6 +262,7 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 
 	def run(self):
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
+		self.user_config_data = {}
 		for server_name,user_parameter in sublime.load_settings(settings_name).get("server_settings").items():
 			user_parameter = UserSettings.format_parameter(default_settings,user_parameter)
 			if user_parameter == (None,(None,None)): # 配置参数错误
