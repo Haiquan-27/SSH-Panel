@@ -1728,7 +1728,8 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			return
 		py_version = {
 			"3":"python3.3",
-			"8":"python38"
+			"8":"python38",
+			"14":"python314",
 		}[str(sys.version_info[1])]
 		libs_path = ""
 		for p in sys.path:
@@ -1741,7 +1742,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 			LOG.E("Lib path(%s) not found"%py_version,sys.path)
 		self.dependencies_url = dependencies_url.format(
 			source = dependencies_source[source],
-			py_version = "py%d%d"%sys.version_info[:2], # py33 | py38
+			py_version = "py%d%d"%sys.version_info[:2], # py33 | py38 | py314
 			platform = sublime.platform(), # 'osx' | 'linux' | 'windows'
 			arch = sublime.arch() # 'x32' | 'x64' | 'arm64'
 		)
