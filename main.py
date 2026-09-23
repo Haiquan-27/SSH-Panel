@@ -532,8 +532,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				resource_item["root_path"] = root_path
 				resource_item["access"] = accessable(fs,*(self.client.userid))
 				resource_item["status"] = []
-				if resource_item["is_dir"] == True:
-					resource_item["expand"] = False # 目录是否展开
 				resource_item["focus"] = False # 是否选中
 				resource_item["where"] = remote_path
 				resource_item["is_dir"] = stat.S_ISDIR(
@@ -550,6 +548,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							)
 					).st_mode
 				)
+				if resource_item["is_dir"] == True:
+					resource_item["expand"] = False # 目录是否展开
 				if self.focus_resource:
 					resource_item["depth"] = self.focus_resource["depth"] + 1
 				else:
