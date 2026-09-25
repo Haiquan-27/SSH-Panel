@@ -528,26 +528,33 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				resource_item = {}
 				resource_item["name"] = fs.filename
 				resource_item["mode"] = oct(stat.S_IMODE(fs.st_mode)).replace("0o","")
-				resource_item["is_link"] = stat.S_ISLNK(fs.st_mode)
 				resource_item["root_path"] = root_path
 				resource_item["access"] = accessable(fs,*(self.client.userid))
 				resource_item["status"] = []
 				resource_item["focus"] = False # 是否选中
 				resource_item["where"] = remote_path
-				resource_item["is_dir"] = stat.S_ISDIR(
-					(
-						fs if 
-							not resource_item["is_link"] 
-						else 
-							self.client.sftp_client.lstat(
-								self.client.sftp_client.normalize(
-									self.client.remote_os_sep.join(
-										[remote_path,fs.filename]
-									)
-								)
-							)
-					).st_mode
-				)
+				is_link = stat.S_ISLNK(fs.st_mode)
+				if not is_link:
+					resource_item["is_dir"] = stat.S_ISDIR(fs.st_mode)
+				else:
+					resource_item["link_info"] = {
+						"target":None,
+						"reachable":None
+					}
+					path = self.client.remote_os_sep.join([remote_path,fs.filename])
+					resource_item["link_info"]["target"] = self.client.sftp_client.readlink(path)
+					try:
+						normalize = self.client.sftp_client.normalize(path)
+						resource_item["is_dir"] = stat.S_ISDIR(self.client.sftp_client.stat(normalize).st_mode)
+						resource_item["link_info"]["reachable"] = True
+					except Exception as e:
+						resource_item["is_dir"] = False
+						resource_item["link_info"]["reachable"] = False
+						LOG.D("link read failed",{
+							"remote_path":path,
+							"error":e.args
+						})
+
 				if resource_item["is_dir"] == True:
 					resource_item["expand"] = False # 目录是否展开
 				if self.focus_resource:
@@ -838,7 +845,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"name": path.split(self.client.remote_os_sep)[-1],
 				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 				"access": accessable(fs,*(self.client.userid)),
-				"is_link": stat.S_ISLNK(fs.st_mode),
 				"is_dir": False,
 				"focus": False,
 				"status": [],
@@ -860,7 +866,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				self.client.sftp_client.chmod(path, 0o666&~umask)
 				new = _resource_create_file(
 					path,
-					self.client.sftp_client.lstat(path),
+					self.client.sftp_client.stat(path),
 					resource
 				)
 				self.focus_resource = new
@@ -882,7 +888,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"name": path.split(self.client.remote_os_sep)[-1],
 				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 				"access": accessable(fs,*(self.client.userid)),
-				"is_link": stat.S_ISLNK(fs.st_mode),
 				"is_dir": True,
 				"expand": False,
 				"focus": False,
@@ -905,7 +910,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				self.client.sftp_client.mkdir(path,0o777&~umask)
 				new = _resource_create_dir(
 					path,
-					self.client.sftp_client.lstat(path),
+					self.client.sftp_client.stat(path),
 					resource
 				)
 				self.focus_resource = new
@@ -957,7 +962,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							fs = stat(local_dir_path)
 							remote_dir_exists = False
 							try:
-								self.client.sftp_client.lstat(remote_dir_path)
+								self.client.sftp_client.stat(remote_dir_path)
 								remote_dir_exists = True
 							except FileNotFoundError:
 								remote_dir_exists = False
@@ -1017,7 +1022,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						continue
 					new = _resource_create_file(
 						r_path,
-						self.client.sftp_client.lstat(r_path),
+						self.client.sftp_client.stat(r_path),
 						select_resource
 					) # 创建文件资源
 					self.focus_resource = new
@@ -1140,7 +1145,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		def resource_info(id):
 			resource = self.resource_data[id]
 			resource_path = self.rpath_by_resource(resource)
-			resource_stat = self.client.sftp_client.lstat(resource_path)
+			resource_stat = self.client.sftp_client.stat(resource_path)
 			size = resource_stat.st_size
 			def h_size(size):
 				bl = size.bit_length()
@@ -1445,12 +1450,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		if path[-1] == self.client.remote_os_sep and len(path) != 1:
 			path = path[:-1]
 		global path_hash_map
-		fs = self.client.sftp_client.lstat(path)
+		fs = self.client.sftp_client.stat(path)
 		resource = {
 			"name": path,
 			"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 			"access": accessable(fs,*(self.client.userid)),
-			"is_link": stat.S_ISLNK(fs.st_mode),
 			"is_dir": True,
 			"expand": expand,
 			"focus": False,
@@ -1614,14 +1618,36 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			resource = self.resource_data[resource_id]
 			ext = os.path.splitext(resource["name"])[1][1:]
 			ele = "<p class='resource_line' style='padding-left:{depth}px'>{file_icon}<a class='{style_class} res' href='resource_click:{resource_id}'>{text}</a>{symbol}{status}<span class='operation_menu'>{operation_menu}</span></p>".format(
-					file_icon = (icon_style["folder_open"] if resource["expand"] else icon_style["folder"]) if resource["is_dir"] else (icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"])) if is_image_icon else icon_style["file"]),
-					style_class = " ".join([("res_dir" if resource["is_dir"] else "res_file"),("res_focus" if resource["focus"] else ""),("no_accessible" if not resource["access"] else "")]),
+					file_icon = (
+								icon_style["folder_open"] if resource["expand"] else icon_style["folder"]
+							) if resource["is_dir"] else (
+								icon_data.get(ext,icon_data.get(resource["name"].lower(),icon_style["file"]))
+								if is_image_icon else
+								icon_style["file"]
+							),
+					style_class = " ".join([
+							("res_dir" if resource["is_dir"] else "res_file"),
+							("res_focus" if resource["focus"] else ""),
+							("no_accessible" if not resource["access"] else "")
+						]),
 					resource_id = resource_id,
 					depth = resource["depth"] * 30,
-					text = html_str(resource["name"]) + "<span class='res_link'>%s</span>"%html_str(" -> %s"%self.client.sftp_client.normalize(self.rpath_by_resource(resource)) if resource["is_link"] else ""),
+					text = (
+							(
+								'<span class="{target_class}">{name}</span><span class="info"> -> </span><span class="{target_class}">{target}</span>'.format(
+									name = html_str(resource["name"]),
+									target = html_str(resource["link_info"]["target"]),
+									target_class = "res_link" if resource["link_info"]["reachable"] else "res_link_error"
+								)
+							)if "link_info" in resource else (
+								html_str(resource["name"])
+							)
+						),
 					symbol = os_sep_symbol if resource["is_dir"] else "",
-					operation_menu = (("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else "") +
-									("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else "",
+					operation_menu = "{drop_icon}{menu_icon}".format(
+							drop_icon = (("<a href='del_root_path:%s'>%s</a>"%(resource_id,icon_style["drop"])) if resource["root_path"] == "" else ""),
+							menu_icon = ("<a href='resource_menu:%s'>%s</a>"%(resource_id,icon_style["menu"])) if resource["focus"] else ""
+						),
 					status = "".join([icon_style[i] for i in resource["status"]])
 				)
 			ele_list.append(ele)
@@ -1701,7 +1727,7 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 		def upload(remote_file):
 			try:
 				# 上传文件保持文件在远程主机上的权限
-				cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=False,reset_stat=client.sftp_client.lstat(remote_file))
+				cmd_ref.file_sync(local_file,remote_file,"put",sync_stat=False,reset_stat=client.sftp_client.stat(remote_file))
 			except OSError as e:
 				# 文件被删除，重新创建
 				if e.errno == errno.ENOENT:

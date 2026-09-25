@@ -452,8 +452,7 @@ class SSHClient():
 
 	def get_new_channel(self):
 		chan = self.transport.open_session(timeout=self.user_settings_config["network_timeout"]) # 设置打开session的timeout
-		# chan.settimeout(self.user_settings_config["network_timeout"]) # 交互timeout
-		chan.settimeout(0.5) # 交互timeout
+		chan.settimeout(self.user_settings_config["network_timeout"]) # 交互timeout
 		return chan
 
 	def exec_command(self,command):

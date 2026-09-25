@@ -54,6 +54,12 @@ a{
 	color: var(--bluish);
 }
 
+.res_link_error{
+	font-weight: bold;
+	font-style: italic;
+	color: var(--redish);
+}
+
 .no_accessible{
 	color: color(var(--foreground) alpha(0.5));
 }
