@@ -1,8 +1,16 @@
 SSH-Panel Changelog
 ===================
 
-v1.6.0 Latest
--------------
+v1.7.0 (Latest)
+---------------
+Add support for Sublime Text 4200+ (Python 3.14)
+Supports showing link targets
+Fix connection list showing old names
+Fix the timeout in the authentication process
+Enhanced debugging
+
+v1.6.0 (2026-2-22)
+------------------
 Add config `jump_host`
 Add config `keepalive`
 Add menu option `Menu of .`
