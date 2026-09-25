@@ -267,6 +267,8 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 .res_file{}
 .res_focus{}
 .operation_menu{}
+.res_link{}
+.res_link_error{}
 .warning{}
 .error{}
 .info{}

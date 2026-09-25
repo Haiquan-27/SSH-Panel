@@ -273,6 +273,8 @@ Create file *"Packages\User\SSH-Panel\style.css"* in sublime package path and se
 .res_file{}
 .res_focus{}
 .operation_menu{}
+.res_link{}
+.res_link_error{}
 .warning{}
 .error{}
 .info{}
