@@ -1808,12 +1808,16 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 				sublime.message_dialog("Package install done,Please restart Sublime Text")
 		with async_Lock:
 			try:
-				urllib.request.urlretrieve(self.dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+				urllib.request.urlretrieve(
+					self.dependencies_url,
+					zip_pack,
+					reporthook=self.sync_transfer_callback()
+				)
 				on_transfer_over()
 			except urllib.error.URLError as e:
 				SshPanelOutputCommand(self.window.active_view()).run(sublime.Edit,content="",display=False,clean=True)
 				if "404" in str(e):
-					LOG.E("UNSUPPORTED PLATFORM")
+					LOG.E("(404) No precompiled package '%s'"%self.dependencies_url)
 				elif sys.version_info[1] == 8 and isinstance(e.args[0],ssl.SSLCertVerificationError):
 					LOG.W("Current SSL Cert Verification cannot be authenticated")
 					if sublime.yes_no_cancel_dialog(
@@ -1821,10 +1825,14 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 							yes_title = "Continue(use unverified)",
 							title = "SSH-Panel Install dependencies"
 					) == sublime.DIALOG_YES:
-						ssl._create_default_https_context = ssl._create_unverified_context
 						self.progress_bar(0)
 						sublime.status_message("SSH-Panel connecting ...")
-						urllib.request.urlretrieve(self.dependencies_url,zip_pack,reporthook=self.sync_transfer_callback())
+						urllib.request.urlretrieve(
+							self.dependencies_url,
+							zip_pack,
+							reporthook=self.sync_transfer_callback(),
+							context = ssl._create_unverified_context
+						)
 						on_transfer_over()
 				else:
 					LOG.I("connot download file: %s"%self.dependencies_url)
