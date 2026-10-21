@@ -1388,12 +1388,24 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					on_done()
 		return transfer
 
-	def file_sync(self,local_path,remote_path,dir,on_done=None,sync_stat=True,reset_stat=None):
+	def file_sync(self,local_path,remote_path,method,on_done=None,sync_stat=True,reset_stat=None):
+		remote_path_limit = [p for p in path_hash_map.keys() if self.client.remote_expandvars(remote_path).startswith(p+self.client.remote_os_sep)][0]
+		local_path_limit = os.path.sep.join(path_hash_map[remote_path_limit][:2][::-1])
+		if not (
+				os.path.abspath(local_path).startswith(local_path_limit + os.path.sep)
+				and
+				self.client.sftp_client.normalize(self.client.remote_expandvars(remote_path)).startswith(remote_path_limit + self.client.remote_os_sep)
+			):
+			LOG.E("Path traversal attempt detected !",{
+				"local_path":local_path,
+				"remote_path":remote_path,
+				"method":method
+			})
 		try:
 			self.client.file_sync(
 				local_path = local_path,
 				remote_path = remote_path,
-				dir = dir,
+				method = method,
 				transfer_callback = self.sync_transfer_callback(on_done),
 				sync_stat = sync_stat,
 				reset_stat = reset_stat,

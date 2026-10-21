@@ -571,11 +571,11 @@ class SSHClient():
 			res.append(fs_item)
 		return res
 
-	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,method,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
 		if not stop_callback:
 			return lambda: False
 		with self._file_sync_Lock:
-			if dir == "put":
+			if method == "put":
 				# self.sftp_client.put(local_path, remote_path,transfer_callback)
 				with self.sftp_client.open(remote_path,"w",bufsize=1024) as rf:
 					with open(local_path,"rb") as lf:
@@ -603,7 +603,7 @@ class SSHClient():
 					self.sftp_client.utime(remote_path,(local_atime,local_mtime))
 					self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
 				LOG.D("remote:%s sync"%remote_path)
-			elif dir == "get":
+			elif method == "get":
 				os.makedirs(os.path.split(local_path)[0],exist_ok=True)
 				# self.sftp_client.get(remote_path,local_path,transfer_callback)
 				with open(local_path,"wb",buffering=1024) as lf:
