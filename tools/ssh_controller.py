@@ -203,6 +203,8 @@ class SSHClient():
 		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
+		self.remote_os_sep = ""
+		self._env_symbol_rule = None
 		self._file_sync_Lock = threading.Lock()
 		self.command_ref = None
 		
@@ -438,6 +440,8 @@ class SSHClient():
 		channel.invoke_subsystem('sftp')
 		self.sftp_client =  paramiko.SFTPClient(sock=channel)
 		self.remote_platform = self.get_platform()
+		self.remote_os_sep = "\\" if self.remote_platform == "windows" else "/"
+		self._env_symbol_rule = ("%",re.compile(r"%([a-zA-Z_][a-zA-Z0-9_]*)%")) if self.remote_platform == "windows" else ("$",re.compile(r"\$([a-zA-Z_][a-zA-Z0-9_]*)"))
 		self.env = self.get_env()
 		self.umask = int(self.user_settings_config["umask"],8)
 		self.user_settings.save_config()
@@ -446,9 +450,41 @@ class SSHClient():
 		if callback:
 			callback()
 
-	@property
-	def remote_os_sep(self):
-		return "\\" if self.remote_platform == "windows" else "/"
+	def realpath(self,path,expandvars=True,readlink=False):
+		path = self.sftp_client.normalize(path)
+		path = self.remote_expandvars(path) if expandvars else path
+		def readlink_f(_path):
+			pending = [p for p in _path.split('/') if p != '']   # 待处理队列
+			res_parts = [] # 已解析的绝对路径分量
+			is_abs = _path.startswith('/')
+			while pending:
+				part = pending.pop(0)
+				if part == '.':
+					continue
+				if part == '..':
+					if res_parts: res_parts.pop()
+					continue
+				candidate = '/' + '/'.join(res_parts + [part]) if is_abs else '/'.join(res_parts + [part])
+				try:
+					st = self.sftp_client.lstat(candidate)
+				except IOError:
+					res_parts.append(part)
+					continue
+				if stat.S_ISLNK(st.st_mode):
+					link = self.sftp_client.readlink(candidate)
+					if link.startswith('/'):
+						res_parts = []
+						is_abs = True
+					# 把 link 的分量插到待处理队列最前面
+					link_parts = [p for p in link.split('/') if p != '']
+					pending = link_parts + pending
+				else:
+					res_parts.append(part)
+			return ('/' if is_abs else '') + '/'.join(res_parts)
+		path = readlink_f(path) if readlink else path
+		path = path[1:] if self.remote_os_sep == "\\" else path
+		res = self.remote_os_sep.join(path.split('/'))
+		return res
 
 	def get_new_channel(self):
 		chan = self.transport.open_session(timeout=self.user_settings_config["network_timeout"]) # 设置打开session的timeout
@@ -530,18 +566,11 @@ class SSHClient():
 			return "unknow"
 
 	def remote_expandvars(self,path):
+		env_symbol,re_rule = self._env_symbol_rule
+		if not re_rule.search(path):
+			return path
 		if path[-1] == self.remote_os_sep and path != "/":
 			path = path[:-1]
-		re_rule = None
-		env_symbol = ""
-		if self.remote_platform == "windows":
-			re_rule = re.compile(r"%.*?%")
-			env_symbol = "%"
-		else:
-			re_rule = re.compile(r"\$[a-zA-z_]+")
-			env_symbol = "$"
-		if re_rule.match(path) == None:
-			return path
 		remote_env = self.env if self.env else self.get_env()
 		def env_replace(match):
 			env_str = match.group()

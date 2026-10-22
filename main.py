@@ -1306,7 +1306,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					resource["status"] = ["error"]
 					resource["focus"] = True
 					self.update_view_port()
-					raise e
+					LOG.E("Open resource Failed: %s"%(str(e.args)),{
+						"resource_path":resource_path
+					})
 				resource["focus"] = True
 			self.update_view_port()
 
@@ -1391,16 +1393,24 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def file_sync(self,local_path,remote_path,method,on_done=None,sync_stat=True,reset_stat=None):
 		remote_path_limit = [p for p in path_hash_map.keys() if self.client.remote_expandvars(remote_path).startswith(p+self.client.remote_os_sep)][0]
 		local_path_limit = os.path.sep.join(path_hash_map[remote_path_limit][:2][::-1])
+		# 路径逃逸判断，防止使用../..访问到root_path之外
+		# 没有link的检测，只是假设link是安全的，link目录下的内容被认为是root_path目录下的一部分
 		if not (
-				os.path.abspath(local_path).startswith(local_path_limit + os.path.sep)
+				os.path.realpath(local_path).startswith(local_path_limit + os.path.sep)
 				and
-				self.client.sftp_client.normalize(self.client.remote_expandvars(remote_path)).startswith(remote_path_limit + self.client.remote_os_sep)
+				# self.client.sftp_client.normalize 返回的是'/'分割的路径，且路径内可能包含一些奇葩字符，需要按照目标分隔符转换
+				self.client.realpath(remote_path).startswith(remote_path_limit + self.client.remote_os_sep)
 			):
-			LOG.E("Path traversal attempt detected !",{
+			LOG.E("Dangerous path traversal attempt was detected and intercepted",{
 				"local_path":local_path,
+				"local_path realpath":os.path.realpath(local_path),
+				"local_path limit":local_path_limit + os.path.sep,
 				"remote_path":remote_path,
+				"remote_path realpath":self.client.realpath(remote_path),
+				"remote_path limit":remote_path_limit + self.client.remote_os_sep,
 				"method":method
-			})
+			},_raise=False)
+			raise SSHPanelStopOptException("File operation terminated")
 		try:
 			self.client.file_sync(
 				local_path = local_path,
@@ -1441,7 +1451,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		if load_f:
 			if fv:
 				fv.close()
-			os.makedirs(os.path.split(local_path)[0], exist_ok=True)
 			try:
 				self.BUS_LOCK = True
 				resource["status"] = ["bus"]
@@ -1452,6 +1461,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					self.update_view_port()
 					v = self.window.open_file(local_path,NF)
 					v.settings().set("SSH-Panel:resource_file",resource)
+				os.makedirs(os.path.split(local_path)[0], exist_ok=True)
 				self.file_sync(local_path,remote_path,"get",on_transfer_over)
 			except Exception as e:
 				self.BUS_LOCK = False
