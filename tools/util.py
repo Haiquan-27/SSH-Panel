@@ -117,6 +117,17 @@ def html_str(s):
 	replace(" ","&nbsp;").\
 	replace("\n","<br>")
 
+def path_merge(paths,sep):
+	paths_len = len(paths)
+	for i in range(paths_len-1):
+		if paths[i] == '':
+			continue
+		if paths[i][-1] != sep:
+			paths[i] = paths[i] + sep
+		if paths[i+1] and paths[i][-1] == paths[i+1][0] == sep:
+			paths[i] = paths[i][:-1]
+	return ''.join(paths)
+
 def password_input(done_callback,clean_callback=None):
 	input_panel = None
 	def hidden(_):

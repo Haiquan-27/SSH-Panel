@@ -450,7 +450,7 @@ class SSHClient():
 		if callback:
 			callback()
 
-	def realpath(self,path,expandvars=True,readlink=False):
+	def realpath(self,path,expandvars=True,readlink=True):
 		path = self.sftp_client.normalize(path)
 		path = self.remote_expandvars(path) if expandvars else path
 		def readlink_f(_path):
