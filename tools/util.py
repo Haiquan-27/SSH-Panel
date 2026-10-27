@@ -117,7 +117,18 @@ def html_str(s):
 	replace(" ","&nbsp;").\
 	replace("\n","<br>")
 
-def password_input(done_callback,clean_callback=None):
+def path_merge(paths,sep):
+	paths_len = len(paths)
+	for i in range(paths_len-1):
+		if paths[i] == '':
+			continue
+		if paths[i][-1] != sep:
+			paths[i] = paths[i] + sep
+		if paths[i+1] and paths[i][-1] == paths[i+1][0] == sep:
+			paths[i] = paths[i][:-1]
+	return ''.join(paths)
+
+def password_input(done_callback,msg="Password(invisible):",clean_callback=None):
 	input_panel = None
 	def hidden(_):
 		if input_panel:
@@ -131,7 +142,7 @@ def password_input(done_callback,clean_callback=None):
 	def on_clean(_):
 		clean_hidden()
 		clean_callback()
-	input_panel = sublime.active_window().show_input_panel("Password(invisible):","",on_done,hidden,on_clean)
+	input_panel = sublime.active_window().show_input_panel(msg,"",on_done,hidden,on_clean)
 
 class SSHPanelException(Exception):
 	pass
@@ -144,6 +155,27 @@ class SSHPanelLoadingBar():
 		self.msg = msg
 		self.loading = 0
 		self.loading_char = [
+			'⠋⠙⠹⠸⠼⠴⠦⠧',
+			[
+				"■⬝⬝⬝⬝⬝⬝⬝",
+				"■■⬝⬝⬝⬝⬝⬝",
+				"■■■⬝⬝⬝⬝⬝",
+				"■■■■⬝⬝⬝⬝",
+				"⬝■■■■⬝⬝⬝",
+				"⬝⬝■■■■⬝⬝",
+				"⬝⬝⬝■■■■⬝",
+				"⬝⬝⬝⬝■■■■",
+				"⬝⬝⬝⬝⬝■■■",
+				"⬝⬝⬝⬝⬝⬝■■",
+				"⬝⬝⬝⬝⬝⬝⬝■",
+				"⬝⬝⬝⬝⬝⬝■■",
+				"⬝⬝⬝⬝⬝■■■",
+				"⬝⬝⬝⬝■■■■",
+				"⬝⬝⬝■■■■⬝",
+				"⬝⬝■■■■⬝⬝",
+				"⬝■■■■⬝⬝⬝",
+				"■■■■⬝⬝⬝⬝"
+			],
 			'⣾⣽⣻⢿⡿⣟⣯⣷',
 			'○◔◑◕●◕◑◔',
 			'◢◣◤◥',
@@ -178,7 +210,7 @@ class SSHPanelLoadingBar():
 				"███▄",
 				"█▄",
 			]
-		][random.randint(0, 5)]
+		][random.randint(0, 7)]
 		self.loading_lock = threading.Lock()
 
 	@async_run

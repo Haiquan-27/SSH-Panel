@@ -63,12 +63,17 @@ class UserSettings():
 			auth_method = AUTH_METHOD_PASSWORD
 		elif ("username" in user_parameter_keys and
 			"hostname" in user_parameter_keys and
-			"private_key" in user_parameter_keys and
-			len(user_parameter.get("private_key")) == 2 and
-			user_parameter.get("private_key")[0] in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"]
+			"private_key" in user_parameter_keys
+
 			):
 			private_key = user_parameter.get("private_key")
-			private_key[1] = os.path.expanduser(os.path.expandvars(private_key[1]))
+			if isinstance(private_key,list) and len(private_key) == 2:
+				private_key[1] = os.path.expanduser(os.path.expandvars(private_key[1]))
+			elif isinstance(private_key,str):
+				private_key = [
+					"AUTO",
+					os.path.expanduser(os.path.expandvars(private_key))
+				]
 			auth_parameter = {
 				"username":user_parameter.get("username"),
 				"hostname":user_parameter.get("hostname"),
@@ -135,7 +140,7 @@ class UserSettings():
 			if not isinstance(config["username"],str):error_list.append("username")
 			if not isinstance(config["hostname"],str):error_list.append("hostname")
 			if (not isinstance(config["private_key"],list) or
-					config["private_key"][0] not in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"] or
+					config["private_key"][0] not in ["RSAKey","ECDSAKey","Ed25519Key","AUTO"] or
 					not os.path.exists(os.path.expanduser(os.path.expandvars(config["private_key"][1])))):
 				error_list.append("private_key")
 			if not isinstance(config["need_passphrase"],bool):error_list.append("need_passphrase")
@@ -203,6 +208,8 @@ class SSHClient():
 		self.umask = None
 		self.userid = (0,(0)) # (uid,(gid...))
 		self.env = None
+		self.remote_os_sep = ""
+		self._env_symbol_rule = None
 		self._file_sync_Lock = threading.Lock()
 		self.command_ref = None
 		
@@ -387,33 +394,39 @@ class SSHClient():
 					on_auth_failed()
 					LOG.E("Password Authentication Failed",str(e.args))
 			if user_settings_config["password"] == "":
-				password_input(auth_password)
+				password_input(
+					auth_password,
+					"%s@%s's password:"%(user_settings_config["username"],hostname)
+				)
 			else:
 				auth_password(user_settings_config["password"])
 
 		elif user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
 			pkey_kex = user_settings_config["private_key"][0]
 			pkey_file = user_settings_config["private_key"][1]
-			def auth_private_key(pkey):
-				self.transport.auth_publickey(
-					username = user_settings_config["username"],
-					key = pkey
-				)
-				LOG.I("Key Authentication Successful")
-			try:
-				pkey = eval("paramiko.%s"%pkey_kex)
-			except Exception as e:
-				on_auth_failed()
-				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
-			if user_settings_config["need_passphrase"]:
-				password_input(lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)))
-			else:
+			def auth_private_key(pkey_file,passphrase=None):
 				try:
-					auth_private_key(pkey.from_private_key_file(pkey_file))
+					if pkey_kex != "AUTO":
+						pkey = eval("paramiko.%s"%pkey_kex)
+						pkey = pkey.from_private_key_file(pkey_file,password=passphrase)
+					else:
+						pkey = paramiko.PKey.from_path(pkey_file,password=(passphrase.encode('utf-8') if passphrase else None))
+					self.transport.auth_publickey(
+						username = user_settings_config["username"],
+						key = pkey
+					)
+					LOG.I("Key Authentication Successful")
+					self.load_client(auth_done)
 				except Exception as e:
 					on_auth_failed()
 					LOG.E("Key Authentication Failed",str(e.args))
-			self.load_client(auth_done)
+			if user_settings_config["need_passphrase"]:
+				password_input(
+					(lambda passphrase: auth_private_key(pkey_file,passphrase=passphrase)),
+					"Enter passphrase for key '%s'"%pkey_file
+				)
+			else:
+				auth_private_key(pkey_file)
 
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
 			try:
@@ -438,6 +451,8 @@ class SSHClient():
 		channel.invoke_subsystem('sftp')
 		self.sftp_client =  paramiko.SFTPClient(sock=channel)
 		self.remote_platform = self.get_platform()
+		self.remote_os_sep = "\\" if self.remote_platform == "windows" else "/"
+		self._env_symbol_rule = ("%",re.compile(r"%([a-zA-Z_][a-zA-Z0-9_]*)%")) if self.remote_platform == "windows" else ("$",re.compile(r"\$([a-zA-Z_][a-zA-Z0-9_]*)"))
 		self.env = self.get_env()
 		self.umask = int(self.user_settings_config["umask"],8)
 		self.user_settings.save_config()
@@ -446,9 +461,41 @@ class SSHClient():
 		if callback:
 			callback()
 
-	@property
-	def remote_os_sep(self):
-		return "\\" if self.remote_platform == "windows" else "/"
+	def realpath(self,path,expandvars=True,readlink=True):
+		path = self.sftp_client.normalize(path)
+		path = self.remote_expandvars(path) if expandvars else path
+		def readlink_f(_path):
+			pending = [p for p in _path.split('/') if p != '']   # 待处理队列
+			res_parts = [] # 已解析的绝对路径分量
+			is_abs = _path.startswith('/')
+			while pending:
+				part = pending.pop(0)
+				if part == '.':
+					continue
+				if part == '..':
+					if res_parts: res_parts.pop()
+					continue
+				candidate = '/' + '/'.join(res_parts + [part]) if is_abs else '/'.join(res_parts + [part])
+				try:
+					st = self.sftp_client.lstat(candidate)
+				except IOError:
+					res_parts.append(part)
+					continue
+				if stat.S_ISLNK(st.st_mode):
+					link = self.sftp_client.readlink(candidate)
+					if link.startswith('/'):
+						res_parts = []
+						is_abs = True
+					# 把 link 的分量插到待处理队列最前面
+					link_parts = [p for p in link.split('/') if p != '']
+					pending = link_parts + pending
+				else:
+					res_parts.append(part)
+			return ('/' if is_abs else '') + '/'.join(res_parts)
+		path = readlink_f(path) if readlink else path
+		path = path[1:] if self.remote_os_sep == "\\" else path
+		res = self.remote_os_sep.join(path.split('/'))
+		return res
 
 	def get_new_channel(self):
 		chan = self.transport.open_session(timeout=self.user_settings_config["network_timeout"]) # 设置打开session的timeout
@@ -530,18 +577,11 @@ class SSHClient():
 			return "unknow"
 
 	def remote_expandvars(self,path):
+		env_symbol,re_rule = self._env_symbol_rule
+		if not re_rule.search(path):
+			return path
 		if path[-1] == self.remote_os_sep and path != "/":
 			path = path[:-1]
-		re_rule = None
-		env_symbol = ""
-		if self.remote_platform == "windows":
-			re_rule = re.compile(r"%.*?%")
-			env_symbol = "%"
-		else:
-			re_rule = re.compile(r"\$[a-zA-z_]+")
-			env_symbol = "$"
-		if re_rule.match(path) == None:
-			return path
 		remote_env = self.env if self.env else self.get_env()
 		def env_replace(match):
 			env_str = match.group()
@@ -571,11 +611,11 @@ class SSHClient():
 			res.append(fs_item)
 		return res
 
-	def file_sync(self,local_path,remote_path,dir,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
+	def file_sync(self,local_path,remote_path,method,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
 		if not stop_callback:
 			return lambda: False
 		with self._file_sync_Lock:
-			if dir == "put":
+			if method == "put":
 				# self.sftp_client.put(local_path, remote_path,transfer_callback)
 				with self.sftp_client.open(remote_path,"w",bufsize=1024) as rf:
 					with open(local_path,"rb") as lf:
@@ -603,7 +643,7 @@ class SSHClient():
 					self.sftp_client.utime(remote_path,(local_atime,local_mtime))
 					self.sftp_client.chmod(remote_path,stat.S_IMODE(local_stat.st_mode))
 				LOG.D("remote:%s sync"%remote_path)
-			elif dir == "get":
+			elif method == "get":
 				os.makedirs(os.path.split(local_path)[0],exist_ok=True)
 				# self.sftp_client.get(remote_path,local_path,transfer_callback)
 				with open(local_path,"wb",buffering=1024) as lf:
