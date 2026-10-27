@@ -134,8 +134,9 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 
 #### 如果服务器使用公私密钥对进行认证，应使用如下选项:
 * `private_key` 用于设置加密算法和私钥文件路径，此项只在服务器要求使用公私密钥对进行认证时有效
-	> 密钥算法支持"RSAKey"、"DSSKey"、"ECDSAKey"、"Ed25519Key"
-	> 此项的值是一个2元素的列表，格式为[{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
+	> 密钥算法支持"RSAKey"、"ECDSAKey"、"Ed25519Key"
+	> 可以直接使用密钥路径进行指定，例如`"private_key":"~/.ssh/id_rsa"`,密钥类型将被自动识别
+	> 或用一个2元素的列表显式指定此项，格式为[{RSAKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
 	> !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
 * `"need_passphrase"` 告知插件此密钥生成时是否使用了passphrase，值为bool
 

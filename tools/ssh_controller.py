@@ -63,12 +63,17 @@ class UserSettings():
 			auth_method = AUTH_METHOD_PASSWORD
 		elif ("username" in user_parameter_keys and
 			"hostname" in user_parameter_keys and
-			"private_key" in user_parameter_keys and
-			len(user_parameter.get("private_key")) == 2 and
-			user_parameter.get("private_key")[0] in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"]
+			"private_key" in user_parameter_keys
+
 			):
 			private_key = user_parameter.get("private_key")
-			private_key[1] = os.path.expanduser(os.path.expandvars(private_key[1]))
+			if isinstance(private_key,list) and len(private_key) == 2:
+				private_key[1] = os.path.expanduser(os.path.expandvars(private_key[1]))
+			elif isinstance(private_key,str):
+				private_key = [
+					"AUTO",
+					os.path.expanduser(os.path.expandvars(private_key))
+				]
 			auth_parameter = {
 				"username":user_parameter.get("username"),
 				"hostname":user_parameter.get("hostname"),
@@ -135,7 +140,7 @@ class UserSettings():
 			if not isinstance(config["username"],str):error_list.append("username")
 			if not isinstance(config["hostname"],str):error_list.append("hostname")
 			if (not isinstance(config["private_key"],list) or
-					config["private_key"][0] not in ["RSAKey","DSSKey","ECDSAKey","Ed25519Key"] or
+					config["private_key"][0] not in ["RSAKey","ECDSAKey","Ed25519Key","AUTO"] or
 					not os.path.exists(os.path.expanduser(os.path.expandvars(config["private_key"][1])))):
 				error_list.append("private_key")
 			if not isinstance(config["need_passphrase"],bool):error_list.append("need_passphrase")
@@ -389,33 +394,39 @@ class SSHClient():
 					on_auth_failed()
 					LOG.E("Password Authentication Failed",str(e.args))
 			if user_settings_config["password"] == "":
-				password_input(auth_password)
+				password_input(
+					auth_password,
+					"%s@%s's password:"%(user_settings_config["username"],hostname)
+				)
 			else:
 				auth_password(user_settings_config["password"])
 
 		elif user_settings.auth_method == AUTH_METHOD_PRIVATEKEY:
 			pkey_kex = user_settings_config["private_key"][0]
 			pkey_file = user_settings_config["private_key"][1]
-			def auth_private_key(pkey):
-				self.transport.auth_publickey(
-					username = user_settings_config["username"],
-					key = pkey
-				)
-				LOG.I("Key Authentication Successful")
-			try:
-				pkey = eval("paramiko.%s"%pkey_kex)
-			except Exception as e:
-				on_auth_failed()
-				LOG.E("Key type '%s' is not available"%pkey_kex,str(e.args))
-			if user_settings_config["need_passphrase"]:
-				password_input(lambda passphrase: auth_private_key(pkey.from_private_key_file(pkey_file,password=passphrase)))
-			else:
+			def auth_private_key(pkey_file,passphrase=None):
 				try:
-					auth_private_key(pkey.from_private_key_file(pkey_file))
+					if pkey_kex != "AUTO":
+						pkey = eval("paramiko.%s"%pkey_kex)
+						pkey = pkey.from_private_key_file(pkey_file,password=passphrase)
+					else:
+						pkey = paramiko.PKey.from_path(pkey_file,password=(passphrase.encode('utf-8') if passphrase else None))
+					self.transport.auth_publickey(
+						username = user_settings_config["username"],
+						key = pkey
+					)
+					LOG.I("Key Authentication Successful")
+					self.load_client(auth_done)
 				except Exception as e:
 					on_auth_failed()
 					LOG.E("Key Authentication Failed",str(e.args))
-			self.load_client(auth_done)
+			if user_settings_config["need_passphrase"]:
+				password_input(
+					(lambda passphrase: auth_private_key(pkey_file,passphrase=passphrase)),
+					"Enter passphrase for key '%s'"%pkey_file
+				)
+			else:
+				auth_private_key(pkey_file)
 
 		elif user_settings.auth_method == AUTH_METHOD_GSSAPI:
 			try:

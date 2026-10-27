@@ -139,11 +139,10 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 
 #### if your server uses private and public_key authentication,option is:
 * `private_key` used to set the encryption method and private key path when logged in to the server with the key
-```
- key algorithm available "RSAKey","DSSKey","ECDSAKey","Ed25519Key"
- The value is a list of 2 elements like [{RSAKey/DSSKey/ECDSAKey/Ed25519Key},{private key path}]
- !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter or use a tool to convert the existing private key file format
-```
+	> key algorithm available "RSAKey","ECDSAKey","Ed25519Key"
+	> You can directly specify it using the key path, for example `"private_key":"~/.ssh/id_rsa"`,The key type will be automatically detected
+	> Or explicitly specify this item with a list of 2 elements like [{RSAKey/ECDSAKey/Ed25519Key},{private key path}]
+	> !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter or use a tool to convert the existing private key file format
 * `"need_passphrase"` tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 
 #### if your server uses gssapi authentication,option is:

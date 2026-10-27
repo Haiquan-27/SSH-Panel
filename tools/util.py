@@ -128,7 +128,7 @@ def path_merge(paths,sep):
 			paths[i] = paths[i][:-1]
 	return ''.join(paths)
 
-def password_input(done_callback,clean_callback=None):
+def password_input(done_callback,msg="Password(invisible):",clean_callback=None):
 	input_panel = None
 	def hidden(_):
 		if input_panel:
@@ -142,7 +142,7 @@ def password_input(done_callback,clean_callback=None):
 	def on_clean(_):
 		clean_hidden()
 		clean_callback()
-	input_panel = sublime.active_window().show_input_panel("Password(invisible):","",on_done,hidden,on_clean)
+	input_panel = sublime.active_window().show_input_panel(msg,"",on_done,hidden,on_clean)
 
 class SSHPanelException(Exception):
 	pass
