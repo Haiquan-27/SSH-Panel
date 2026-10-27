@@ -29,8 +29,8 @@
 		"MyServer1":{
 			"username":"",
 			"hostname":"",
-			"private_key":"~/.ssh/id_rsa",						// automatically detected to RSAKey
-			// "private_key":["RSAKey","~/.ssh/id_rsa"],		// ssh-keygen -t rsa [-m PEM]
+			"private_key":"~/.ssh/id_rsa",					// automatically detected to RSAKey
+			// "private_key":["RSAKey","~/.ssh/id_rsa"],			// ssh-keygen -t rsa [-m PEM]
 			// "private_key":["ECDSAKey","~/.ssh/id_ecdsa"]		// ssh-keygen -t ecdsa [-m PEM]
 			// "private_key":["Ed25519Key","~/.ssh/id_ed25519"]	// ssh-keygen -t ed25519 [-m PEM]
 			"need_passphrase":false,	// (optional) default is false, if is true will prompt intput when connect

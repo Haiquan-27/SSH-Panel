@@ -112,13 +112,13 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 * `network_timeout` 用于认证和连接到远程主机的超时秒数
 * `port` 服务器上的SSH服务端口，默认22
 * `sftp_shell` 配置会话是否支持shell
-> 当连接完成时，插件会向sftp shell执行"echo ~"命令，通过命令返回结果确定目标服务器的OS，以确保设置正确的路径分隔符，环境变量的值也将通过"env"命令获取
->当SFTP会话禁止shell权限时，如果'sftp_sthell'的值为true，在连接时和获取用户id时的操作将导致产生shell命令失败的超时时间，
->将`sftp_shell`设为false以避免上述情况的发生，路径分割符的设置将通过其他方式获得，同时在"remote_path"中使用的环境变量将不再可用
+	- 当连接完成时，插件会向sftp shell执行"echo ~"命令，通过命令返回结果确定目标服务器的OS，以确保设置正确的路径分隔符，环境变量的值也将通过"env"命令获取
+	- 当SFTP会话禁止shell权限时，如果'sftp_sthell'的值为true，在连接时和获取用户id时的操作将导致产生shell命令失败的超时时间，
+	- 将`sftp_shell`设为false以避免上述情况的发生，路径分割符的设置将通过其他方式获得，同时在"remote_path"中使用的环境变量将不再可用
 * `known_hosts_file` 本地know_hosts文件路径，如果设置此项则
-	> 连接时使用known_hosts_file中记录的主机密钥算法
-	> 如主机未在know_hosts_file中记录，则会提示是否添加主机公钥
-	> 当在连接成功后得到的主机公钥与known_host_file中记录的公钥不匹配时将会警告并强制关闭当前连接
+	- 连接时使用known_hosts_file中记录的主机密钥算法
+	- 如主机未在know_hosts_file中记录，则会提示是否添加主机公钥
+	- 当在连接成功后得到的主机公钥与known_host_file中记录的公钥不匹配时将会警告并强制关闭当前连接
 * `username` 远程主机上的用户名
 * `hostname` 远程主机IP或域名
 * `always_fingerprint_confirm` 每次连接要求确认主机指纹，如果设置了`known_hosts_file`则直接通过known_hosts_file验证主机指纹
@@ -134,10 +134,10 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 
 #### 如果服务器使用公私密钥对进行认证，应使用如下选项:
 * `private_key` 用于设置加密算法和私钥文件路径，此项只在服务器要求使用公私密钥对进行认证时有效
-	> 密钥算法支持"RSAKey"、"ECDSAKey"、"Ed25519Key"
-	> 可以直接使用密钥路径进行指定，例如`"private_key":"~/.ssh/id_rsa"`,密钥类型将被自动识别
-	> 或用一个2元素的列表显式指定此项，格式为[{RSAKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
-	> !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
+	- 密钥算法支持"RSAKey"、"ECDSAKey"、"Ed25519Key"
+	- 可以直接使用密钥路径进行指定，例如`"private_key":"~/.ssh/id_rsa"`,密钥类型将被自动识别
+	- 或用一个2元素的列表显式指定此项，格式为[{RSAKey/ECDSAKey/Ed25519Key},{私钥文件路径}]
+	- !! 对于密钥文件，如果你使用的sublime版本<4000 生成密钥的命令必须包括[-m PEM]参数，或对已有的私钥文件转换格式
 * `"need_passphrase"` 告知插件此密钥生成时是否使用了passphrase，值为bool
 
 #### 如果服务器使用GSSAPI进行认证，应使用如下选项:
@@ -194,7 +194,8 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 		"username":"test",
 		"hostname":"Ubuntu", // NetBIOS / DNS 名称
 		"port":2244,
-		"private_key":["RSAKey","~/.ssh/id_rsa"],
+		"private_key":"~/.ssh/id_rsa",
+		// "private_key":["RSAKey","~/.ssh/id_rsa"], // 显式指定
 		"need_passphrase":false，
 		"remote_path":[
 			"/etc/apache2"

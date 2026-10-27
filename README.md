@@ -117,13 +117,13 @@ After the first connection, this path will be save to the user configuration and
 * `network_timeout` The number of timeout seconds used to authenticate and connect to the remote host
 * `port` SSH service port of remote host,default is 22
 * `sftp_shell` Configure whether the session supports shell
-> When the connection is complete, we will try to execute "echo ~" to the sftp shell. The return result will determine the OS platform of the target server to ensure the correct path delimiter is set, and the values of the environment variables will also be obtained through the "env" command
-> When shell permissions are disabled in an SFTP session, if 'sftp_sthell' is true, it will consume a timeout of shell failures when connecting and obtain user ID
-> Set 'sftp_sthell' to false to avoid this situation, and the path delimiter setting will no longer depend on the shell and the environment variables used in 'remote_path' will be unavailable
+	- When the connection is complete, we will try to execute "echo ~" to the sftp shell. The return result will determine the OS platform of the target server to ensure the correct path delimiter is set, and the values of the environment variables will also be obtained through the "env" command
+	- When shell permissions are disabled in an SFTP session, if 'sftp_sthell' is true, it will consume a timeout of shell failures when connecting and obtain user ID
+	- Set 'sftp_sthell' to false to avoid this situation, and the path delimiter setting will no longer depend on the shell and the environment variables used in 'remote_path' will be unavailable
 * `known_hosts_file` know_hosts file path at local,if filled it will:
-	> use the host key algorithm recorded in known_hosts_file when connecting
-	> if host not recorded in known_hosts_file, confirm whether to add and save the host public_key when connecting
-	> warn and force close connect when public_key obtained from remote host not matches public_key recorded in known_host_file
+	- use the host key algorithm recorded in known_hosts_file when connecting
+	- if host not recorded in known_hosts_file, confirm whether to add and save the host public_key when connecting
+	- warn and force close connect when public_key obtained from remote host not matches public_key recorded in known_host_file
 * `username` user name on remote host
 * `hostname` remote host IP address or domain name
 * `always_fingerprint_confirm` confirm server fingerprint every time,if `known_hosts_file` is set wile use AA to verify the host fingerprint
@@ -139,10 +139,10 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 
 #### if your server uses private and public_key authentication,option is:
 * `private_key` used to set the encryption method and private key path when logged in to the server with the key
-	> key algorithm available "RSAKey","ECDSAKey","Ed25519Key"
-	> You can directly specify it using the key path, for example `"private_key":"~/.ssh/id_rsa"`,The key type will be automatically detected
-	> Or explicitly specify this item with a list of 2 elements like [{RSAKey/ECDSAKey/Ed25519Key},{private key path}]
-	> !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter or use a tool to convert the existing private key file format
+	- key algorithm available "RSAKey","ECDSAKey","Ed25519Key"
+	- You can directly specify it using the key path, for example `"private_key":"~/.ssh/id_rsa"`,The key type will be automatically detected
+	- Or explicitly specify this item with a list of 2 elements like [{RSAKey/ECDSAKey/Ed25519Key},{private key path}]
+	- !! if you sublime version < 4000 the command to generate the key must contain the [-m PEM] parameter or use a tool to convert the existing private key file format
 * `"need_passphrase"` tells the plug-in whether a passphrase is set when generating a key pair, value is bool
 
 #### if your server uses gssapi authentication,option is:
@@ -198,7 +198,8 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 		"username":"test",
 		"hostname":"TestServer", // NetBIOS / DNS Name
 		"port":2244,
-		"private_key":["RSAKey","~/.ssh/id_rsa"],
+		"private_key":"~/.ssh/id_rsa",
+		// "private_key":["RSAKey","~/.ssh/id_rsa"], // explicitly specify
 		"need_passphrase":false,
 		"remote_path":[
 			"/etc/apache2"
