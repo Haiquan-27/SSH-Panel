@@ -167,8 +167,8 @@ Connect to jump host and then establishing a TCP forwarding to the ultimate dest
 * `icon_theme` if `"icon_style":"image"`,this value represents the path of the theme package where the icon is located,Example:
 	- `"Packages/"`  Match from all path
 	- `"Packages/Theme - Default/"`  Match within a specific Theme path
-	- `"Packages/zzz A File Icon zzz/patches/general/multi/"`  if `A File Icon` already installed,multi-color icons can be used
-	- `"Packages/zzz A File Icon zzz/patches/general/single/"`  if `A File Icon` already installed,single-color icons can be used
+	- `"Packages/A File Icon/icons/color"`  if `A File Icon` already installed,`color` icons can be used
+	- `"Packages/A File Icon/icons/mono"`  if `A File Icon` already installed,`mono` icons can be used
 * `icon_quality` if `"icon_style":"image"`,This value is used to specify the resolution prefix used by the displayed icon, which is generally defined before the icon file name in most theme packs,chiose from `""` | `"@2x"` | `"@3x"`
 * `icon_color` if `"icon_style":"image"`,this value is used to specify the color of icons for general files and directories,but it will not affect the icons in the theme pack,chiose from `"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
 * `nav_bar_color_offset` change color of the directory panel,value range is -16777215~+16777215(-0xffffff~+0xffffff) type is string,this value will be added with the RGB color of the current view background to get a new RGB color，used to distinguish the display of navigation panel views

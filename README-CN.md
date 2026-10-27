@@ -160,8 +160,8 @@ window.run_command('ssh_panel_install_dependencies',args={"source":"gitee"})  # 
 * `icon_theme` 如果设置了`"icon_style":"image"`,则此值用于指定图标所在主题包的路径,例如这样设置：
 	- `"Packages/"`  在所有的包路径下匹配
 	- `"Packages/Theme - Default/"`  在特定的主题包路径下匹配
-	- `"Packages/zzz A File Icon zzz/patches/general/multi/"`  如果安装了 `A File Icon` 可以使用其下的多色图标
-	- `"Packages/zzz A File Icon zzz/patches/general/single/"`  如果安装了 `A File Icon` 可以使用其下的单色图标
+	- `"Packages/A File Icon/icons/color"`  如果安装了 `A File Icon` 可以使用其下的多色图标
+	- `"Packages/A File Icon/icons/mono"`  如果安装了 `A File Icon` 可以使用其下的单色图标
 * `icon_quality` 如果设置了`"icon_style":"image"`，则此值用于指定被显示的图标使用的分辨率前缀，此前缀一般定义在大多数主题包中图标文件名的前段，可选`""` | `"@2x"` | `"@3x"`
 * `icon_color` 如果设置了`"icon_style":"image"`，则此值用于指定一般文件和目录图标的颜色，但不会影响主题包中的图标,可选`"blue"` | `"green"` | `"white"` | `"yellow"` | `"gray"`
 * `nav_bar_color_offset` 更改目录面板的颜色，值为-16777215~+16777215(-0xffffff~+0xffffff)，值为字符串，此值将与当前视图背景的rgb色进行加运算得到一个新的rgb色，用于区分显示导航面板视图
