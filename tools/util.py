@@ -76,7 +76,8 @@ def html_tmp(content):
 
 def abstract_hex(algorithm:"加密算法 可用 md5 sha256 sha1 ....",value:bytes):
 	abstract_algorithm_name = algorithm.lower()
-	abstract_algorithm_method = eval("hashlib.%s"%abstract_algorithm_name)
+	# abstract_algorithm_method = eval("hashlib.%s"%abstract_algorithm_name)
+	abstract_algorithm_method = getattr(hashlib,abstract_algorithm_name)
 	return abstract_algorithm_method(value).hexdigest()
 
 def abstract_base64(algorithm:"加密算法 可用 md5 sha256 sha1 ....",value:bytes):
@@ -118,15 +119,18 @@ def html_str(s):
 	replace("\n","<br>")
 
 def path_merge(paths,sep):
-	paths_len = len(paths)
-	for i in range(paths_len-1):
-		if paths[i] == '':
-			continue
-		if paths[i][-1] != sep:
-			paths[i] = paths[i] + sep
-		if paths[i+1] and paths[i][-1] == paths[i+1][0] == sep:
-			paths[i] = paths[i][:-1]
-	return ''.join(paths)
+	parts = [p for p in paths if p != ""]
+	is_abs = bool(paths) and paths[0] == ""
+	if not parts:
+		return sep if is_abs else ""
+	res = parts[0]
+	for p in parts[1:]:
+		if not res.endswith(sep):
+			res += sep
+		res += p.lstrip(sep)          # 避免出现重复分隔符
+	if is_abs and not res.startswith(sep):
+		res = sep + res
+	return res
 
 def password_input(done_callback,msg="Password(invisible):",clean_callback=None):
 	input_panel = None
@@ -141,7 +145,8 @@ def password_input(done_callback,msg="Password(invisible):",clean_callback=None)
 		done_callback(pwd)
 	def on_clean(_):
 		clean_hidden()
-		clean_callback()
+		if clean_callback:
+			clean_callback()
 	input_panel = sublime.active_window().show_input_panel(msg,"",on_done,hidden,on_clean)
 
 class SSHPanelException(Exception):
@@ -307,8 +312,9 @@ class SshPanelOutputCommand(sublime_plugin.TextCommand):
 			panel_view.settings().set("line_numbers",False)
 			panel_view.settings().set("scroll_past_end",False)
 			if panel_view.settings().get("color_scheme",None):
-				# panel_view.settings().set("color_scheme",sublime.load_settings("Preferences.sublime-settings").get("color_scheme"))
-				panel_view.settings().set("color_scheme",sublime.find_resources("SSH-Panel.hidden-color-scheme")[0])
+				color_scheme = sublime.find_resources("SSH-Panel.hidden-color-scheme")
+				if color_scheme:
+					panel_view.settings().set("color_scheme",color_scheme[0])
 		self.panel_view = panel_view
 		if display:
 			window.run_command("show_panel",args={"panel":"output."+output_panel_name})

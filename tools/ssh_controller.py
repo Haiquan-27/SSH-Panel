@@ -9,7 +9,7 @@ import re
 import sys
 import paramiko
 
-AUTH_METHOD_PASSWORD = 0	# 0: username and password	
+AUTH_METHOD_PASSWORD = 0		# 0: username and password
 AUTH_METHOD_PRIVATEKEY = 1	# 1: username and private_key	
 AUTH_METHOD_GSSAPI = 2		# 2: username and gssapi	
 
@@ -112,7 +112,7 @@ class UserSettings():
 	@classmethod
 	def check_config_error(cls,config,auth_method):
 		error_list = []
-		if config==None or auth_method==None:
+		if not config or auth_method not in (AUTH_METHOD_PASSWORD, AUTH_METHOD_PRIVATEKEY, AUTH_METHOD_GSSAPI):
 			LOG.E("parameter parse failed please, possible causes following:",
 				[
 					"your missing requisite parameter",
@@ -127,7 +127,7 @@ class UserSettings():
 		if not isinstance(config["port"],int):error_list.append("port")
 		if not isinstance(config["terminus_encoding"],str):error_list.append("terminus_encoding")
 		if not isinstance(config["keepalive"],int):error_list.append("keepalive")
-		if not isinstance(config["jump_host"],str):error_list.append("keepalive")
+		if not isinstance(config["jump_host"],str):error_list.append("jump_host")
 		if (not os.path.exists(os.path.expanduser(os.path.expandvars(config["known_hosts_file"]))) and config["known_hosts_file"] != ""):
 			error_list.append("known_hosts_file")
 		#  os.path.exists(os.path.expandvars(user_parameter.get("private_key")[1]))
@@ -155,11 +155,15 @@ class UserSettings():
 
 	@classmethod
 	def to_config(cls,auth_parameter,connect_parameter,auth_method=None):
+		all_config = dict(auth_parameter,**connect_parameter)
+		if all_config.get("save_password") == False:
+			all_config["password"] = ""
+		return all_config
+
+	@property
+	def config(self):
 		try:
-			all_config = dict(auth_parameter,**connect_parameter)
-			if all_config.get("save_password") == False:
-				all_config["password"] = ""
-			return all_config
+			return UserSettings.to_config(self.auth_parameter,self.connect_parameter)
 		except TypeError:
 			LOG.E("UserSettings has not init",{
 					"server_name": self.server_name,
@@ -167,9 +171,6 @@ class UserSettings():
 					"connect_parameter": self.connect_parameter,
 					"auth_method": self.auth_method
 				})
-	@property
-	def config(self):
-		return UserSettings.to_config(self.auth_parameter,self.connect_parameter)
 
 	def save_config(self,config=None):
 		server_name = self.server_name
@@ -185,12 +186,13 @@ class UserSettings():
 			st_settings.set("server_settings",server_settings)
 		sublime.save_settings(settings_name)
 
+	@classmethod
 	def delete_from_settings_file(cls,server_name):
 		st_settings = sublime.load_settings(settings_name)
 		server_settings = st_settings.get("server_settings")
 		del server_settings[server_name]
 		st_settings.set("server_settings",server_settings)
-		subilme.save_settings(settings_name)
+		sublime.save_settings(settings_name)
 
 
 class SSHClient():
@@ -592,8 +594,10 @@ class SSHClient():
 
 	def disconnect(self):
 		LOG.I(self.user_settings.server_name+" close")
-		self.transport.close()
-		self.sftp_client.close()
+		if self.transport:
+			self.transport.close()
+		if self.sftp_client:
+			self.sftp_client.close()
 		if self.user_settings_config["jump_host"]:
 			self.jump_client.disconnect()
 
@@ -613,7 +617,7 @@ class SSHClient():
 
 	def file_sync(self,local_path,remote_path,method,transfer_callback=None,sync_stat=True,reset_stat=None,stop_callback=None): # 写入并保持远程文件原始权限
 		if not stop_callback:
-			return lambda: False
+			stop_callback = lambda: False
 		with self._file_sync_Lock:
 			if method == "put":
 				# self.sftp_client.put(local_path, remote_path,transfer_callback)

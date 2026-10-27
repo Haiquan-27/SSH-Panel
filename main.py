@@ -265,7 +265,7 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 		self.user_config_data = {}
 		for server_name,user_parameter in sublime.load_settings(settings_name).get("server_settings").items():
 			user_parameter = UserSettings.format_parameter(default_settings,user_parameter)
-			if user_parameter == (None,(None,None)): # 配置参数错误
+			if user_parameter == ({},{},None): # 配置参数错误
 				self.user_config_data[server_name] = (None,None)
 			else:
 				self.user_config_data[server_name] = (UserSettings.to_config(*user_parameter),user_parameter[2])
@@ -311,10 +311,12 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 			panel_view.set_viewport_position((0,0))
 
 		def on_done(index):
-			server_name,user_config,error_parameter_list = self.select
 			if index == -1:
 				window.destroy_output_panel(output_panel_name)
 				return
+			if not self.select:
+				return
+			server_name,user_config,error_parameter_list = self.select
 			if error_parameter_list != []:
 				return
 			# ensure a unique client with server_name
@@ -603,7 +605,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			r = resource_data[id]
 			path_where = r["where"]
 			root_path = r["root_path"]
-			if path_where.startswith(resource_path) and root_path == resource["root_path"]:
+			if (path_where == resource_path or path_where.startswith(resource_path+self.client.remote_os_sep)) and root_path == resource["root_path"]:
 				dl.append(id)
 			if root_path == resource_path: # 当在root_path下
 				dl.append(id)
@@ -614,7 +616,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		# 填补删除的空缺，让视图在目录收起时不会因文本行数变化而漂移
 		# 当当前视图可见底部留白区域，则进行行填补，否则清空已存在的留白
 		# 由update_view_port进行渲染
-		content_lines = nv.settings().get("SSH-Panel:resource_count",0) + 3
 		nv.settings().set("SSH-Panel:temp_lines",temp_lines)
 
 	def show_focus_resource(self):
@@ -861,15 +862,21 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			resource_path = self.rpath_by_resource(resource)
 			umask = self.client.umask
 			def on_done(path):
-				if path[-1] == self.client.remote_os_sep: return
-				self.client.sftp_client.open(path,"a").close()
-				self.client.sftp_client.chmod(path, 0o666&~umask)
-				new = _resource_create_file(
-					path,
-					self.client.sftp_client.stat(path),
-					resource
-				)
-				self.focus_resource = new
+				try:
+					if path and path[-1] == self.client.remote_os_sep: return
+					self.client.sftp_client.open(path,"a").close()
+					self.client.sftp_client.chmod(path, 0o666&~umask)
+					new = _resource_create_file(
+						path,
+						self.client.sftp_client.stat(path),
+						resource
+					)
+					self.focus_resource = new
+				except Exception as e:
+					LOG.E("Create File Failed",{
+						"path":path,
+						"error":str(e.args)
+					})
 				self.update_view_port()
 				self.show_focus_resource()
 				sublime.status_message("create %s"%self.rpath_by_resource(new))
@@ -893,7 +900,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"focus": False,
 				"status" : [],
 				"root_path": parent_resource["root_path"] if parent_resource["root_path"] != "" else self.rpath_by_resource(parent_resource),
-				"where": remote_os_sep.join(path.split(remote_os_sep)[:-1]),
 				"where": path_merge(path.split(remote_os_sep)[:-1],remote_os_sep),
 				"depth": parent_resource["depth"] + 1
 			}
@@ -906,18 +912,24 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			resource_path = self.rpath_by_resource(resource)
 			umask = self.client.umask
 			def on_done(path):
-				if path[-1] == self.client.remote_os_sep:
-					path = path[:-1]
-				self.client.sftp_client.mkdir(path,0o777&~umask)
-				new = _resource_create_dir(
-					path,
-					self.client.sftp_client.stat(path),
-					resource
-				)
-				self.focus_resource = new
-				self.update_view_port()
-				self.show_focus_resource()
-				sublime.status_message("create %s"%self.rpath_by_resource(new))
+				try:
+					if path and path[-1] == self.client.remote_os_sep:
+						path = path[:-1]
+					self.client.sftp_client.mkdir(path,0o777&~umask)
+					new = _resource_create_dir(
+						path,
+						self.client.sftp_client.stat(path),
+						resource
+					)
+					self.focus_resource = new
+					self.update_view_port()
+					self.show_focus_resource()
+					sublime.status_message("create %s"%self.rpath_by_resource(new))
+				except Exception as e:
+					LOG.E("Create Folder Failed",{
+						"path":path,
+						"error":str(e.args)
+					})
 			self.window.show_input_panel(
 				"new dir:",
 				resource_path+self.client.remote_os_sep,
@@ -975,7 +987,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							for file in sub_files:
 								l_path = local_dir_path + os.path.sep + file
 								r_path = remote_dir_path + remote_os_sep + file
-								self.file_sync(l_path, r_path, "put")
+								self.file_sync(l_path, r_path, "put", allow_local_paths=dir_list)
 								SUM_F.append(r_path)
 						new["status"] = ["ok"]
 					except Exception as e:
@@ -1017,7 +1029,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					l_path = file
 					r_path = put_path + remote_os_sep + os.path.split(file)[1]
 					try:
-						self.file_sync(l_path, r_path, "put")
+						self.file_sync(l_path, r_path, "put", allow_local_paths=file_list)
 					except Exception:
 						continue
 					new = _resource_create_file(
@@ -1124,7 +1136,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				make_in_local(remote_path)
 				self.BUS_LOCK = False
 				self.update_view_port()
-				LOG.I("Give %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
+				LOG.I("Get %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
 				if stop_e:
 					raise stop_e
 			if int(sublime.version()) >= 4081:
@@ -1257,7 +1269,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		def resource_force_load(id):
 			select_resource = self.resource_data[id]
 			if select_resource["is_dir"]:
-				os.makedirs(l_path,exist_ok=True)
+				os.makedirs(self.lpath_by_resource(select_resource),exist_ok=True)
 			else:
 				self.open_resource_file(select_resource,force_load=True)
 
@@ -1389,41 +1401,40 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					on_done()
 		return transfer
 
-	def file_sync(self,local_path,remote_path,method,on_done=None,sync_stat=True,reset_stat=None):
-		local_realpath = os.path.realpath(local_path)
-		remote_realpath = self.client.realpath(remote_path)
+	def file_sync(self,local_path,remote_path,method,on_done=None,sync_stat=True,reset_stat=None,allow_local_paths=None):
+		# allow_local_paths: 可包含文件或目录；文件按精确路径放行，目录按目录边界放行其子项
 		# 路径逃逸判断，防止使用../..访问到SFTP-Local之外
 		# 没有link的检测，只是假设link是安全的，link目录下的内容被认为是root_path目录下的一部分
 		# 所以不检查remote_path的逃逸
-		limit = [
-			(
-				path_merge([p,self.client.remote_os_sep],self.client.remote_os_sep),
-				path_merge([path_hash_map[p][1],path_hash_map[p][0],os.path.sep],os.path.sep)
-			)
-			for p in path_hash_map.keys() 
-			# if remote_path.startswith(
-			# 	path_merge([p,self.client.remote_os_sep],self.client.remote_os_sep)
-			# )
-			if local_path.startswith(
-				path_merge([path_hash_map[p][1],path_hash_map[p][0],os.path.sep],os.path.sep)
-			)
+		def is_under(path,root):
+			if not root:
+				return False                      # 过滤空串，避免 startswith("") 放行一切
+			root = os.path.realpath(root)          # 与 local_realpath 保持一致，支持软链接
+			if root == os.path.sep:
+				return path.startswith(os.path.sep)
+			return path == root or path.startswith(root + os.path.sep)
+
+		local_realpath = os.path.realpath(local_path)
+		# 白名单 = 本 client 的 SFTP-Local 根 + 本次操作显式授权的本地路径（文件或目录）
+		local_limit = [
+			path_merge([d[1],d[0]],os.path.sep)
+			for d in path_hash_map.values() if d[2] == self.client_id
 		]
-		remote_path_limit,local_path_limit = zip(*limit) if limit else ([],[])
-		if not (
-				sum([local_realpath.startswith(ll) for ll in local_path_limit]) >= 1
-				# and
-				# sum([remote_realpath.startswith(rl) for rl in remote_path_limit]) >= 1
-			):
+		if allow_local_paths:
+			if isinstance(allow_local_paths,str):
+				allow_local_paths = [allow_local_paths]
+			local_limit += [p for p in allow_local_paths if p]
+
+		if not any(is_under(local_realpath,p) for p in local_limit):
 			LOG.E("Dangerous path traversal attempt was detected and intercepted",{
 				"local_path":local_path,
 				"local_realpath":local_realpath,
-				"local_path_limit":local_path_limit,
+				"local_path_limit":local_limit,
 				"remote_path":remote_path,
-				"remote_realpath":remote_realpath,
-				"remote_path_limit":remote_path_limit,
 				"method":method
 			},_raise=False)
 			raise SSHPanelStopOptException("File operation terminated")
+
 		try:
 			self.client.file_sync(
 				local_path = local_path,
@@ -1435,12 +1446,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				stop_callback = lambda: self._file_sync_stop
 			)
 		except Exception as e:
-			# 调用处无法捕获异步函数中抛出的错误信息
-			err_msg = e.args
 			LOG.E("file sync failed",{
 				"remote_path":remote_path,
 				"local_path": local_path,
-				"error": err_msg
+				"error": e.args
 			},_raise=False)
 			raise e
 
@@ -1452,8 +1461,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		NF = 0
 		if int(sublime.version()) >= 4096:
 			NF = sublime.SEMI_TRANSIENT | sublime.REPLACE_MRU
-		if os.path.exists(local_path) and file_reload == "auto":
-			v = self.window.open_file(local_path,NF)
+		# if os.path.exists(local_path) and file_reload == "auto":
+		# 	v = self.window.open_file(local_path,NF)
 		if int(sublime.version()) >= 4081:
 			fv = [v for v in self.window.views(include_transient=True) if v.file_name() == local_path]
 		else:
@@ -1715,11 +1724,12 @@ class SshPanelNavcationViewEventCommand(sublime_plugin.ViewEventListener):
 		client_id = self.view.settings().get("ssh_panel_clientID")
 		for remote_path in [p for p,d in path_hash_map.items() if d[2] == client_id]:
 			del path_hash_map[remote_path]
-		del client_map[client_id]
 		client = client_map.get(client_id,None)
+		del client_map[client_id]
 		if not client:
 			return
-		client.disconnect()
+		else:
+			client.disconnect()
 
 ssh_panel_file_view_before = None
 
@@ -1793,8 +1803,12 @@ class SshPanelFileViewEventCommand(sublime_plugin.ViewEventListener):
 		resource = cmd_ref.lpath_resource_map.get(self.view.file_name(),None)
 		view_res = self.view.settings().get("SSH-Panel:resource_file")
 		global ssh_panel_file_view_before
-		if view_res and (self.view.file_name() not in cmd_ref.lpath_resource_map.keys()):
-			cmd_ref.lpath_resource_map[cmd_ref.lpath_by_resource(view_res)] = resource
+		if resource is None and view_res:
+			resource = next(
+				(r for r in cmd_ref.resource_data.values()
+					if cmd_ref.lpath_by_resource(r) == self.view.file_name()),
+				view_res) # 找不到（root 已被移除）时退回副本
+			cmd_ref.lpath_resource_map[self.view.file_name()] = resource
 		if resource and resource != cmd_ref.focus_resource and self.view != ssh_panel_file_view_before:
 			ssh_panel_file_view_before = self.view
 			cmd_ref.focus_resource = resource
@@ -1866,7 +1880,7 @@ class SshPanelInstallDependenciesCommand(sublime_plugin.WindowCommand):
 							self.dependencies_url,
 							zip_pack,
 							reporthook=self.sync_transfer_callback(),
-							context = ssl._create_unverified_context
+							context = ssl._create_unverified_context()
 						)
 						on_transfer_over()
 				else:

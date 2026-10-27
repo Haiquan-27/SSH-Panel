@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 import os
 import sys
+import time
 import threading
 from .ssh_controller import SSHClient
 from paramiko.channel import Channel as SSHChannel
