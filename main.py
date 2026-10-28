@@ -556,7 +556,13 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							"remote_path":path,
 							"error":e.args
 						})
-
+				l_path = self.lpath_by_resource(resource_item)
+				if os.path.exists(l_path):
+					r_mtime_s = int(fs.st_mtime)
+					l_mtime_s = int(os.stat(l_path).st_mtime)
+					if r_mtime_s == l_mtime_s:
+						LOG.I(l_path + " OK")
+						resource_item["status"] = ['ok']
 				if resource_item["is_dir"] == True:
 					resource_item["expand"] = False # 目录是否展开
 				if self.focus_resource:
@@ -1456,7 +1462,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 	def open_resource_file(self,resource,force_load=False):
 		remote_path = self.rpath_by_resource(resource)
 		local_path  = self.lpath_by_resource(resource)
-		LOG.D("path_hash_map",path_hash_map)
 		file_reload = sublime.load_settings(settings_name).get("file_reload","auto")
 		NF = 0
 		if int(sublime.version()) >= 4096:
@@ -1509,14 +1514,14 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		}
 		id = self.create_id_by_resource(resource)
 		self.resource_data[id] = resource
-		if expand:
-			self.focus_resource = resource # set depth
-			self.add_path(path,root_path=path)
 		path_hash_map[path] = (
 			abstract_hex("md5",path.encode("utf8")),
 			self.client.user_settings_config["local_path"],
 			self.client_id
 		)
+		if expand:
+			self.focus_resource = resource # set depth
+			self.add_path(path,root_path=path)
 
 	def update_view_port(self):
 		client_activied = self.client != None and self.client.transport != None
