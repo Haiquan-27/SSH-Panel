@@ -14,7 +14,7 @@ import errno
 # importlib.reload(util) # debug
 from .tools.util import *
 
-version = "1.7.0"
+version = "1.7.1"
 
 Dependencies_LOST_Exception = None
 try:

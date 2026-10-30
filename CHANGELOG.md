@@ -1,8 +1,21 @@
 SSH-Panel Changelog
 ===================
 
-v1.7.0 (Latest)
+v1.7.1 (Latest)
 ---------------
+Security bug fix: HTTPS global unverified_context
+Security bug fix: detecting path traversal attempt
+Remove `DSSKey` support
+Support `private_key` Automatic recognition from file path
+The 'green dot badge' highlights the files that were last synced
+Fix passphrase input bug
+Fix SSH session leak, the connection was never closed after the navigation view was closed
+Fix Navigate and "Menu of ." failed
+Fix crash when picking a server in the connect panel and when cancelling the password / passphrase prompt
+Fix file transfer silently doing nothing when no stop callback is given
+
+v1.7.0 (2026-9-26)
+------------------
 Add support for Sublime Text 4200+ (Python 3.14)
 Supports showing link targets
 Fix connection list showing old names
