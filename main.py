@@ -536,6 +536,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				resource_item["focus"] = False # 是否选中
 				resource_item["where"] = remote_path
 				is_link = stat.S_ISLNK(fs.st_mode)
+				_fs = fs
 				if not is_link:
 					resource_item["is_dir"] = stat.S_ISDIR(fs.st_mode)
 				else:
@@ -547,7 +548,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					resource_item["link_info"]["target"] = self.client.sftp_client.readlink(path)
 					try:
 						realpath = self.client.realpath(path,expandvars=False,readlink=True)
-						resource_item["is_dir"] = stat.S_ISDIR(self.client.sftp_client.stat(realpath).st_mode)
+						_fs = self.client.sftp_client.stat(realpath)
+						resource_item["is_dir"] = stat.S_ISDIR(_fs.st_mode)
 						resource_item["link_info"]["reachable"] = True
 					except Exception as e:
 						resource_item["is_dir"] = False
@@ -558,11 +560,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						})
 				l_path = self.lpath_by_resource(resource_item)
 				if os.path.exists(l_path):
-					r_mtime_s = int(fs.st_mtime)
+					r_mtime_s = int(_fs.st_mtime)
 					l_mtime_s = int(os.stat(l_path).st_mtime)
 					if r_mtime_s == l_mtime_s:
 						LOG.I(l_path + " OK")
-						resource_item["status"] = ['ok']
+						resource_item["status"] += ['ok']
 				if resource_item["is_dir"] == True:
 					resource_item["expand"] = False # 目录是否展开
 				if self.focus_resource:
