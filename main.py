@@ -252,6 +252,29 @@ def plugin_loaded():
 def plugin_unloaded():
 	pass
 
+def settings_type_check():
+	settings = sublime.load_settings(settings_name)
+	settings_types = {
+		"default_connect_settings":dict,
+		"server_settings":dict,
+		"style_css":str,
+		"new_window":bool,
+		"reconnect_on_start":bool,
+		"file_reload":str,
+		"nav_bar_color_offset":str,
+		"icon_style":str,
+		"icon_theme":str,
+		"icon_quality":str,
+		"icon_color":str,
+		"font_size":str,
+		"quiet_log":bool,
+		"debug_mode":bool
+	}
+	error_list = []
+	for k in settings_types.keys():
+		if type(settings.get(k)) is not settings_types.get(k):
+			error_list.append(k)
+	return error_list
 
 class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 	def __init__(self,window):
@@ -261,14 +284,28 @@ class SshPanelSelectConnectCommand(sublime_plugin.WindowCommand):
 		self.select = None # (server_name,user_config,error_parameter_list)
 
 	def run(self):
+		settings_errors = settings_type_check()
+		if settings_errors:
+			sublime.load_settings(settings_name).set("style_css","Packages/SSH-Panel/style.css")
+			LOG.E("Config error, Please check from 'SSH-Panel: Edit Settings'",{
+				"key":str(settings_errors),
+				"configuration file":settings_name
+			})
 		default_settings = sublime.load_settings(settings_name).get("default_connect_settings")
 		self.user_config_data = {}
 		for server_name,user_parameter in sublime.load_settings(settings_name).get("server_settings").items():
-			user_parameter = UserSettings.format_parameter(default_settings,user_parameter)
-			if user_parameter == ({},{},None): # 配置参数错误
-				self.user_config_data[server_name] = (None,None)
-			else:
-				self.user_config_data[server_name] = (UserSettings.to_config(*user_parameter),user_parameter[2])
+			try:
+				user_parameter = UserSettings.format_parameter(default_settings,user_parameter)
+				if user_parameter == ({},{},None): # 配置参数错误
+					self.user_config_data[server_name] = (None,None)
+				else:
+					self.user_config_data[server_name] = (UserSettings.to_config(*user_parameter),user_parameter[2])
+			except Exception as e:
+				LOG.E("Config error, Please check from 'SSH-Panel: Edit Settings'",{
+					"error":str(e.args),
+					"key":"server_settings",
+					"configuration file":settings_name,
+				})
 		self.show_panel()
 
 	def show_panel(self,start_index=0):
@@ -563,7 +600,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					r_mtime_s = int(_fs.st_mtime)
 					l_mtime_s = int(os.stat(l_path).st_mtime)
 					if r_mtime_s == l_mtime_s:
-						LOG.I(l_path + " OK")
 						resource_item["status"] += ['ok']
 				if resource_item["is_dir"] == True:
 					resource_item["expand"] = False # 目录是否展开
