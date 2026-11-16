@@ -1,5 +1,5 @@
 {
-	// copy from "Sublime Widgets"
+	// Based from "Sublime Widgets"
 	"name": "SSH-Panel",
 	"globals": {
 		"foreground": "var(dark_grey)",
@@ -9,6 +9,8 @@
 		"selection": "color(var(dark_grey) a(0.2))",
 		"selection_border": "color(var(dark_grey) a(0.1))",
 		"inactive_selection": "color(var(dark_grey) a(0.15))",
+		"line_highlight": "color(#000 a(0))",
+		"highlight": "color(#000 a(0))",
 		"inactive_selection_border": "transparent",
 		"bracket_contents_options": "stippled_underline",
 	}, 
