@@ -610,7 +610,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				id = self.create_id_by_resource(resource_item)
 				res.append(id)
 				resource_data[id] = resource_item
-				LOG.D("Sub resource",resource_item)
+				LOG.D("Sub resource [%s]"%id,resource_item)
 			return res
 		except socket.timeout:
 			if sublime.yes_no_cancel_dialog("SSH connect has been close(timeout),reconnect now?") == (sublime.DialogResult.YES if int(sublime.version()) >= 4132 else 1):
@@ -873,7 +873,10 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			resource = self.resource_data[resource_id]
 			resource_path_chain_ids = [resource_id]
 			while True:
-				parent_resource_id = self.get_id_by_path(resource["root_path"],resource["where"])
+				parent_resource_id = self.get_id_by_path(
+					resource["root_path"],
+					resource["where"] if resource["where"] else self.rpath_by_resource(resource)
+				)
 				resource_path_chain_ids.insert(0,parent_resource_id)
 				resource = self.resource_data[parent_resource_id]
 				if resource["root_path"] == "":
@@ -1333,7 +1336,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 		def resource_click(id):
 			resource_data = self.resource_data
 			resource = resource_data[id]
-			LOG.D("Resource",resource)
+			LOG.D("Resource Click [%s]"%id,resource)
 			resource["focus"] = not resource["focus"]
 			resource_path = self.rpath_by_resource(resource)
 			focus_resource = self.focus_resource
@@ -1557,6 +1560,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			self.client.user_settings_config["local_path"],
 			self.client_id
 		)
+		LOG.D("ROOT Resource [%s]"%id,resource)
 		if expand:
 			self.focus_resource = resource # set depth
 			self.add_path(path,root_path=path)
@@ -1650,7 +1654,6 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			nv_settings.set("color_scheme",theme_resource)
 		self.phantom_items = [phantom]
 		self.update_phantom()
-		# LOG.D("resource_data",self.resource_data)
 
 	def update_phantom(self):
 		self.PhantomSet.update(self.phantom_items)
