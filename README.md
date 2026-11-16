@@ -243,6 +243,7 @@ you can edit and view server information on the pop-up directory panel
 
 ## quick button:
 > Click the `ip@username` at the top of the navigation view to show quick button
+
 * `[?]` :Help
 * `[I]` :show server Infomation
 * `[R]` :Refresh and sync file list
