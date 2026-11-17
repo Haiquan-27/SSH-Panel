@@ -1004,7 +1004,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 					LOG.D("put dir","<%s>"%local_root)
 					new = _resource_create_dir(
 						put_path + remote_os_sep + os.path.split(local_root)[1],
-						stat(local_root),
+						os.stat(local_root),
 						select_resource
 					)
 					new["expand"] = True
@@ -1018,7 +1018,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							rel_remote_path = path_merge(rel_path.split(os.path.sep),remote_os_sep)
 							local_dir_path = path_merge([root_path,rel_path],os.path.sep)
 							remote_dir_path = path_merge([put_path,rel_remote_path],remote_os_sep)
-							fs = stat(local_dir_path)
+							fs = os.stat(local_dir_path)
 							remote_dir_exists = False
 							try:
 								self.client.sftp_client.stat(remote_dir_path)
