@@ -470,6 +470,8 @@ class SSHClient():
 			pending = [p for p in _path.split('/') if p != '']   # 待处理队列
 			res_parts = [] # 已解析的绝对路径分量
 			is_abs = _path.startswith('/')
+			visited_links = [] # 循环检测,记录已展开的链接自身路径
+			hops = 0
 			while pending:
 				part = pending.pop(0)
 				if part == '.':
@@ -484,6 +486,11 @@ class SSHClient():
 					res_parts.append(part)
 					continue
 				if stat.S_ISLNK(st.st_mode):
+					hops += 1
+					# if hops > 40 or visited_links.count(candidate) >= 2:
+					if hops > 40 or visited_links.count(candidate) >= 3: # 允许 /x/l/../l
+						raise IOError("Too many levels of symbolic links: %s" % candidate)
+					visited_links.append(candidate)
 					link = self.sftp_client.readlink(candidate)
 					if link.startswith('/'):
 						res_parts = []

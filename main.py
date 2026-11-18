@@ -1123,55 +1123,117 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				stop_e = None
 				SUM_D = []
 				SUM_F = []
+				SUM_E = []
+				visited_targets = []
 				def make_in_local(_remote_path):
+					nonlocal visited_targets
 					nonlocal current_resource
 					nonlocal stop_e
 					nonlocal SUM_D
 					nonlocal SUM_F
+					nonlocal SUM_E
 					new = None
-					for fs in list(self.client.sftp_client.listdir_iter(_remote_path)):
+					try:
+						child_list = list(self.client.sftp_client.listdir_iter(_remote_path))
+					except Exception as e:
+						SUM_E.append(_remote_path)
+						LOG.E("clone folder failed,skip",{
+							"remote_path":_remote_path,
+							"error":"%s"%e
+						},_raise=False)
+						return
+					for fs in child_list:
 						r_path = path_merge([_remote_path,fs.filename],remote_os_sep)
 						l_path = path_merge([save_hash_root,*r_path[len(root_path if root_path else select_resource["name"]):].split(remote_os_sep)],os.path.sep)
 						if stop_e:
 							break
-						if(stat.S_ISDIR(fs.st_mode)): # 目录
+						is_link = stat.S_ISLNK(fs.st_mode)
+						_fs = fs
+						if is_link:
+							realpath = None
+							try:
+								realpath = self.client.realpath(r_path,expandvars=False,readlink=True)
+								_fs = self.client.sftp_client.stat(realpath)
+							except Exception as e:
+								LOG.E("link is unreachable,skip",{
+									"link":r_path,
+									"target":realpath
+								},_raise=False)
+								new = _resource_create_file(
+									r_path,
+									_fs,
+									current_resource
+								) # 回退到创建文件资源
+								new["focus"] = False
+								new["status"] = ["error"]
+								SUM_E.append(r_path)
+								continue
+						if(stat.S_ISDIR(_fs.st_mode)): # 目录
 							new = _resource_create_dir(
 								r_path,
-								fs,
+								_fs,
 								current_resource
 							) # 创建目录资源
-							new["expand"] = True
 							new["focus"] = False
+							if is_link and realpath in visited_targets:
+								# 链接循环或重复别名目标，跳过
+								LOG.W("link loop detected,skip",{
+									"remote_path":r_path,
+									"realpath":realpath,
+									"visited_targets":visited_targets
+								})
+								new["expand"] = False
+								new["status"] = ["warning"]
+								SUM_E.append(r_path)
+								continue
+							if is_link:
+								visited_targets.append(realpath)
+							new["expand"] = True
 							new["status"] = ["bus"]
 							parent_bak = current_resource.copy()
 							current_resource = new
 							# 创建空目录，递归进入创建空目录
-							os.makedirs(l_path, exist_ok=True)
-							os.chmod(l_path,stat.S_IMODE(fs.st_mode))
+							try:
+								os.makedirs(l_path, exist_ok=True)
+								os.chmod(l_path,stat.S_IMODE(_fs.st_mode))
+							except Exception as e:
+								new["status"] = ["error"]
+								SUM_E.append(r_path)
+								LOG.E("clone folder failed,skip",{
+									"remote_path":r_path,
+									"local_path": l_path,
+									"error":"%s"%e
+								},_raise=False)
+								current_resource = parent_bak
+								continue
 							SUM_D.append(l_path)
 							make_in_local(r_path) # 递归
-							new["status"] = ["ok"]
+							if r_path in SUM_E or stop_e:
+								new["status"] = ["error"]
+							else:
+								new["status"] = ["ok"]
 							current_resource = parent_bak
 						else: # 文件
 							new = _resource_create_file(
 								r_path,
-								fs,
+								_fs,
 								current_resource
 							) # 创建文件资源
 							new["focus"] = False
 							new["status"] = ["bus"]
 							# 直接get到本地
-							os.makedirs(os.path.split(l_path)[0], exist_ok=True)
 							def on_transfer_over(): # 单个文件接收完成
 								sublime.status_message("get [%s] to [%s] done"%(r_path,l_path))
 								new["status"] = ["ok"]
 								self.update_view_port()
 							try:
+								os.makedirs(os.path.split(l_path)[0], exist_ok=True)
 								self.file_sync(l_path,r_path,"get",on_transfer_over)
 								SUM_F.append(l_path)
 							except Exception as e:
 								new["status"] = ["error"]
-								LOG.E("clone folder failed",{
+								SUM_E.append(r_path)
+								LOG.E("clone folder failed,skip",{
 									"remote_path":r_path,
 									"local_path": l_path,
 									"error": e.args
@@ -1180,10 +1242,14 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 									stop_e = e
 									break
 				self.BUS_LOCK = True
-				make_in_local(remote_path)
-				self.BUS_LOCK = False
+				try:
+					make_in_local(remote_path)
+				finally:
+					self.BUS_LOCK = False
 				self.update_view_port()
 				LOG.I("Get %d Folders and %d files"%(len(SUM_D),len(SUM_F)),sorted(SUM_D+SUM_F))
+				if SUM_E:
+					LOG.E("%d clones failed"%(len(SUM_E)),sorted(SUM_E),_raise=False)
 				if stop_e:
 					raise stop_e
 			if int(sublime.version()) >= 4081:
