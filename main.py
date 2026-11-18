@@ -576,6 +576,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				_fs = fs
 				if not is_link:
 					resource_item["is_dir"] = stat.S_ISDIR(fs.st_mode)
+					resource_item["link_info"] = {"target": None, "reachable": None}
 				else:
 					resource_item["link_info"] = {
 						"target":None,
@@ -893,6 +894,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"name": path.split(self.client.remote_os_sep)[-1],
 				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 				"access": accessable(fs,*(self.client.userid)),
+				"link_info": {"target": None, "reachable": None},
 				"is_dir": False,
 				"focus": False,
 				"status": [],
@@ -942,6 +944,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 				"name": path.split(self.client.remote_os_sep)[-1],
 				"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 				"access": accessable(fs,*(self.client.userid)),
+				"link_info": {"target": None, "reachable": None},
 				"is_dir": True,
 				"expand": False,
 				"focus": False,
@@ -1151,7 +1154,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						_fs = fs
 						if is_link:
 							realpath = None
+							readlink = None
 							try:
+								readlink = self.client.sftp_client.readlink(r_path)
 								realpath = self.client.realpath(r_path,expandvars=False,readlink=True)
 								_fs = self.client.sftp_client.stat(realpath)
 							except Exception as e:
@@ -1166,6 +1171,8 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 								) # 回退到创建文件资源
 								new["focus"] = False
 								new["status"] = ["error"]
+								new["link_info"]["target"] = readlink
+								new["link_info"]["reachable"] = False
 								SUM_E.append(r_path)
 								continue
 						if(stat.S_ISDIR(_fs.st_mode)): # 目录
@@ -1185,8 +1192,12 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 								new["expand"] = False
 								new["status"] = ["warning"]
 								SUM_E.append(r_path)
+								new["link_info"]["target"] = readlink
+								new["link_info"]["reachable"] = True
 								continue
 							if is_link:
+								new["link_info"]["target"] = readlink
+								new["link_info"]["reachable"] = True
 								visited_targets.append(realpath)
 							new["expand"] = True
 							new["status"] = ["bus"]
@@ -1221,6 +1232,9 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 							) # 创建文件资源
 							new["focus"] = False
 							new["status"] = ["bus"]
+							if is_link:
+								new["link_info"]["target"] = readlink
+								new["link_info"]["reachable"] = True
 							# 直接get到本地
 							def on_transfer_over(): # 单个文件接收完成
 								sublime.status_message("get [%s] to [%s] done"%(r_path,l_path))
@@ -1311,7 +1325,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			remote_os_sep = self.client.remote_os_sep
 			@async_run
 			def confirm():
-				if resource["is_dir"]:
+				if resource["is_dir"] and resource["link_info"]["target"] == None: # 资源直接指向目录
 					dir_list = [resource_path]
 					file_list = []
 					denied_list = []
@@ -1363,9 +1377,11 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 						self.clean_resource(resource)
 						del self.resource_data[id]
 						self.update_view_port()
-				else:
+				else: # resource指向文件或目录连接
 					try:
 						self.client.sftp_client.remove(resource_path)
+						if resource["is_dir"]:
+							self.clean_resource(resource)
 						del self.resource_data[id]
 						self.update_view_port()
 					except Exception as e:
@@ -1611,6 +1627,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 			"name": path,
 			"mode": oct(stat.S_IMODE(fs.st_mode)).replace("0o",""),
 			"access": accessable(fs,*(self.client.userid)),
+			"link_info": {"target": None, "reachable": None},
 			"is_dir": True,
 			"expand": expand,
 			"focus": False,
@@ -1795,7 +1812,7 @@ class SshPanelConnectCommand(sublime_plugin.TextCommand):
 									target = html_str(resource["link_info"]["target"]),
 									target_class = "res_link" if resource["link_info"]["reachable"] else "res_link_error"
 								)
-							)if "link_info" in resource else (
+							)if resource.get("link_info",{}).get("target") is not None else (
 								html_str(resource["name"])
 							)
 						),
